@@ -1,0 +1,13 @@
+name = "Sophon"
+uuid = "077df616-1c15-4d29-b519-7542a62df138"
+authors = ["MilkshakeForReal <yicheng.wu@ucalgary.ca> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
