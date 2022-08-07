@@ -5,5 +5,5 @@ import Lux: initialparameters, initialstates, AbstractExplicitLayer, AbstractExp
 
 include("layers/basic.jl")
 
-export Fourier
+export FourierFeature
 end
