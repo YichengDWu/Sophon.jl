@@ -1,9 +1,11 @@
 module Sophon
 
 using Lux, Random, NNlib, NNlibCUDA
-import Lux: initialparameters, initialstates, AbstractExplicitLayer, AbstractExplicitContainerLayer
+import Lux: initialparameters, initialstates, AbstractExplicitLayer,
+            AbstractExplicitContainerLayer
 
 include("layers/basic.jl")
+include("layers/nets.jl")
 
-export FourierFeature
+export FourierFeature, TriplewiseFusion, PINNAttentionNet
 end
