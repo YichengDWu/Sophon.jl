@@ -5,13 +5,13 @@ struct FourierFeature <: AbstractExplicitLayer
     std
 end
 
-FourierFeature(in_dims::Int; num_modes::Int, std::Number = 1) = FourierFeature(in_dims, num_modes * 2, num_modes, std)
-function FourierFeature(int_dims::Int, out_dims::Int; std::Number = 1)
+FourierFeature(in_dims::Int; num_modes::Int, std::AbstractFloat = 10f0) = FourierFeature(in_dims, num_modes * 2, num_modes, std)
+function FourierFeature(int_dims::Int, out_dims::Int; std::AbstractFloat = 10f0)
     @assert iseven(out_dims) "The output dimension must be even"
     FourierFeature(int_dims, out_dims, out_dims ÷ 2, std)
 end
 
-function FourierFeature(ch::Pair{Int, Int}; std::Number = 1)
+function FourierFeature(ch::Pair{Int, Int}; std::AbstractFloat = 10f0)
     FourierFeature(first(ch), last(ch); std)
 end
 
