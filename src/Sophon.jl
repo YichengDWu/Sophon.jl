@@ -1,6 +1,9 @@
 module Sophon
 
-using Lux
-# Write your package code here.
+using Lux, Random, NNlib, NNlibCUDA
+import Lux: initialparameters, initialstates, AbstractExplicitLayer, AbstractExplicitContainerLayer
 
+include("layers/basic.jl")
+
+export Fourier
 end
