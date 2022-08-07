@@ -4,6 +4,14 @@
 
 The output dimesion of `H_net` and the input dimension of `layers` must be the same .
 
+```
+           x → U_net → u                     u
+                         ↘                     ↘
+x → H_net →  h1 → layer1 → connection → layer2 → connection
+                         ↗                     ↗
+           x → V_net → v                     v
+```
+
 # References
 
 [1] Wang, Sifan, Yujun Teng, and Paris Perdikaris. "Understanding and mitigating gradient flow pathologies in physics-informed neural networks." SIAM Journal on Scientific Computing 43.5 (2021): A3055-A3081
