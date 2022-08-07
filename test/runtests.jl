@@ -17,7 +17,7 @@ rng = Random.default_rng()
                 @test_throws MethodError FourierFeature(2 => 4; num_modes=2, std = 10.0)
                 f4 = FourierFeature(2 => 4; std = 1.0)
                 ps, st = Lux.setup(rng, f4)
-                @test size(ps.modes) == (2,2)
+                @test size(st.modes) == (2,2)
                 y, st = f4(rand(Float32, 2, 2), ps, st)
                 @test size(y) == (4,2)
             end

@@ -15,19 +15,19 @@ function FourierFeature(ch::Pair{Int, Int}; std::Number = 1)
     FourierFeature(first(ch), last(ch); std)
 end
 
-function initialparameters(rng::AbstractRNG, f::FourierFeature)
+function initialstates(rng::AbstractRNG, f::FourierFeature)
     modes = randn(rng, Float32, f.num_modes, f.in_dims) .* f.std
     return (modes = modes,)
 end
 
 function (f::FourierFeature)(x::AbstractVecOrMat, ps, st::NamedTuple)
-    x = ps.modes * x
+    x = st.modes * x
     x = 2 * eltype(x)(π) .* x
     return cat(sin.(x), cos.(x); dims = 1), st
 end
 
 function (f::FourierFeature)(x::AbstractArray, ps, st::NamedTuple)
-    x = batched_mul(ps.modes, x)
+    x = batched_mul(st.modes, x)
     x = 2 * eltype(x)(π) .* x
     return cat(sin.(x), cos.(x); dims = 1), st
 end
