@@ -144,5 +144,16 @@ end
 
 Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 
-@generated function FullyConnected(int_dims::Int, out_dims::T, activation::Function) where {T}
+"""
+    FullyConnected(int_dims::Int, out_dims::NTuple{N, Int}, activation)
+
+Create fully connected layers.
+"""
+@generated function FullyConnected(int_dims::Int, out_dims::NTuple{N, T}, activation::Function) where {N,T<:Int}
+    N == 1 && return :(Dense(int_dims, out_dims[1], activation))
+    get_layer(i) = :(Dense(out_dims[$i] => out_dims[$(i+1)], activation))
+    layers = [:(Dense(int_dims => out_dims[1], activation))]
+    append!(layers, [get_layer(i) for i in 1:(N-2)])
+    append!(layers, [:(Dense(out_dims[N-1] => out_dims[N]))])
+    return :(Chain($(layers...)))
 end
