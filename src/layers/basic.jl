@@ -40,22 +40,22 @@ end
 
 function initialstates(rng::AbstractRNG, f::FourierFeature)
     N = length(f.modes)
-    names = ntuple(i->Symbol("mode_$i"), N)
+    names = ntuple(i -> Symbol("mode_$i"), N)
     frequencies = ntuple(N) do i
         m = f.modes[i]
-        randn(rng, Float32, last(m), f.in_dims) .* first(m)
+        return randn(rng, Float32, last(m), f.in_dims) .* first(m)
     end
     return NamedTuple{names}(frequencies)
 end
 
 function (f::FourierFeature)(x::AbstractVecOrMat, ps, st::NamedTuple)
-    frequencies = reduce(vcat,st)
+    frequencies = reduce(vcat, st)
     x = 2 * eltype(x)(π) .* frequencies * x
     return vcat(sin.(x), cos.(x)), st
 end
 
 function (f::FourierFeature)(x::AbstractArray, ps, st::NamedTuple)
-    frequencies = reduce(vcat,st)
+    frequencies = reduce(vcat, st)
     x = 2 * eltype(x)(π) .* batched_mul(frequencies, x)
     return vcat(sin.(x), cos.(x)), st
 end
