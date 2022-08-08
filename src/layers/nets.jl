@@ -22,20 +22,19 @@ struct PINNAttention <: AbstractExplicitContainerLayer{(:H_net, :U_net, :V_net, 
     V_net::AbstractExplicitLayer
     fusion::AbstractExplicitLayer
     function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLayer,
-                              V_net::AbstractExplicitLayer, fusion::TriplewiseFusion)
+                           V_net::AbstractExplicitLayer, fusion::TriplewiseFusion)
         return new(H_net, U_net, V_net, fusion)
     end
 end
 
 function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLayer,
-                          V_net::AbstractExplicitLayer;
-                          fusion_layers::AbstractExplicitLayer)
+                       V_net::AbstractExplicitLayer; fusion_layers::AbstractExplicitLayer)
     fusion = TriplewiseFusion(attention_connection, fusion_layers)
     return PINNAttention(H_net, U_net, V_net, fusion)
 end
 
 function PINNAttention(int_dims::Int, out_dims::Int, activation::Function;
-                          fusion_layers::AbstractExplicitLayer)
+                       fusion_layers::AbstractExplicitLayer)
     activation = NNlib.fast_act(activation)
     H_net = Dense(int_dims, out_dims, activation)
     U_net = Dense(int_dims, out_dims, activation)
@@ -55,54 +54,33 @@ end
 attention_connection(z, u, v) = (1 .- z) .* u .+ z .* v
 
 """
-    MultiscaleFourier(int_dims::Int, out_dims::Int, hidden_dims::Int, chain; std)
+    MultiscaleFourier(int_dims::Int, out_dims::NTuple, activation=identity, modes::NTuple)
 
-Multi-scale Fourier Net.
+Multi-scale Fourier Feature Net.
 
 ```
-    FourierFeature → chain_1
-  ↗                          ↘
-x → FourierFeature → chain_2 → Dense → y
-  ↘                          ↗
-    FourierFeature → chain_3
+x → FourierFeature → FullyConnected → y
 ```
 
-Here `chain_1`, `chain_2`, and `chain_3` are all identical copies of `chain`, but with different parameters.
+# Arguments
 
-# Keyword Arguments
-
-  - `std`: A container of standard deviations of the Gaussian distribution.
+  - `int_dims`: The number of input dimensions.
+  - `out_dims`: A tuple of output dimensions used to construct `FullyConnected`.
+  - `activation`: The activation function used to construct `FullyConnected`.
+  - `modes`: A tuple of modes used to construct `FourierFeature`.
 
 # References
 
 [1] Wang, Sifan, Hanwen Wang, and Paris Perdikaris. “On the eigenvector bias of fourier feature networks: From regression to solving multi-scale pdes with physics-informed neural networks.” Computer Methods in Applied Mechanics and Engineering 384 (2021): 113938.
 """
-struct MultiscaleFourier{T, C <: AbstractExplicitLayer, O} <:
-       AbstractExplicitContainerLayer{(:chains, :output_layer)}
-    std::T
-    chains::C
-    output_layer::O
-    int_dims::Int
-    out_dims::Int
-    hidden_dims::Int
-end
-
-function MultiscaleFourier(int_dims::Int, out_dims::Int, hidden_dims::Int, chain; std)
-    M = length(std)
-    chains = [Chain(FourierFeature(int_dims, hidden_dims; std=i), chain) for i in std]
-    chains = BranchLayer(chains...)
-    output_layer = Dense(hidden_dims * M, out_dims)
-    return MultiscaleFourier{typeof(std), typeof(chains), typeof(output_layer)}(std,
-                                                                                   chains,
-                                                                                   output_layer,
-                                                                                   int_dims,
-                                                                                   out_dims,
-                                                                                   hidden_dims)
-end
-
-function (m::MultiscaleFourier)(x::AbstractArray, ps, st::NamedTuple)
-    hs, st_chains = m.chains(x, ps.chains, st.chains)
-    y, st_out = m.output_layer(vcat(hs...), ps.output_layer, st.output_layer)
-    st = merge(st, (chains=st_chains, output_layer=st_out))
-    return y, st
+function MultiscaleFourier(int_dims::Int,
+                           out_dims::NTuple{N1, Int}=(ntuple(i -> 512, 6)..., 1),
+                           activation::Function=identity,
+                           modes::NTuple{N2, Pair{S, Int}}=(1 => 64, 10 => 64, 20 => 64,
+                                                            50 => 32, 100 => 32)) where {N1,
+                                                                                         N2,
+                                                                                         S}
+    fourierfeature = FourierFeature(int_dims, modes)
+    chain = FullyConnected(fourierfeature.out_dims, out_dims, activation)
+    return Chain(fourierfeature, chain)
 end
