@@ -143,3 +143,5 @@ end
 end
 
 Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
+
+function FullyConnected end
