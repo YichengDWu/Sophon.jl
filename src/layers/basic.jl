@@ -26,6 +26,10 @@ Fourier Feature Network.
 ```julia
 FourierFeature(2, (1 => 3, 50 => 4))
 ```
+
+# References
+
+[1] Tancik, Matthew, et al. “Fourier features let networks learn high frequency functions in low dimensional domains.” Advances in Neural Information Processing Systems 33 (2020): 7537-7547.
 """
 struct FourierFeature{M} <: AbstractExplicitLayer
     in_dims::Int
