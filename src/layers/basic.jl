@@ -128,14 +128,14 @@ end
     st_symbols = [gensym() for _ in 1:N]
     calls = [:($(y_symbols[N + 1]) = x[1])]
     function getuv(i)
-        return T <: Tuple{AbstractArray, Vararg{Tuple}} ? :((x[2][$i], x[3][$i])) :
-               :((x[2], x[3]))
+        return T <: Tuple{AbstractArray, Vararg{Tuple}} ? (:(x[2][$i]), :(x[3][$i])) :
+               (:(x[2]), :(x[3]))
     end
     append!(calls,
             [:(($(y_symbols[i]), $(st_symbols[i])) = layers[$i]($(y_symbols[N + 1]),
                                                                 ps.$(names[i]),
                                                                 st.$(names[i]));
-               $(y_symbols[N + 1]) = connection($(y_symbols[i]), $(getuv(i))...))
+               $(y_symbols[N + 1]) = connection($(y_symbols[i]), $(getuv(i)...)))
              for i in 1:N])
     push!(calls, :(st = NamedTuple{$names}(($(Tuple(st_symbols))))))
     push!(calls, :(return $(y_symbols[N + 1]), st))
@@ -144,4 +144,5 @@ end
 
 Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 
-function FullyConnected end
+@generated function FullyConnected(int_dims::Int, out_dims::T, activation::Function) where {T}
+end
