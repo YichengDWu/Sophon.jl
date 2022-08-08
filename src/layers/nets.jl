@@ -68,6 +68,10 @@ x → FourierFeature → chain_2 → Dense → y
 ```
 
 Here `chain_1`, `chain_2`, and `chain_3` are all identical copies of `chain`, but with different parameters.
+
+# References
+
+[1] Wang, Sifan, Hanwen Wang, and Paris Perdikaris. “On the eigenvector bias of fourier feature networks: From regression to solving multi-scale pdes with physics-informed neural networks.” Computer Methods in Applied Mechanics and Engineering 384 (2021): 113938.
 """
 struct MultiscaleFourierNet{T, C <: AbstractExplicitLayer, O} <:
        AbstractExplicitContainerLayer{(:chains, :output_layer)}
