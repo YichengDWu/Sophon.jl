@@ -55,7 +55,7 @@ end
 attention_connection(z, u, v) = (1 .- z) .* u .+ z .* v
 
 """
-    MultiscaleFourierNet(int_dims::Int, out_dims::Int, chain; std)
+    MultiscaleFourierNet(int_dims::Int, out_dims::Int, hidden_dims::Int, chain; std)
 
 Multi-scale Fourier Net.
 
@@ -69,6 +69,10 @@ x → FourierFeature → chain_2 → Dense → y
 
 Here `chain_1`, `chain_2`, and `chain_3` are all identical copies of `chain`, but with different parameters.
 
+# Keyword Arguments
+
+  - `std`: A container of standard deviations of the Gaussian distribution.
+
 # References
 
 [1] Wang, Sifan, Hanwen Wang, and Paris Perdikaris. “On the eigenvector bias of fourier feature networks: From regression to solving multi-scale pdes with physics-informed neural networks.” Computer Methods in Applied Mechanics and Engineering 384 (2021): 113938.
@@ -80,18 +84,20 @@ struct MultiscaleFourierNet{T, C <: AbstractExplicitLayer, O} <:
     output_layer::O
     int_dims::Int
     out_dims::Int
+    hidden_dims::Int
 end
 
-function MultiscaleFourierNet(int_dims::Int, out_dims::Int, chain; std)
+function MultiscaleFourierNet(int_dims::Int, out_dims::Int, hidden_dims::Int, chain; std)
     M = length(std)
-    chains = [Chain(FourierFeature(int_dims, out_dims; std=i), chain) for i in std]
+    chains = [Chain(FourierFeature(int_dims, hidden_dims; std=i), chain) for i in std]
     chains = BranchLayer(chains...)
-    output_layer = Dense(out_dims * M, out_dims)
+    output_layer = Dense(hidden_dims * M, out_dims)
     return MultiscaleFourierNet{typeof(std), typeof(chains), typeof(output_layer)}(std,
                                                                                    chains,
                                                                                    output_layer,
                                                                                    int_dims,
-                                                                                   out_dims)
+                                                                                   out_dims,
+                                                                                   hidden_dims)
 end
 
 function (m::MultiscaleFourierNet)(x::AbstractArray, ps, st::NamedTuple)
