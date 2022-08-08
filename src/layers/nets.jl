@@ -1,5 +1,5 @@
 """
-    PINNAttention(H_net, U_net, V_net, fusion::TriplewiseFusion)
+    PINNAttention(H_net, U_net, V_net, fusion=TriplewiseFusion)
     PINNAttention(H_net, U_net, V_net; fusion_layers)
 
 The output dimesion of `H_net` and the input dimension of `layers` must be the same .
@@ -16,21 +16,21 @@ x → H_net →  h1 → layer1 → connection → layer2 → connection
 
 [1] Wang, Sifan, Yujun Teng, and Paris Perdikaris. "Understanding and mitigating gradient flow pathologies in physics-informed neural networks." SIAM Journal on Scientific Computing 43.5 (2021): A3055-A3081
 """
-struct PINNAttention <: AbstractExplicitContainerLayer{(:H_net, :U_net, :V_net, :fusion)}
-    H_net::AbstractExplicitLayer
-    U_net::AbstractExplicitLayer
-    V_net::AbstractExplicitLayer
-    fusion::AbstractExplicitLayer
-    function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLayer,
-                           V_net::AbstractExplicitLayer, fusion::TriplewiseFusion)
-        return new(H_net, U_net, V_net, fusion)
-    end
+struct PINNAttention{H, U, V, F} <:
+       AbstractExplicitContainerLayer{(:H_net, :U_net, :V_net, :fusion)}
+    H_net::H
+    U_net::U
+    V_net::V
+    fusion::F
 end
 
 function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLayer,
                        V_net::AbstractExplicitLayer; fusion_layers::AbstractExplicitLayer)
     fusion = TriplewiseFusion(attention_connection, fusion_layers)
-    return PINNAttention(H_net, U_net, V_net, fusion)
+    return PINNAttention{typeof(H_net), typeof(U_net), typeof(V_net), typeof(fusion)}(H_net,
+                                                                                      U_net,
+                                                                                      V_net,
+                                                                                      fusion)
 end
 
 function PINNAttention(int_dims::Int, out_dims::Int, activation::Function;
@@ -52,6 +52,14 @@ function (m::PINNAttention)(x::AbstractArray, ps, st::NamedTuple)
 end
 
 attention_connection(z, u, v) = (1 .- z) .* u .+ z .* v
+
+"""
+    FourierAttention()
+
+```
+x → [x; Fourier(x)] → PINNAttention(Dense, Dense, Dense, TriplewiseFusion)
+```
+"""
 
 """
     MultiscaleFourier(int_dims::Int, out_dims::NTuple, activation=identity, modes::NTuple)
