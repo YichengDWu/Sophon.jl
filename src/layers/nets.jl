@@ -1,6 +1,6 @@
 """
-    PINNAttentionNet(H_net, U_net, V_net, fusion::TriplewiseFusion)
-    PINNAttentionNet(H_net, U_net, V_net; fusion_layers)
+    PINNAttention(H_net, U_net, V_net, fusion::TriplewiseFusion)
+    PINNAttention(H_net, U_net, V_net; fusion_layers)
 
 The output dimesion of `H_net` and the input dimension of `layers` must be the same .
 
@@ -16,34 +16,34 @@ x → H_net →  h1 → layer1 → connection → layer2 → connection
 
 [1] Wang, Sifan, Yujun Teng, and Paris Perdikaris. "Understanding and mitigating gradient flow pathologies in physics-informed neural networks." SIAM Journal on Scientific Computing 43.5 (2021): A3055-A3081
 """
-struct PINNAttentionNet <: AbstractExplicitContainerLayer{(:H_net, :U_net, :V_net, :fusion)}
+struct PINNAttention <: AbstractExplicitContainerLayer{(:H_net, :U_net, :V_net, :fusion)}
     H_net::AbstractExplicitLayer
     U_net::AbstractExplicitLayer
     V_net::AbstractExplicitLayer
     fusion::AbstractExplicitLayer
-    function PINNAttentionNet(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLayer,
+    function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLayer,
                               V_net::AbstractExplicitLayer, fusion::TriplewiseFusion)
         return new(H_net, U_net, V_net, fusion)
     end
 end
 
-function PINNAttentionNet(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLayer,
+function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLayer,
                           V_net::AbstractExplicitLayer;
                           fusion_layers::AbstractExplicitLayer)
     fusion = TriplewiseFusion(attention_connection, fusion_layers)
-    return PINNAttentionNet(H_net, U_net, V_net, fusion)
+    return PINNAttention(H_net, U_net, V_net, fusion)
 end
 
-function PINNAttentionNet(int_dims::Int, out_dims::Int, activation::Function;
+function PINNAttention(int_dims::Int, out_dims::Int, activation::Function;
                           fusion_layers::AbstractExplicitLayer)
     activation = NNlib.fast_act(activation)
     H_net = Dense(int_dims, out_dims, activation)
     U_net = Dense(int_dims, out_dims, activation)
     V_net = Dense(int_dims, out_dims, activation)
-    return PINNAttentionNet(H_net, U_net, V_net; fusion_layers=fusion_layers)
+    return PINNAttention(H_net, U_net, V_net; fusion_layers=fusion_layers)
 end
 
-function (m::PINNAttentionNet)(x::AbstractArray, ps, st::NamedTuple)
+function (m::PINNAttention)(x::AbstractArray, ps, st::NamedTuple)
     H, st_h = m.H_net(x, ps.H_net, st.H_net)
     U, st_u = m.U_net(x, ps.U_net, st.U_net)
     V, st_v = m.V_net(x, ps.V_net, st.V_net)
@@ -55,7 +55,7 @@ end
 attention_connection(z, u, v) = (1 .- z) .* u .+ z .* v
 
 """
-    MultiscaleFourierNet(int_dims::Int, out_dims::Int, hidden_dims::Int, chain; std)
+    MultiscaleFourier(int_dims::Int, out_dims::Int, hidden_dims::Int, chain; std)
 
 Multi-scale Fourier Net.
 
@@ -77,7 +77,7 @@ Here `chain_1`, `chain_2`, and `chain_3` are all identical copies of `chain`, bu
 
 [1] Wang, Sifan, Hanwen Wang, and Paris Perdikaris. “On the eigenvector bias of fourier feature networks: From regression to solving multi-scale pdes with physics-informed neural networks.” Computer Methods in Applied Mechanics and Engineering 384 (2021): 113938.
 """
-struct MultiscaleFourierNet{T, C <: AbstractExplicitLayer, O} <:
+struct MultiscaleFourier{T, C <: AbstractExplicitLayer, O} <:
        AbstractExplicitContainerLayer{(:chains, :output_layer)}
     std::T
     chains::C
@@ -87,12 +87,12 @@ struct MultiscaleFourierNet{T, C <: AbstractExplicitLayer, O} <:
     hidden_dims::Int
 end
 
-function MultiscaleFourierNet(int_dims::Int, out_dims::Int, hidden_dims::Int, chain; std)
+function MultiscaleFourier(int_dims::Int, out_dims::Int, hidden_dims::Int, chain; std)
     M = length(std)
     chains = [Chain(FourierFeature(int_dims, hidden_dims; std=i), chain) for i in std]
     chains = BranchLayer(chains...)
     output_layer = Dense(hidden_dims * M, out_dims)
-    return MultiscaleFourierNet{typeof(std), typeof(chains), typeof(output_layer)}(std,
+    return MultiscaleFourier{typeof(std), typeof(chains), typeof(output_layer)}(std,
                                                                                    chains,
                                                                                    output_layer,
                                                                                    int_dims,
@@ -100,7 +100,7 @@ function MultiscaleFourierNet(int_dims::Int, out_dims::Int, hidden_dims::Int, ch
                                                                                    hidden_dims)
 end
 
-function (m::MultiscaleFourierNet)(x::AbstractArray, ps, st::NamedTuple)
+function (m::MultiscaleFourier)(x::AbstractArray, ps, st::NamedTuple)
     hs, st_chains = m.chains(x, ps.chains, st.chains)
     y, st_out = m.output_layer(vcat(hs...), ps.output_layer, st.output_layer)
     st = merge(st, (chains=st_chains, output_layer=st_out))
