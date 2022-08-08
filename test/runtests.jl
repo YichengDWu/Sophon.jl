@@ -39,8 +39,7 @@ rng = Random.default_rng()
         end
         @testset "MultiscaleFourier" begin
             x = rand(Float32, 2, 5)
-            chain = Chain(Dense(4, 4, relu), Dense(4, 4, relu), Dense(4, 4, relu))
-            m = MultiscaleFourier(2, 1, 4, chain; std=[1, 20, 50])
+            m = MultiscaleFourier(2)
             ps, st = Lux.setup(rng, m)
             y, st = m(x, ps, st)
             @test size(y) == (1, 5)

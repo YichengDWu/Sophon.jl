@@ -14,7 +14,7 @@ Fourier Feature Network.
 
 # Returns
 
-  - An AbstractArray with `size(y, 1) == prod(last(modes) * 2)`.
+  - An AbstractArray with `size(y, 1) == sum(last(modes) * 2)`.
   - The states of the layers.
 
 # States
@@ -39,7 +39,7 @@ end
 
 function FourierFeature(in_dims::Int, modes::NTuple{N, Pair{S, T}}) where {N, S, T <: Int}
     out_dims = map(x -> 2 * last(x), modes)
-    return FourierFeature{typeof(modes)}(in_dims, prod(out_dims), modes)
+    return FourierFeature{typeof(modes)}(in_dims, sum(out_dims), modes)
 end
 
 function initialstates(rng::AbstractRNG, f::FourierFeature)
@@ -165,7 +165,7 @@ Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 Create fully connected layers.
 """
 @generated function FullyConnected(int_dims::Int, out_dims::NTuple{N, T},
-                                   activation::Function) where {N, T <: Int}
+                                   activation::Function=identity) where {N, T <: Int}
     N == 1 && return :(Dense(int_dims, out_dims[1], activation))
     get_layer(i) = :(Dense(out_dims[$i] => out_dims[$(i + 1)], activation))
     layers = [:(Dense(int_dims => out_dims[1], activation))]
