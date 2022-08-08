@@ -137,9 +137,11 @@ end
                                                                 st.$(names[i]));
                $(y_symbols[N + 1]) = connection($(y_symbols[i]), $(getuv(i))...))
              for i in 1:N])
-    push!(calls, :(st = NamedTuple{$names}((($(Tuple(st_symbols)...),)))))
+    push!(calls, :(st = NamedTuple{$names}(($(Tuple(st_symbols))))))
     push!(calls, :(return $(y_symbols[N + 1]), st))
     return Expr(:block, calls...)
 end
 
 Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
+
+function FullyConnected end
