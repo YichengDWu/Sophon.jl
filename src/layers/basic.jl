@@ -1,52 +1,63 @@
 """
-    FourierFeature(in_dims::Int; num_modes::Int, std::Number=10.0f0)
-    FourierFeature(int_dims::Int, out_dims::Int; std::Number=10.0f0)
+    FourierFeature(in_dims::Int, modes::NTuple{N,Pair{S,T}}) where {N,S,T<:Int}
 
 Fourier Feature Network.
 
-# Keyword Arguments
+# Arguments
 
-- `num_modes`: Number of modes.
-- `std`: Standard deviation of the Gaussian distribution from which the frequencies are sampled.
+  - `int_dims`: Input dimension.
+  - `modes`: A tuple of pairs of `std => out_dims`, where `std` is the standard deviation of the Gaussian distribution, and `out_dims` is the output dimension.
+
+# Inputs
+
+  - `x`: An an AbstractArray with `size(x, 1) == in_dims`.
+
+# Returns
+
+  - An AbstractArray with `size(y, 1) == prod(last(modes) * 2)`.
+  - The states of the layers.
 
 # States
 
-- `modes`: Random Fourier mappings.
+  - `modes`: Random Fourier mappings.
+
+# Examples
+
+```julia
+FourierFeature(2, (1 => 3, 50 => 4))
+```
 """
-struct FourierFeature{S} <: AbstractExplicitLayer
+struct FourierFeature{M} <: AbstractExplicitLayer
     in_dims::Int
     out_dims::Int
-    num_modes::Int
-    std::S
+    modes::M
 end
 
-function FourierFeature(in_dims::Int; num_modes::Int, std::Number=10.0f0)
-    return FourierFeature(in_dims, num_modes * 2, num_modes, std)
-end
-function FourierFeature(int_dims::Int, out_dims::Int; std::Number=10.0f0)
-    @assert iseven(out_dims) "The output dimension must be even"
-    return FourierFeature{typeof(std)}(int_dims, out_dims, out_dims ÷ 2, std)
-end
-
-function FourierFeature(ch::Pair{Int, Int}; std::Number=10.0f0)
-    return FourierFeature(first(ch), last(ch); std = std)
+function FourierFeature(in_dims::Int, modes::NTuple{N, Pair{S, T}}) where {N, S, T <: Int}
+    out_dims = map(x -> 2 * last(x), modes)
+    return FourierFeature{typeof(modes)}(in_dims, prod(out_dims), modes)
 end
 
 function initialstates(rng::AbstractRNG, f::FourierFeature)
-    modes = randn(rng, Float32, f.num_modes, f.in_dims) .* f.std
-    return (modes=modes,)
+    N = length(f.modes)
+    names = ntuple(i->Symbol("mode_$i"), N)
+    frequencies = ntuple(N) do i
+        m = f.modes[i]
+        randn(rng, Float32, last(m), f.in_dims) .* first(m)
+    end
+    return NamedTuple{names}(frequencies)
 end
 
 function (f::FourierFeature)(x::AbstractVecOrMat, ps, st::NamedTuple)
-    x = st.modes * x
-    x = 2 * eltype(x)(π) .* x
-    return cat(sin.(x), cos.(x); dims=1), st
+    frequencies = reduce(vcat,st)
+    x = 2 * eltype(x)(π) .* frequencies * x
+    return vcat(sin.(x), cos.(x)), st
 end
 
 function (f::FourierFeature)(x::AbstractArray, ps, st::NamedTuple)
-    x = batched_mul(st.modes, x)
-    x = 2 * eltype(x)(π) .* x
-    return cat(sin.(x), cos.(x); dims=1), st
+    frequencies = reduce(vcat,st)
+    x = 2 * eltype(x)(π) .* batched_mul(frequencies, x)
+    return vcat(sin.(x), cos.(x)), st
 end
 
 function Base.show(io::IO, f::FourierFeature)
@@ -149,11 +160,12 @@ Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 
 Create fully connected layers.
 """
-@generated function FullyConnected(int_dims::Int, out_dims::NTuple{N, T}, activation::Function) where {N,T<:Int}
+@generated function FullyConnected(int_dims::Int, out_dims::NTuple{N, T},
+                                   activation::Function) where {N, T <: Int}
     N == 1 && return :(Dense(int_dims, out_dims[1], activation))
-    get_layer(i) = :(Dense(out_dims[$i] => out_dims[$(i+1)], activation))
+    get_layer(i) = :(Dense(out_dims[$i] => out_dims[$(i + 1)], activation))
     layers = [:(Dense(int_dims => out_dims[1], activation))]
-    append!(layers, [get_layer(i) for i in 1:(N-2)])
-    append!(layers, [:(Dense(out_dims[N-1] => out_dims[N]))])
+    append!(layers, [get_layer(i) for i in 1:(N - 2)])
+    append!(layers, [:(Dense(out_dims[N - 1] => out_dims[N]))])
     return :(Chain($(layers...)))
 end

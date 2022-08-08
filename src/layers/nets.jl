@@ -22,20 +22,19 @@ struct PINNAttention <: AbstractExplicitContainerLayer{(:H_net, :U_net, :V_net, 
     V_net::AbstractExplicitLayer
     fusion::AbstractExplicitLayer
     function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLayer,
-                              V_net::AbstractExplicitLayer, fusion::TriplewiseFusion)
+                           V_net::AbstractExplicitLayer, fusion::TriplewiseFusion)
         return new(H_net, U_net, V_net, fusion)
     end
 end
 
 function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLayer,
-                          V_net::AbstractExplicitLayer;
-                          fusion_layers::AbstractExplicitLayer)
+                       V_net::AbstractExplicitLayer; fusion_layers::AbstractExplicitLayer)
     fusion = TriplewiseFusion(attention_connection, fusion_layers)
     return PINNAttention(H_net, U_net, V_net, fusion)
 end
 
 function PINNAttention(int_dims::Int, out_dims::Int, activation::Function;
-                          fusion_layers::AbstractExplicitLayer)
+                       fusion_layers::AbstractExplicitLayer)
     activation = NNlib.fast_act(activation)
     H_net = Dense(int_dims, out_dims, activation)
     U_net = Dense(int_dims, out_dims, activation)
@@ -92,12 +91,11 @@ function MultiscaleFourier(int_dims::Int, out_dims::Int, hidden_dims::Int, chain
     chains = [Chain(FourierFeature(int_dims, hidden_dims; std=i), chain) for i in std]
     chains = BranchLayer(chains...)
     output_layer = Dense(hidden_dims * M, out_dims)
-    return MultiscaleFourier{typeof(std), typeof(chains), typeof(output_layer)}(std,
-                                                                                   chains,
-                                                                                   output_layer,
-                                                                                   int_dims,
-                                                                                   out_dims,
-                                                                                   hidden_dims)
+    return MultiscaleFourier{typeof(std), typeof(chains), typeof(output_layer)}(std, chains,
+                                                                                output_layer,
+                                                                                int_dims,
+                                                                                out_dims,
+                                                                                hidden_dims)
 end
 
 function (m::MultiscaleFourier)(x::AbstractArray, ps, st::NamedTuple)
