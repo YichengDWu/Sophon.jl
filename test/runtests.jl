@@ -33,4 +33,12 @@ rng = Random.default_rng()
         y2, st2 = m2(x, ps2, st2)
         @test size(y2) == (4, 5)
     end
+    @testset "MultiscaleFourierNet" begin
+        x = rand(Float32, 2, 5)
+        chain = Chain(Dense(4, 4, relu), Dense(4, 4, relu), Dense(4, 4, relu))
+        m = MultiscaleFourierNet(2,4,chain; std = [1,20,50])
+        ps, st = Lux.setup(rng, m)
+        y, st = m(x, ps, st)
+        @test size(y) == (4, 5)
+    end
 end end end

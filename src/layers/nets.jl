@@ -53,3 +53,46 @@ function (m::PINNAttentionNet)(x::AbstractArray, ps, st::NamedTuple)
 end
 
 attention_connection(z, u, v) = (1 .- z) .* u .+ z .* v
+
+"""
+    MultiscaleFourierNet(int_dims::Int, out_dims::Int, chain; std)
+
+Multi-scale Fourier Net.
+
+```
+    FourierFeature → chain_1
+  ↗                          ↘
+x → FourierFeature → chain_2 → Dense → y
+  ↘                          ↗
+    FourierFeature → chain_3
+```
+
+Here `chain_1`, `chain_2`, and `chain_3` are all identical copies of `chain`, but with different parameters.
+"""
+struct MultiscaleFourierNet{T, C <: AbstractExplicitLayer, O} <:
+       AbstractExplicitContainerLayer{(:chains, :output_layer)}
+    std::T
+    chains::C
+    output_layer::O
+    int_dims::Int
+    out_dims::Int
+end
+
+function MultiscaleFourierNet(int_dims::Int, out_dims::Int, chain; std)
+    M = length(std)
+    chains = [Chain(FourierFeature(int_dims, out_dims; std=i), chain) for i in std]
+    chains = BranchLayer(chains...)
+    output_layer = Dense(out_dims * M, out_dims)
+    return MultiscaleFourierNet{typeof(std), typeof(chains), typeof(output_layer)}(std,
+                                                                                   chains,
+                                                                                   output_layer,
+                                                                                   int_dims,
+                                                                                   out_dims)
+end
+
+function (m::MultiscaleFourierNet)(x::AbstractArray, ps, st::NamedTuple)
+    hs, st_chains = m.chains(x, ps.chains, st.chains)
+    y, st_out = m.output_layer(vcat(hs...), ps.output_layer, st.output_layer)
+    st = merge(st, (chains=st_chains, output_layer=st_out))
+    return y, st
+end

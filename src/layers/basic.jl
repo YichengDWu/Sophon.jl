@@ -1,8 +1,23 @@
-struct FourierFeature <: AbstractExplicitLayer
-    in_dims::Any
-    out_dims::Any
-    num_modes::Any
-    std::Any
+"""
+    FourierFeature(in_dims::Int; num_modes::Int, std::Number=10.0f0)
+    FourierFeature(int_dims::Int, out_dims::Int; std::Number=10.0f0)
+
+Fourier Feature Network.
+
+# Keyword Arguments
+
+- `num_modes`: Number of modes.
+- `std`: Standard deviation of the Gaussian distribution from which the frequencies are sampled.
+
+# States
+
+- `modes`: Random Fourier mappings.
+"""
+struct FourierFeature{S} <: AbstractExplicitLayer
+    in_dims::Int
+    out_dims::Int
+    num_modes::Int
+    std::S
 end
 
 function FourierFeature(in_dims::Int; num_modes::Int, std::Number=10.0f0)
@@ -10,11 +25,11 @@ function FourierFeature(in_dims::Int; num_modes::Int, std::Number=10.0f0)
 end
 function FourierFeature(int_dims::Int, out_dims::Int; std::Number=10.0f0)
     @assert iseven(out_dims) "The output dimension must be even"
-    return FourierFeature(int_dims, out_dims, out_dims ÷ 2, std)
+    return FourierFeature{typeof(std)}(int_dims, out_dims, out_dims ÷ 2, std)
 end
 
 function FourierFeature(ch::Pair{Int, Int}; std::Number=10.0f0)
-    return FourierFeature(first(ch), last(ch); std)
+    return FourierFeature(first(ch), last(ch); std = std)
 end
 
 function initialstates(rng::AbstractRNG, f::FourierFeature)
@@ -73,7 +88,6 @@ end
 for i in 1:N
     h = connection(layers[i](h), u, v)
 end
-h = layers[end](h)
 ```
 
 ## Returns
