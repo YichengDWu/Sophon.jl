@@ -21,7 +21,7 @@ x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connect
     - `in_dim`: The input dimension.
     - `hidden_dims`: The output dimension of `H_net`.
     - `fusion_layers`: `AbstractExplicitLayer` or a tuple of integeters. In the latter case,
-    fully connected layers are used.
+        fully connected layers are used.
 
 ## References
 
