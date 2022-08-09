@@ -34,14 +34,9 @@ rng = Random.default_rng()
             y, st = m(x, ps, st)
             @test size(y) == (4, 5)
 
-            m2 = PINNAttention(3, (4,4,4,4), relu)
-            ps2, st2 = Lux.setup(rng, m2)
-            y2, st2 = m2(x, ps2, st2)
-            @test size(y2) == (4, 5)
-
             m3 = PINNAttention(3, 4, 3, relu)
             ps3, st3 = Lux.setup(rng, m3)
-            y3, st3 = m2(x, ps3, st3)
+            y3, st3 = m3(x, ps3, st3)
             @test size(y3) == (4, 5)
         end
         @testset "MultiscaleFourier" begin
@@ -52,7 +47,11 @@ rng = Random.default_rng()
             @test size(y) == (1, 5)
         end
         @testset "FourierAttention" begin
-            fa = FourierAttention(2,(3,4,5), Lux.relu; modes = (1=>2,10=>3))
+            fa = FourierAttention(2, (4, 4, 4), Lux.relu; modes=(1 => 2, 10 => 3))
+            x = rand(Float32, 2, 5)
+            ps, st = Lux.setup(rng, fa)
+            y, st = fa(x, ps, st)
+            @test size(y) == (4, 5)
         end
     end
 end end

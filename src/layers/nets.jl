@@ -2,6 +2,7 @@
     PINNAttention(H_net, U_net, V_net, fusion_layers)
     PINNAttention(in_dim::Int, hidden_dims::NTuple{N,T}, activation)
     PINNAttention(in_dim::Int, hidden_dim::Int, num_layers::Int, activation)
+
 The output dimesion of `H_net` and the input dimension of `fusion_layers` must be the same.
 For the second and the third constructor, `Dense` layers is used for `H_net`, `U_net`, and `V_net`.
 
@@ -27,7 +28,7 @@ x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connect
 
 [1] Wang, Sifan, Yujun Teng, and Paris Perdikaris. "Understanding and mitigating gradient flow pathologies in physics-informed neural networks." SIAM Journal on Scientific Computing 43.5 (2021): A3055-A3081
 """
-struct PINNAttention{H, U, V, F<:TriplewiseFusion} <:
+struct PINNAttention{H, U, V, F <: TriplewiseFusion} <:
        AbstractExplicitContainerLayer{(:H_net, :U_net, :V_net, :fusion)}
     H_net::H
     U_net::U
@@ -42,14 +43,6 @@ function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLaye
                                                                                       U_net,
                                                                                       V_net,
                                                                                       fusion)
-end
-
-function PINNAttention(in_dim::Int, hidden_dims::NTuple{N,T}, activation::Function) where {N,T}
-    H_net = Dense(in_dim, hidden_dims[1], activation)
-    U_net = Dense(in_dim, hidden_dims[1], activation)
-    V_net = Dense(in_dim, hidden_dims[1], activation)
-    fusion_layers = FullyConnected(hidden_dims[1], hidden_dims[2:end], activation)
-    return PINNAttention(H_net, U_net, V_net, fusion_layers)
 end
 
 function PINNAttention(in_dim::Int, hidden_dim::Int, num_layers::Int, activation::Function)
@@ -72,16 +65,23 @@ end
 attention_connection(z, u, v) = (1 .- z) .* u .+ z .* v
 
 """
-    FourierAttention()
+    FourierAttention(in_dim::Int, hidden_dim::Int, num_layers::Int, activation; modes)
 
 ```
-x → [FourierFeature(x); x] → PINNAttention(Dense, Dense, Dense, TriplewiseFusion)
+x → [FourierFeature(x); x] → PINNAttention
+
+# Arguments
+- `in_dim`: The input dimension.
+- `hidden_dim`: The hidden dimension of each hidden layer.
+- `num_layers`: The number of hidden layers.
+# Keyword Arguments
 ```
 """
-function FourierAttention(in_dim::Int, hidden_dims::NTuple{N,T}, activation; modes) where {N,T}
+function FourierAttention(in_dim::Int, hidden_dim::Int, num_layers::Int, activation; modes)
     fourierfeature = FourierFeature(in_dim, modes)
     encoder = SkipConnection(fourierfeature, vcat)
-    attention_layer = PINNAttention(fourierfeature.out_dim + in_dim, hidden_dims, activation)
+    attention_layer = PINNAttention(fourierfeature.out_dim + in_dim, hidden_dim, num_layers,
+                                    activation)
     return Chain(encoder, attention_layer)
 end
 
