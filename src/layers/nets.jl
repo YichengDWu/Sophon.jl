@@ -1,6 +1,6 @@
 """
     PINNAttention(H_net, U_net, V_net, fusion_layers)
-    PINNAttention(in_dim::Int, hidden_dim::Int, num_layers::Int, activation)
+    PINNAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation)
 
 The output dimesion of `H_net` and the input dimension of `fusion_layers` must be the same.
 For the second and the third constructor, `Dense` layers is used for `H_net`, `U_net`, and `V_net`.
@@ -18,7 +18,7 @@ x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connect
     - `H_net`: `AbstractExplicitLayer`
     - `U_net`: `AbstractExplicitLayer`
     - `V_net`: `AbstractExplicitLayer`
-    - `in_dim`: The input dimension.
+    - `in_dims`: The input dimension.
     - `hidden_dims`: The output dimension of `H_net`.
     - `fusion_layers`: `AbstractExplicitLayer` or a tuple of integeters. In the latter case,
         fully connected layers are used.
@@ -44,10 +44,10 @@ function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLaye
                                                                                       fusion)
 end
 
-function PINNAttention(in_dim::Int, hidden_dim::Int, num_layers::Int, activation::Function)
-    H_net = Dense(in_dim, hidden_dim, activation)
-    U_net = Dense(in_dim, hidden_dim, activation)
-    V_net = Dense(in_dim, hidden_dim, activation)
+function PINNAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation::Function)
+    H_net = Dense(in_dims, hidden_dim, activation)
+    U_net = Dense(in_dims, hidden_dim, activation)
+    V_net = Dense(in_dims, hidden_dim, activation)
     fusion_layers = FullyConnected(hidden_dim, hidden_dim, num_layers, activation)
     return PINNAttention(H_net, U_net, V_net, fusion_layers)
 end
@@ -64,29 +64,29 @@ end
 attention_connection(z, u, v) = (1 .- z) .* u .+ z .* v
 
 """
-    FourierAttention(in_dim::Int, hidden_dim::Int, num_layers::Int, activation; modes)
+    FourierAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation; modes)
 
 ```
 x → [FourierFeature(x); x] → PINNAttention
 ```
 
 # Arguments
-- `in_dim`: The input dimension.
+- `in_dims`: The input dimension.
 - `hidden_dim`: The hidden dimension of each hidden layer.
 - `num_layers`: The number of hidden layers.
 # Keyword Arguments
 ```
 """
-function FourierAttention(in_dim::Int, hidden_dim::Int, num_layers::Int, activation; modes)
-    fourierfeature = FourierFeature(in_dim, modes)
+function FourierAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation; modes)
+    fourierfeature = FourierFeature(in_dims, modes)
     encoder = SkipConnection(fourierfeature, vcat)
-    attention_layer = PINNAttention(fourierfeature.out_dim + in_dim, hidden_dim, num_layers,
+    attention_layer = PINNAttention(fourierfeature.out_dims + in_dims, hidden_dim, num_layers,
                                     activation)
     return Chain(encoder, attention_layer)
 end
 
 """
-    MultiscaleFourier(in_dim::Int, out_dim::NTuple, activation=identity, modes::NTuple)
+    MultiscaleFourier(in_dims::Int, out_dims::NTuple, activation=identity, modes::NTuple)
 
 Multi-scale Fourier Feature Net.
 
@@ -96,8 +96,8 @@ x → FourierFeature → FullyConnected → y
 
 # Arguments
 
-  - `in_dim`: The number of input dimensions.
-  - `out_dim`: A tuple of output dimensions used to construct `FullyConnected`.
+  - `in_dims`: The number of input dimensions.
+  - `out_dims`: A tuple of output dimensions used to construct `FullyConnected`.
   - `activation`: The activation function used to construct `FullyConnected`.
   - `modes`: A tuple of modes used to construct `FourierFeature`.
 
@@ -105,14 +105,14 @@ x → FourierFeature → FullyConnected → y
 
 [1] Wang, Sifan, Hanwen Wang, and Paris Perdikaris. “On the eigenvector bias of fourier feature networks: From regression to solving multi-scale pdes with physics-informed neural networks.” Computer Methods in Applied Mechanics and Engineering 384 (2021): 113938.
 """
-function MultiscaleFourier(in_dim::Int,
-                           out_dim::NTuple{N1, Int}=(ntuple(i -> 512, 6)..., 1),
+function MultiscaleFourier(in_dims::Int,
+                           out_dims::NTuple{N1, Int}=(ntuple(i -> 512, 6)..., 1),
                            activation::Function=identity,
                            modes::NTuple{N2, Pair{S, Int}}=(1 => 64, 10 => 64, 20 => 64,
                                                             50 => 32, 100 => 32)) where {N1,
                                                                                          N2,
                                                                                          S}
-    fourierfeature = FourierFeature(in_dim, modes)
-    chain = FullyConnected(fourierfeature.out_dim, out_dim, activation)
+    fourierfeature = FourierFeature(in_dims, modes)
+    chain = FullyConnected(fourierfeature.out_dims, out_dims, activation)
     return Chain(fourierfeature, chain)
 end
