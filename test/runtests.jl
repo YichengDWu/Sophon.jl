@@ -47,7 +47,7 @@ rng = Random.default_rng()
             @test size(y) == (1, 5)
         end
         @testset "FourierAttention" begin
-            fa = FourierAttention(2, (4, 4, 4), Lux.relu; modes=(1 => 2, 10 => 3))
+            fa = FourierAttention(2, 4, 3, Lux.relu; modes=(1 => 2, 10 => 3))
             x = rand(Float32, 2, 5)
             ps, st = Lux.setup(rng, fa)
             y, st = fa(x, ps, st)
