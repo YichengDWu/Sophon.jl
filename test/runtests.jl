@@ -20,8 +20,15 @@ rng = Random.default_rng()
             @test fc == Dense(2, 4, sin)
             fc2 = FullyConnected(2, (4, 5, 6), sin)
             @test values(map(x -> x.out_dims, fc2.layers)) == (4, 5, 6)
+            @test fc2.layers[end].activation == identity
             fc3 = FullyConnected(2, 4, 3, sin)
             @test values(map(x -> x.out_dims, fc3.layers)) == (4, 4, 4)
+            @test fc3.layers[end].activation == identity
+
+            fc4 = FullyConnected(2, (4, 5, 6), sin; use_activation = true)
+            @test fc4.layers[end].activation == sin
+            fc5 = FullyConnected(2, 4, 5, sin; use_activation = true)
+            @test fc5.layers[end].activation == sin
         end
     end
     @testset "Nets" begin

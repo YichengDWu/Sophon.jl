@@ -165,20 +165,41 @@ end
 Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 
 """
-    FullyConnected(in_dim, hidden_dims::NTuple{N, Int}, activation = identity)
-    FullyConnected(in_dim, hidden_dims, num_layers, activation=identity)
+    FullyConnected(in_dim, hidden_dims::NTuple{N, Int}, activation; use_activation = false)
+    FullyConnected(in_dim, hidden_dims, num_layers, activation; use_activation = false)
 
-Create fully connected layers. Note that the last layer is activated as well.
+Create fully connected layers.
+
+## Arguments
+
+  - `in_dim`: Input dimension.
+
+      + `hidden_dims`: Hidden dimensions.
+      + `num_layers`: Number of layers.
+      + `activation`: Activation function.
+
+## Keyword Arguments
+
+  - `use_activation`: Whether to use activation function for the last layer.
 """
+function FullyConnected(in_dim::Int, hidden_dims::NTuple{N, T}, activation::Function;
+                        use_activation::Bool=false) where {N, T <: Int}
+    return FullyConnected(in_dim, hidden_dims, activation, Val(use_activation))
+end
+
+function FullyConnected(in_dim::Int, hidden_dim::Int, num_layers::Int, activation;
+                        use_activation=false)
+    return FullyConnected(in_dim, ntuple(i -> hidden_dim, num_layers), activation,
+                          Val(use_activation))
+end
+
 @generated function FullyConnected(in_dim::Int, hidden_dims::NTuple{N, T},
-                                   activation::Function) where {N, T <: Int}
+                                   activation::Function, ::Val{F}) where {N, T <: Int, F}
     N == 1 && return :(Dense(in_dim, hidden_dims[1], activation))
     get_layer(i) = :(Dense(hidden_dims[$i] => hidden_dims[$(i + 1)], activation))
     layers = [:(Dense(in_dim => hidden_dims[1], activation))]
-    append!(layers, [get_layer(i) for i in 1:(N - 1)])
+    append!(layers, [get_layer(i) for i in 1:(N - 2)])
+    append!(layers,
+            F ? [get_layer(N - 1)] : [:(Dense(hidden_dims[$(N - 1)] => hidden_dims[$N]))])
     return :(Chain($(layers...)))
-end
-
-function FullyConnected(in_dim::Int, hidden_dim::Int, num_layers::Int, activation)
-    return FullyConnected(in_dim, ntuple(i -> hidden_dim, num_layers), activation)
 end
