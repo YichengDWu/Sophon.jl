@@ -82,7 +82,7 @@ h1 → layer1 → connection → layer2 → connection
 ## Arguments
 
   - `connection`: Takes 3 inputs and combines them
-  - `layers`: [`AbstractExplicitLayer`](@ref)s
+  - `layers`: `AbstractExplicitLayer`s or a `Chain`.
 
 ## Inputs
 
@@ -120,20 +120,20 @@ end
   - States of each `layer` wrapped in a NamedTuple with
     `fields = layer_1, layer_2, ..., layer_N`
 """
-struct TriplewiseFusion{F, T <: NamedTuple} <: AbstractExplicitContainerLayer{(:layers,)}
+struct TriplewiseFusion{F, T} <: AbstractExplicitContainerLayer{(:layers,)}
     connection::F
     layers::T
 end
 
 function TriplewiseFusion(connection, layers...)
-    names = ntuple(i -> Symbol("layer_$i"), length(layers))
-    return TriplewiseFusion(connection, NamedTuple{names}(layers))
+    layers = Chain(layers)
+    return TriplewiseFusion{typeof(connection), typeof(layers)}(connection, layers)
 end
 
 function (m::TriplewiseFusion)(x::Union{NTuple{3, AbstractArray},
                                         Tuple{AbstractArray, Vararg{Tuple}}}, ps,
                                st::NamedTuple)
-    return applytriplewisefusion(m.layers, m.connection, x, ps, st)
+    return applytriplewisefusion(m.layers.layers, m.connection, x, ps, st)
 end
 
 @generated function applytriplewisefusion(layers::NamedTuple{names}, connection::C, x::T,
@@ -166,7 +166,7 @@ Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 Create fully connected layers. Note that the last layer is activated as well.
 """
 @generated function FullyConnected(in_dim::Int, hidden_dims::NTuple{N, T},
-                                   activation::Function=identity) where {N, T <: Int}
+                                   activation::Function) where {N, T <: Int}
     N == 1 && return :(Dense(in_dim, hidden_dims[1], activation))
     get_layer(i) = :(Dense(hidden_dims[$i] => hidden_dims[$(i + 1)], activation))
     layers = [:(Dense(in_dim => hidden_dims[1], activation))]
@@ -174,6 +174,6 @@ Create fully connected layers. Note that the last layer is activated as well.
     return :(Chain($(layers...)))
 end
 
-function FullyConnected(in_dim::Int, hidden_dim::Int, num_layers::Int, activation=identity)
+function FullyConnected(in_dim::Int, hidden_dim::Int, num_layers::Int, activation)
     return FullyConnected(in_dim, ntuple(i -> hidden_dim, num_layers), activation)
 end

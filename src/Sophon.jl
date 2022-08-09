@@ -6,7 +6,8 @@ import Lux: initialparameters, initialstates, AbstractExplicitLayer,
 
 include("layers/basic.jl")
 include("layers/nets.jl")
+include("utils.jl")
 
 export FourierFeature, TriplewiseFusion, FullyConnected
-export PINNAttention, MultiscaleFourier
+export PINNAttention, MultiscaleFourier, FourierAttention
 end
