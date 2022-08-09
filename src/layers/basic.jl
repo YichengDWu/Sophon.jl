@@ -120,20 +120,25 @@ end
   - States of each `layer` wrapped in a NamedTuple with
     `fields = layer_1, layer_2, ..., layer_N`
 """
-struct TriplewiseFusion{F, T} <: AbstractExplicitContainerLayer{(:layers,)}
+struct TriplewiseFusion{F, T <: NamedTuple} <: AbstractExplicitContainerLayer{(:layers,)}
     connection::F
     layers::T
 end
 
-function TriplewiseFusion(connection, layers...)
-    layers = Chain(layers)
+function TriplewiseFusion(connection, layers::AbstractExplicitLayer...)
+    names = ntuple(i -> Symbol("layer_$i"), length(layers))
+    return TriplewiseFusion(connection, NamedTuple{names}(layers))
+end
+
+function TriplewiseFusion(connection, chain::Chain)
+    layers = chain.layers
     return TriplewiseFusion{typeof(connection), typeof(layers)}(connection, layers)
 end
 
 function (m::TriplewiseFusion)(x::Union{NTuple{3, AbstractArray},
                                         Tuple{AbstractArray, Vararg{Tuple}}}, ps,
                                st::NamedTuple)
-    return applytriplewisefusion(m.layers.layers, m.connection, x, ps, st)
+    return applytriplewisefusion(m.layers, m.connection, x, ps, st)
 end
 
 @generated function applytriplewisefusion(layers::NamedTuple{names}, connection::C, x::T,

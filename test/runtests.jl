@@ -34,7 +34,7 @@ rng = Random.default_rng()
             y, st = m(x, ps, st)
             @test size(y) == (4, 5)
 
-            m2 = PINNAttention(3, (4,4,4), relu)
+            m2 = PINNAttention(3, (4,4,4,4), relu)
             ps2, st2 = Lux.setup(rng, m2)
             y2, st2 = m2(x, ps2, st2)
             @test size(y2) == (4, 5)
