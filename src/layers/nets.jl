@@ -1,6 +1,5 @@
 """
     PINNAttention(H_net, U_net, V_net, fusion_layers)
-    PINNAttention(in_dim::Int, hidden_dims::NTuple{N,T}, activation)
     PINNAttention(in_dim::Int, hidden_dim::Int, num_layers::Int, activation)
 
 The output dimesion of `H_net` and the input dimension of `fusion_layers` must be the same.
