@@ -1,16 +1,16 @@
 """
-    FourierFeature(in_dim::Int, modes::NTuple{N,Pair{S,T}}) where {N,S,T<:Int}
+    FourierFeature(in_dims::Int, modes::NTuple{N,Pair{S,T}}) where {N,S,T<:Int}
 
 Fourier Feature Network.
 
 # Arguments
 
-  - `in_dim`: Input dimension.
-  - `modes`: A tuple of pairs of `std => out_dim`, where `std` is the standard deviation of the Gaussian distribution, and `out_dim` is the output dimension.
+  - `in_dims`: Input dimension.
+  - `modes`: A tuple of pairs of `std => out_dims`, where `std` is the standard deviation of the Gaussian distribution, and `out_dims` is the output dimension.
 
 # Inputs
 
-  - `x`: An an AbstractArray with `size(x, 1) == in_dim`.
+  - `x`: An an AbstractArray with `size(x, 1) == in_dims`.
 
 # Returns
 
@@ -32,14 +32,14 @@ FourierFeature(2, (1 => 3, 50 => 4))
 [1] Tancik, Matthew, et al. “Fourier features let networks learn high frequency functions in low dimensional domains.” Advances in Neural Information Processing Systems 33 (2020): 7537-7547.
 """
 struct FourierFeature{M} <: AbstractExplicitLayer
-    in_dim::Int
-    out_dim::Int
+    in_dims::Int
+    out_dims::Int
     modes::M
 end
 
-function FourierFeature(in_dim::Int, modes::NTuple{N, Pair{S, T}}) where {N, S, T <: Int}
+function FourierFeature(in_dims::Int, modes::NTuple{N, Pair{S, T}}) where {N, S, T <: Int}
     out_dims = map(x -> 2 * last(x), modes)
-    return FourierFeature{typeof(modes)}(in_dim, sum(out_dims), modes)
+    return FourierFeature{typeof(modes)}(in_dims, sum(out_dims), modes)
 end
 
 function initialstates(rng::AbstractRNG, f::FourierFeature)
@@ -47,7 +47,7 @@ function initialstates(rng::AbstractRNG, f::FourierFeature)
     names = ntuple(i -> Symbol("mode_$i"), N)
     frequencies = ntuple(N) do i
         m = f.modes[i]
-        return randn(rng, Float32, last(m), f.in_dim) .* first(m)
+        return randn(rng, Float32, last(m), f.in_dims) .* first(m)
     end
     return NamedTuple{names}(frequencies)
 end
@@ -65,7 +65,7 @@ function (f::FourierFeature)(x::AbstractArray, ps, st::NamedTuple)
 end
 
 function Base.show(io::IO, f::FourierFeature)
-    return print(io, "FourierFeature($(f.in_dim) => $(f.out_dim))")
+    return print(io, "FourierFeature($(f.in_dims) => $(f.out_dims))")
 end
 
 """
@@ -165,14 +165,14 @@ end
 Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 
 """
-    FullyConnected(in_dim, hidden_dims::NTuple{N, Int}, activation; use_activation = false)
-    FullyConnected(in_dim, hidden_dims, num_layers, activation; use_activation = false)
+    FullyConnected(in_dims, hidden_dims::NTuple{N, Int}, activation; use_activation = false)
+    FullyConnected(in_dims, hidden_dims, num_layers, activation; use_activation = false)
 
 Create fully connected layers.
 
 ## Arguments
 
-  - `in_dim`: Input dimension.
+  - `in_dims`: Input dimension.
 
       + `hidden_dims`: Hidden dimensions.
       + `num_layers`: Number of layers.
@@ -182,22 +182,22 @@ Create fully connected layers.
 
   - `use_activation`: Whether to use activation function for the last layer.
 """
-function FullyConnected(in_dim::Int, hidden_dims::NTuple{N, T}, activation::Function;
+function FullyConnected(in_dims::Int, hidden_dims::NTuple{N, T}, activation::Function;
                         use_activation::Bool=false) where {N, T <: Int}
-    return FullyConnected(in_dim, hidden_dims, activation, Val(use_activation))
+    return FullyConnected(in_dims, hidden_dims, activation, Val(use_activation))
 end
 
-function FullyConnected(in_dim::Int, hidden_dim::Int, num_layers::Int, activation;
+function FullyConnected(in_dims::Int, hidden_dim::Int, num_layers::Int, activation;
                         use_activation=false)
-    return FullyConnected(in_dim, ntuple(i -> hidden_dim, num_layers), activation,
+    return FullyConnected(in_dims, ntuple(i -> hidden_dim, num_layers), activation,
                           Val(use_activation))
 end
 
-@generated function FullyConnected(in_dim::Int, hidden_dims::NTuple{N, T},
+@generated function FullyConnected(in_dims::Int, hidden_dims::NTuple{N, T},
                                    activation::Function, ::Val{F}) where {N, T <: Int, F}
-    N == 1 && return :(Dense(in_dim, hidden_dims[1], activation))
+    N == 1 && return :(Dense(in_dims, hidden_dims[1], activation))
     get_layer(i) = :(Dense(hidden_dims[$i] => hidden_dims[$(i + 1)], activation))
-    layers = [:(Dense(in_dim => hidden_dims[1], activation))]
+    layers = [:(Dense(in_dims => hidden_dims[1], activation))]
     append!(layers, [get_layer(i) for i in 1:(N - 2)])
     append!(layers,
             F ? [get_layer(N - 1)] : [:(Dense(hidden_dims[$(N - 1)] => hidden_dims[$N]))])
