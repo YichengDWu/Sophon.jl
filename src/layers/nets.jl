@@ -14,7 +14,7 @@ x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connect
                  x → V_net → v                           v
 ```
 
-# Arguments
+## Arguments
 
     - `H_net`: `AbstractExplicitLayer`
     - `U_net`: `AbstractExplicitLayer`
@@ -24,7 +24,7 @@ x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connect
     - `fusion_layers`: `AbstractExplicitLayer` or a tuple of integeters. In the latter case,
     fully connected layers are used.
 
-# References
+## References
 
 [1] Wang, Sifan, Yujun Teng, and Paris Perdikaris. "Understanding and mitigating gradient flow pathologies in physics-informed neural networks." SIAM Journal on Scientific Computing 43.5 (2021): A3055-A3081
 """
