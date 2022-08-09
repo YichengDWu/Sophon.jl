@@ -69,6 +69,7 @@ attention_connection(z, u, v) = (1 .- z) .* u .+ z .* v
 
 ```
 x → [FourierFeature(x); x] → PINNAttention
+```
 
 # Arguments
 - `in_dim`: The input dimension.
