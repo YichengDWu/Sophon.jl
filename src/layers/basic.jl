@@ -38,8 +38,8 @@ struct FourierFeature{M} <: AbstractExplicitLayer
 end
 
 function FourierFeature(in_dim::Int, modes::NTuple{N, Pair{S, T}}) where {N, S, T <: Int}
-    out_dim = map(x -> 2 * last(x), modes)
-    return FourierFeature{typeof(modes)}(in_dim, sum(out_dim), modes)
+    out_dims = map(x -> 2 * last(x), modes)
+    return FourierFeature{typeof(modes)}(in_dim, sum(out_dims), modes)
 end
 
 function initialstates(rng::AbstractRNG, f::FourierFeature)
@@ -174,6 +174,6 @@ Create fully connected layers. Note that the last layer is activated as well.
     return :(Chain($(layers...)))
 end
 
-function FullyConnected(in_dim::Int, hidden_dims::Int, num_layers::Int, activation=identity)
-    return FullyConnected(in_dim, ntuple(i -> hidden_dims, num_layers), activation)
+function FullyConnected(in_dim::Int, hidden_dim::Int, num_layers::Int, activation=identity)
+    return FullyConnected(in_dim, ntuple(i -> hidden_dim, num_layers), activation)
 end

@@ -44,13 +44,21 @@ function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLaye
                                                                                       fusion)
 end
 
-function PINNAttention(in_dim::Int, hidden_dims::Int, activation::Function,
+function PINNAttention(in_dim::Int, hidden_dim::Int, activation::Function,
                        fusion_layers::T) where {T}
-    H_net = Dense(in_dim, hidden_dims, activation)
-    U_net = Dense(in_dim, hidden_dims, activation)
-    V_net = Dense(in_dim, hidden_dims, activation)
-    fusion_layers = T <: NTuple ? FullyConnected(hidden_dims, fusion_layers, activation) :
+    H_net = Dense(in_dim, hidden_dim, activation)
+    U_net = Dense(in_dim, hidden_dim, activation)
+    V_net = Dense(in_dim, hidden_dim, activation)
+    fusion_layers = T <: NTuple ? FullyConnected(hidden_dim, fusion_layers, activation) :
                     fusion_layers
+    return PINNAttention(H_net, U_net, V_net, fusion_layers)
+end
+
+function PINNAttention(in_dim::Int, hidden_dim::Int, activation::Function; num_layers::Int)
+    H_net = Dense(in_dim, hidden_dim, activation)
+    U_net = Dense(in_dim, hidden_dim, activation)
+    V_net = Dense(in_dim, hidden_dim, activation)
+    fusion_layers = FullyConnected(hidden_dim, hidden_dim, num_layers, activation)
     return PINNAttention(H_net, U_net, V_net, fusion_layers)
 end
 
