@@ -132,9 +132,7 @@ end
 @generated function Siren(in_dims::Int, hidden_dims::NTuple{N, T};
                           omega=30.0f0) where {N, T <: Int}
     N == 1 && return :(Sine(in_dims, hidden_dims[1]; is_first=true, omega=omega))
-
     get_layer(i) = :(Sine(hidden_dims[$i] => hidden_dims[$(i + 1)]))
-
     layers = [:(Sine(in_dims => hidden_dims[1]; is_first=true, omega=omega))]
     append!(layers, [get_layer(i) for i in 1:(N - 2)])
     append!(layers, [:(Sine(hidden_dims[$(N - 1)] => hidden_dims[$N], identity))])
