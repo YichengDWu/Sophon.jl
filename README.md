@@ -52,4 +52,4 @@ lines!(xs, vec(us), label = "prediction")
 axislegend(axis)
 display(fig)
 ```
-![possion](https://github.com/MilkshakeForReal/Sophon.jl/blob/main/assets/possion.png)
+![possion](https://github.com/MilkshakeForReal/Sophon.jl/blob/main/assets/poisson.png)
