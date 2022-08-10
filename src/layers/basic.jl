@@ -239,8 +239,8 @@ function Sine(chs::Pair{T, T}, activation=sin; is_first::Bool=false,
 end
 
 function initialparameters(rng::AbstractRNG, s::Sine{is_first}) where {is_first}
-    weight = (rand(rng, Float32, s.out_dims, s.in_dims) .- 0.5f0) .* 2.0f0
-    scale = is_first ? 1.0f0 / s.in_dims : sqrt(6.0f0 / s.in_dims)
+    weight = (rand(rng, Float32, s.out_dims, s.in_dims) .- 0.5f0) .* 2f0
+    scale = is_first ? Float32(s.init_omega()) / s.in_dims : sqrt(6f0 / s.in_dims)
     bias = Lux.zeros32(rng, s.out_dims, 1)
     return (weight=weight .* scale, bias=bias)
 end
@@ -260,28 +260,16 @@ end
 statelength(s::Sine{true}) = 1
 statelength(s::Sine{false}) = 0
 
-@inline function (m::Sine{false})(x::AbstractVector, ps, st::NamedTuple)
+@inline function (m::Sine)(x::AbstractVector, ps, st::NamedTuple)
     return m.activation.(ps.weight * x .+ vec(ps.bias)), st
 end
 
-@inline function (m::Sine{false})(x::AbstractMatrix, ps, st::NamedTuple)
+@inline function (m::Sine)(x::AbstractMatrix, ps, st::NamedTuple)
     return m.activation.(ps.weight * x .+ ps.bias), st
 end
 
-@inline function (m::Sine{false})(x::AbstractArray, ps, st::NamedTuple)
+@inline function (m::Sine)(x::AbstractArray, ps, st::NamedTuple)
     return m.activation.(batched_m(ps.weight, x) .+ ps.bias), st
-end
-
-@inline function (m::Sine{true})(x::AbstractVector, ps, st::NamedTuple)
-    return m.activation.(st.omega .* ps.weight * x .+ vec(ps.bias)), st
-end
-
-@inline function (m::Sine{true})(x::AbstractMatrix, ps, st::NamedTuple)
-    return m.activation.(st.omega .* ps.weight * x .+ ps.bias), st
-end
-
-@inline function (m::Sine{true})(x::AbstractArray, ps, st::NamedTuple)
-    return m.activation.(st.omega .* batched_m(ps.weight, x) .+ ps.bias), st
 end
 
 @inline function (m::Sine{false, typeof(identity)})(x::AbstractVector, ps, st::NamedTuple)
