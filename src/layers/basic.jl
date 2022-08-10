@@ -269,7 +269,7 @@ end
 end
 
 @inline function (m::Sine)(x::AbstractArray, ps, st::NamedTuple)
-    return m.activation.(batched_m(ps.weight, x) .+ ps.bias), st
+    return m.activation.(batched_mul(ps.weight, x) .+ ps.bias), st
 end
 
 @inline function (m::Sine{false, typeof(identity)})(x::AbstractVector, ps, st::NamedTuple)
@@ -281,5 +281,5 @@ end
 end
 
 @inline function (m::Sine{false, typeof(identity)})(x::AbstractArray, ps, st::NamedTuple)
-    return batched_m(ps.weight, x) .+ ps.bias, st
+    return batched_mul(ps.weight, x) .+ ps.bias, st
 end
