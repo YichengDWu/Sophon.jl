@@ -173,7 +173,7 @@ Create fully connected layers.
 ## Arguments
 
   - `in_dim`: Input dimension.
-
+    
       + `hidden_dims`: Hidden dimensions.
       + `num_layers`: Number of layers.
       + `activation`: Activation function.
@@ -212,36 +212,42 @@ Sinusoidal Representation Network.
 ## Example
 
 ```julia
-s = Sine(2,2; is_first = true) # first layer
-s = Sine(2,2) # hidden layer
-s = Sine(2,2, identity) # last layer
+s = Sine(2, 2; is_first=true) # first layer
+s = Sine(2, 2) # hidden layer
+s = Sine(2, 2, identity) # last layer
 ```
 """
 struct Sine{is_first, F} <: AbstractExplicitLayer
-    activation:: F
+    activation::F
     in_dims::Int
     out_dims::Int
-    init_omega
+    init_omega::Any
 end
 
 function Base.show(io::IO, s::Sine)
     return print(io, "Sine($(s.in_dims) => $(s.out_dims))")
 end
 
-function Sine(in_dims::Int, out_dims::Int, activation=sin; is_first::Bool = false, omega::AbstractFloat = 30f0)
+function Sine(in_dims::Int, out_dims::Int, activation=sin; is_first::Bool=false,
+              omega=30.0f0)
     init_omega = is_first ? () -> omega : nothing
     return Sine{is_first, typeof(activation)}(activation, in_dims, out_dims, init_omega)
 end
 
+function Sine(chs::Pair{T, T}, activation=sin; is_first::Bool=false,
+              omega::AbstractFloat=30.0f0) where {T <: Int}
+    return Sine(first(chs), last(chs), activation; is_first=is_first, omega=omega)
+end
+
 function initialparameters(rng::AbstractRNG, s::Sine{is_first}) where {is_first}
-    weight = (rand(rng, Float32, s.out_dims, s.in_dims) .- 0.5f0) .* 2f0
-    scale = is_first ? 1f0/s.in_dims : sqrt(6f0/s.in_dims)
+    weight = (rand(rng, Float32, s.out_dims, s.in_dims) .- 0.5f0) .* 2.0f0
+    scale = is_first ? 1.0f0 / s.in_dims : sqrt(6.0f0 / s.in_dims)
     bias = Lux.zeros32(rng, s.out_dims, 1)
-    return (weight = weight .* scale, bias = bias)
+    return (weight=weight .* scale, bias=bias)
 end
 
 function initialstates(rng::AbstractRNG, s::Sine{true})
-    return (omega = s.init_omega(),)
+    return (omega=s.init_omega(),)
 end
 
 function initialstates(rng::AbstractRNG, s::Sine{false})

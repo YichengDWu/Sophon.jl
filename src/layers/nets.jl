@@ -71,10 +71,14 @@ x → [FourierFeature(x); x] → PINNAttention
 ```
 
 # Arguments
-- `in_dim`: The input dimension.
-- `hidden_dim`: The hidden dimension of each hidden layer.
-- `num_layers`: The number of hidden layers.
+
+  - `in_dim`: The input dimension.
+  - `hidden_dim`: The hidden dimension of each hidden layer.
+  - `num_layers`: The number of hidden layers.
+
 # Keyword Arguments
+
+```
 ```
 """
 function FourierAttention(in_dim::Int, hidden_dim::Int, num_layers::Int, activation; modes)
@@ -115,4 +119,24 @@ function MultiscaleFourier(in_dim::Int,
     fourierfeature = FourierFeature(in_dim, modes)
     chain = FullyConnected(fourierfeature.out_dim, out_dim, activation)
     return Chain(fourierfeature, chain)
+end
+
+"""
+    Siren(in_dim::Int, hidden_dim::Int, num_layers::Int; omega = 30f0)
+    Siren(in_dim::Int, hidden_dims::NTuple{N, T}; omega = 30f0) where {N, T <: Int}
+"""
+function Siren(in_dim::Int, hidden_dim::Int, num_layers::Int; omega=30.0f0)
+    return Siren(in_dim, ntuple(i -> hidden_dim, num_layers); omega=omega)
+end
+
+@generated function Siren(in_dim::Int, hidden_dims::NTuple{N, T};
+                          omega=30.0f0) where {N, T <: Int}
+    N == 1 && return :(Sine(in_dim, hidden_dims[1]; is_first=true, omega=omega))
+
+    get_layer(i) = :(Sine(hidden_dims[$i] => hidden_dims[$(i + 1)]))
+
+    layers = [:(Sine(in_dim => hidden_dims[1]; is_first=true, omega=omega))]
+    append!(layers, [get_layer(i) for i in 1:(N - 2)])
+    append!(layers, [:(Sine(hidden_dims[$(N - 1)] => hidden_dims[$N], identity))])
+    return :(Chain($(layers...)))
 end
