@@ -7,13 +7,13 @@ rng = Random.default_rng()
     @testset "basic" begin
         @testset "FourierFeature" begin
             f1 = FourierFeature(2, (1 => 4,))
-            @test f1.out_dim == 8
+            @test f1.out_dims == 8
             f2 = FourierFeature(2, (1 => 4, 2 => 5))
             ps, st = Lux.setup(rng, f2)
             @test length(st) == (2)
             y, st = f2(rand(Float32, 2, 2), ps, st)
             @test size(y) == (18, 2)
-            @test f2.out_dim == 18
+            @test f2.out_dims == 18
         end
         @testset "FullyConnected" begin
             fc = FullyConnected(2, (4,), sin)
