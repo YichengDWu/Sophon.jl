@@ -8,6 +8,6 @@ include("layers/basic.jl")
 include("layers/nets.jl")
 include("utils.jl")
 
-export FourierFeature, TriplewiseFusion, FullyConnected
+export FourierFeature, TriplewiseFusion, FullyConnected, Sine
 export PINNAttention, MultiscaleFourier, FourierAttention
 end
