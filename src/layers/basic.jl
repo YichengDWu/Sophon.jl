@@ -206,7 +206,7 @@ end
 """
     Sine(in_dims::Int, out_dims::Int, activation=sin; is_first::Bool = false, omega::AbstractFloat = 30f0)
 
-Sinusoidal Representation Network.
+Sinusoidal layer.
 
 ## Example
 

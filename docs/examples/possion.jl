@@ -1,16 +1,3 @@
-# Sophon
-
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://MilkshakeForReal.github.io/Sophon.jl/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://MilkshakeForReal.github.io/Sophon.jl/dev/)
-[![Build Status](https://github.com/MilkshakeForReal/Sophon.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/MilkshakeForReal/Sophon.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/MilkshakeForReal/Sophon.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/MilkshakeForReal/Sophon.jl)
-
-`Sophon.jl` provides suitable neural networks/operators for Physics-informed machine learning.
-
-## Getting Started
-Simply replace premitive fully connected neural nets with those defined in this pacakge!
-
-```julia
 using NeuralPDE, IntervalSets, Lux, Sophon
 using Optimization, OptimizationOptimisers, OptimizationOptimJL
 using CairoMakie
@@ -51,4 +38,3 @@ lines!(xs, u_true, label = "Ground truth")
 lines!(xs, vec(us), label = "prediction")
 axislegend(axis)
 display(fig)
-```
