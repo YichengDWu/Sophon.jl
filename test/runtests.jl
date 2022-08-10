@@ -38,6 +38,7 @@ rng = Random.default_rng()
             @test st.omega isa AbstractFloat
             y, st = s(x, ps, st)
             @test size(y) == (3, 5)
+            @test Lux.statelength(s) == 1
 
             # hidden layer
             s2 = Sine(2, 3)
@@ -45,6 +46,7 @@ rng = Random.default_rng()
             @test st2 == NamedTuple()
             y2, st2 = s2(x, ps2, st2)
             @test size(y2) == (3, 5)
+            @test Lux.statelength(s2) == 0
 
             # last layer
             s3 = Sine(2, 3, identity)
@@ -52,6 +54,7 @@ rng = Random.default_rng()
             @test st3 == NamedTuple()
             y3, st3 = s3(x, ps3, st3)
             @test size(y3) == (3, 5)
+            @test Lux.statelength(s3) == 0
         end
     end
     @testset "Nets" begin
@@ -92,6 +95,7 @@ rng = Random.default_rng()
             ps, st = Lux.setup(rng, siren)
             y, st = siren(x, ps, st)
             @test size(y) == (4, 5)
+            @test Lux.statelength(siren) == 1
 
             siren2 = Siren(2, (3, 4, 5))
             @test siren2.layers[1].init_omega() == 30.0f0
@@ -99,6 +103,7 @@ rng = Random.default_rng()
             ps2, st2 = Lux.setup(rng, siren2)
             y2, st2 = siren(x, ps2, st2)
             @test size(y2) == (5, 5)
+            @test Lux.statelength(siren) == 1
         end
     end
 end end
