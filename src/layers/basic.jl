@@ -165,8 +165,8 @@ end
 Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 
 """
-    FullyConnected(in_dims, hidden_dims::NTuple{N, Int}, activation; use_activation = false)
-    FullyConnected(in_dims, hidden_dims, num_layers, activation; use_activation = false)
+    FullyConnected(in_dims, hidden_dims::NTuple{N, Int}, activation; outermost = false)
+    FullyConnected(in_dims, hidden_dims, num_layers, activation; outermost = false)
 
 Create fully connected layers.
 
@@ -179,17 +179,17 @@ Create fully connected layers.
 
 ## Keyword Arguments
 
-  - `use_activation`: Whether to use activation function for the last layer.
+  - `outermost`: Whether to use activation function for the last layer.
 """
 function FullyConnected(in_dims::Int, hidden_dims::NTuple{N, T}, activation::Function;
-                        use_activation::Bool=false) where {N, T <: Int}
-    return FullyConnected(in_dims, hidden_dims, activation, Val(use_activation))
+                        outermost::Bool=false) where {N, T <: Int}
+    return FullyConnected(in_dims, hidden_dims, activation, Val(outermost))
 end
 
 function FullyConnected(in_dims::Int, hidden_dims::Int, num_layers::Int, activation;
-                        use_activation=false)
+                        outermost=false)
     return FullyConnected(in_dims, ntuple(i -> hidden_dims, num_layers), activation,
-                          Val(use_activation))
+                          Val(outermost))
 end
 
 @generated function FullyConnected(in_dims::Int, hidden_dims::NTuple{N, T},
