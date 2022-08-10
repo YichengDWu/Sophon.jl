@@ -87,14 +87,14 @@ rng = Random.default_rng()
         @testset "Siren" begin
             x = rand(Float32, 2, 5)
             siren = Siren(2, 4, 3)
-            @test siren.layers[1].init_omega() == 30f0
+            @test siren.layers[1].init_omega() == 30.0f0
             @test siren.layers[3].activation == identity
             ps, st = Lux.setup(rng, siren)
             y, st = siren(x, ps, st)
             @test size(y) == (4, 5)
 
-            siren2 = Siren(2, (3,4,5) )
-            @test siren2.layers[1].init_omega() == 30f0
+            siren2 = Siren(2, (3, 4, 5))
+            @test siren2.layers[1].init_omega() == 30.0f0
             @test siren2.layers[3].activation == identity
             ps2, st2 = Lux.setup(rng, siren2)
             y2, st2 = siren(x, ps2, st2)

@@ -173,7 +173,7 @@ Create fully connected layers.
 ## Arguments
 
   - `in_dims`: Input dimension.
-
+    
       + `hidden_dims`: Hidden dimensions.
       + `num_layers`: Number of layers.
       + `activation`: Activation function.

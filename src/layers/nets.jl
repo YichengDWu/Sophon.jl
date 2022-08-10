@@ -84,8 +84,8 @@ x → [FourierFeature(x); x] → PINNAttention
 function FourierAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation; modes)
     fourierfeature = FourierFeature(in_dims, modes)
     encoder = SkipConnection(fourierfeature, vcat)
-    attention_layer = PINNAttention(fourierfeature.out_dims + in_dims, hidden_dim, num_layers,
-                                    activation)
+    attention_layer = PINNAttention(fourierfeature.out_dims + in_dims, hidden_dim,
+                                    num_layers, activation)
     return Chain(encoder, attention_layer)
 end
 
