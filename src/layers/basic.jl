@@ -220,7 +220,7 @@ struct Sine{is_first, F} <: AbstractExplicitLayer
     activation::F
     in_dims::Int
     out_dims::Int
-    init_omega::Any
+    init_omega::Function
 end
 
 function Base.show(io::IO, s::Sine)
