@@ -186,9 +186,9 @@ function FullyConnected(in_dims::Int, hidden_dims::NTuple{N, T}, activation::Fun
     return FullyConnected(in_dims, hidden_dims, activation, Val(use_activation))
 end
 
-function FullyConnected(in_dims::Int, hidden_dim::Int, num_layers::Int, activation;
+function FullyConnected(in_dims::Int, hidden_dims::Int, num_layers::Int, activation;
                         use_activation=false)
-    return FullyConnected(in_dims, ntuple(i -> hidden_dim, num_layers), activation,
+    return FullyConnected(in_dims, ntuple(i -> hidden_dims, num_layers), activation,
                           Val(use_activation))
 end
 
