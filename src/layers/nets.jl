@@ -78,8 +78,7 @@ x → [FourierFeature(x); x] → PINNAttention
 
 # Keyword Arguments
 
-```
-```
+  - `modes`: A tuple of pairs of random frequencies and the number of samples.
 """
 function FourierAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation; modes)
     fourierfeature = FourierFeature(in_dims, modes)
@@ -128,7 +127,12 @@ end
 Sinusoidal Representation Network.
 
 ## Keyword Arguments
+
   - `omega`: The `ω₀` used for the first layer.
+
+## References
+
+[1] Sitzmann, Vincent, et al. "Implicit neural representations with periodic activation functions." Advances in Neural Information Processing Systems 33 (2020): 7462-7473.
 """
 function Siren(in_dims::Int, hidden_dim::Int, num_layers::Int; omega=30.0f0)
     return Siren(in_dims, ntuple(i -> hidden_dim, num_layers); omega=omega)

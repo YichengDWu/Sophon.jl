@@ -220,7 +220,7 @@ struct Sine{is_first, F} <: AbstractExplicitLayer
     activation::F
     in_dims::Int
     out_dims::Int
-    init_omega::Union{Function,Nothing}
+    init_omega::Union{Function, Nothing}
 end
 
 function Base.show(io::IO, s::Sine)
@@ -239,8 +239,8 @@ function Sine(chs::Pair{T, T}, activation=sin; is_first::Bool=false,
 end
 
 function initialparameters(rng::AbstractRNG, s::Sine{is_first}) where {is_first}
-    weight = (rand(rng, Float32, s.out_dims, s.in_dims) .- 0.5f0) .* 2f0
-    scale = is_first ? Float32(s.init_omega()) / s.in_dims : sqrt(6f0 / s.in_dims)
+    weight = (rand(rng, Float32, s.out_dims, s.in_dims) .- 0.5f0) .* 2.0f0
+    scale = is_first ? Float32(s.init_omega()) / s.in_dims : sqrt(6.0f0 / s.in_dims)
     bias = Lux.zeros32(rng, s.out_dims, 1)
     return (weight=weight .* scale, bias=bias)
 end
