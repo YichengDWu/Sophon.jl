@@ -30,6 +30,29 @@ rng = Random.default_rng()
             fc5 = FullyConnected(2, 4, 5, sin; use_activation = true)
             @test fc5.layers[end].activation == sin
         end
+        @testset "Sine" begin
+            # first layer
+            s = Sine(2, 3; is_first = true)
+            x = rand(Float32, 2, 5)
+            ps, st = Lux.setup(rng, s)
+            @test st.omega isa AbstractFloat
+            y, st = s(x, ps, st)
+            @test size(y) == (3, 5)
+
+            # hidden layer
+            s2 = Sine(2, 3)
+            ps2, st2 = Lux.setup(rng, s2)
+            @test st2 == NamedTuple()
+            y2, st2 = s2(x, ps2, st2)
+            @test size(y2) == (3, 5)
+
+            # last layer
+            s3 = Sine(2, 3, identity)
+            ps3, st3 = Lux.setup(rng, s3)
+            @test st3 == NamedTuple()
+            y3, st3 = s3(x, ps3, st3)
+            @test size(y3) == (3, 5)
+        end
     end
     @testset "Nets" begin
         @testset "PINNAttention" begin
