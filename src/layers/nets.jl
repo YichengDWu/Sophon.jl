@@ -71,17 +71,21 @@ x → [FourierFeature(x); x] → PINNAttention
 ```
 
 # Arguments
-- `in_dims`: The input dimension.
-- `hidden_dim`: The hidden dimension of each hidden layer.
-- `num_layers`: The number of hidden layers.
+
+  - `in_dims`: The input dimension.
+  - `hidden_dim`: The hidden dimension of each hidden layer.
+  - `num_layers`: The number of hidden layers.
+
 # Keyword Arguments
+
+```
 ```
 """
 function FourierAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation; modes)
     fourierfeature = FourierFeature(in_dims, modes)
     encoder = SkipConnection(fourierfeature, vcat)
-    attention_layer = PINNAttention(fourierfeature.out_dims + in_dims, hidden_dim, num_layers,
-                                    activation)
+    attention_layer = PINNAttention(fourierfeature.out_dims + in_dims, hidden_dim,
+                                    num_layers, activation)
     return Chain(encoder, attention_layer)
 end
 
@@ -115,4 +119,25 @@ function MultiscaleFourier(in_dims::Int,
     fourierfeature = FourierFeature(in_dims, modes)
     chain = FullyConnected(fourierfeature.out_dims, out_dims, activation)
     return Chain(fourierfeature, chain)
+end
+
+"""
+    Siren(in_dims::Int, hidden_dim::Int, num_layers::Int; omega = 30f0)
+    Siren(in_dims::Int, hidden_dims::NTuple{N, T}; omega = 30f0) where {N, T <: Int}
+
+## K
+  -`omega`: The `ω₀` used for the first layer.
+"""
+function Siren(in_dims::Int, hidden_dim::Int, num_layers::Int; omega=30.0f0)
+    return Siren(in_dims, ntuple(i -> hidden_dim, num_layers); omega=omega)
+end
+
+@generated function Siren(in_dims::Int, hidden_dims::NTuple{N, T};
+                          omega=30.0f0) where {N, T <: Int}
+    N == 1 && return :(Sine(in_dims, hidden_dims[1]; is_first=true, omega=omega))
+    get_layer(i) = :(Sine(hidden_dims[$i] => hidden_dims[$(i + 1)]))
+    layers = [:(Sine(in_dims => hidden_dims[1]; is_first=true, omega=omega))]
+    append!(layers, [get_layer(i) for i in 1:(N - 2)])
+    append!(layers, [:(Sine(hidden_dims[$(N - 1)] => hidden_dims[$N], identity))])
+    return :(Chain($(layers...)))
 end

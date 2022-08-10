@@ -25,14 +25,14 @@ rng = Random.default_rng()
             @test values(map(x -> x.out_dims, fc3.layers)) == (4, 4, 4)
             @test fc3.layers[end].activation == identity
 
-            fc4 = FullyConnected(2, (4, 5, 6), sin; use_activation = true)
+            fc4 = FullyConnected(2, (4, 5, 6), sin; use_activation=true)
             @test fc4.layers[end].activation == sin
-            fc5 = FullyConnected(2, 4, 5, sin; use_activation = true)
+            fc5 = FullyConnected(2, 4, 5, sin; use_activation=true)
             @test fc5.layers[end].activation == sin
         end
         @testset "Sine" begin
             # first layer
-            s = Sine(2, 3; is_first = true)
+            s = Sine(2, 3; is_first=true)
             x = rand(Float32, 2, 5)
             ps, st = Lux.setup(rng, s)
             @test st.omega isa AbstractFloat
@@ -82,6 +82,23 @@ rng = Random.default_rng()
             ps, st = Lux.setup(rng, fa)
             y, st = fa(x, ps, st)
             @test size(y) == (4, 5)
+        end
+
+        @testset "Siren" begin
+            x = rand(Float32, 2, 5)
+            siren = Siren(2, 4, 3)
+            @test siren.layers[1].init_omega() == 30.0f0
+            @test siren.layers[3].activation == identity
+            ps, st = Lux.setup(rng, siren)
+            y, st = siren(x, ps, st)
+            @test size(y) == (4, 5)
+
+            siren2 = Siren(2, (3, 4, 5))
+            @test siren2.layers[1].init_omega() == 30.0f0
+            @test siren2.layers[3].activation == identity
+            ps2, st2 = Lux.setup(rng, siren2)
+            y2, st2 = siren(x, ps2, st2)
+            @test size(y2) == (5, 5)
         end
     end
 end end
