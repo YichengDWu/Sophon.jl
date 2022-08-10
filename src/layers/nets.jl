@@ -125,8 +125,10 @@ end
     Siren(in_dims::Int, hidden_dim::Int, num_layers::Int; omega = 30f0)
     Siren(in_dims::Int, hidden_dims::NTuple{N, T}; omega = 30f0) where {N, T <: Int}
 
-## K
-  -`omega`: The `ω₀` used for the first layer.
+Sinusoidal Representation Network.
+
+## Keyword Arguments
+  - `omega`: The `ω₀` used for the first layer.
 """
 function Siren(in_dims::Int, hidden_dim::Int, num_layers::Int; omega=30.0f0)
     return Siren(in_dims, ntuple(i -> hidden_dim, num_layers); omega=omega)
