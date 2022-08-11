@@ -5,8 +5,9 @@ Fourier Feature Network.
 
 # Arguments
 
-  - `in_dims`: Input dimension.
-  - `modes`: A tuple of pairs of `std => out_dims`, where `std` is the standard deviation of the Gaussian distribution, and `out_dims` is the output dimension.
+  - `in_dims`: Number of the input dimensions.
+  - `modes`: A tuple of pairs of `std => out_dims`, where `std` is the standard deviation of
+    the Gaussian distribution, and `out_dims` is the corresponding number of output dimensions.
 
 # Inputs
 
@@ -14,17 +15,24 @@ Fourier Feature Network.
 
 # Returns
 
-  - An AbstractArray with `size(y, 1) == sum(last(modes) * 2)`.
-  - The states of the layers.
+  - An `AbstractArray` with `size(y, 1) == sum(last(modes) * 2)`.
+  - The states of the modes.
 
 # States
 
-  - `modes`: Random frequencies.
+  - States of each mode wrapped in a NamedTuple with `fields = mode_1, mode_2, ..., mode_N`.
 
 # Examples
 
 ```julia
-FourierFeature(2, (1 => 3, 50 => 4))
+julia> f = FourierFeature(2, (1 => 3, 50 => 4))
+FourierFeature(2 => 14)
+
+julia> ps, st = Lux.setup(rng, f)
+(NamedTuple(), (mode_1 = Float32[0.7510394 0.0678698; -1.6466209 -0.08511321; -0.4704813 2.0663197], mode_2 = Float32[-98.90031 -42.593884; 110.35572 15.565719; 81.60114 51.257904; -0.53021294 15.216658]))
+
+julia> st
+(mode_1 = Float32[0.7510394 0.0678698; -1.6466209 -0.08511321; -0.4704813 2.0663197], mode_2 = Float32[-98.90031 -42.593884; 110.35572 15.565719; 81.60114 51.257904; -0.53021294 15.216658])
 ```
 
 # References
@@ -81,7 +89,7 @@ h1 → layer1 → connection → layer2 → connection
 
 ## Arguments
 
-  - `connection`: Takes 3 inputs and combines them
+  - `connection`: A functio takes 3 inputs and combines them.
   - `layers`: `AbstractExplicitLayer`s or a `Chain`.
 
 ## Inputs
@@ -104,11 +112,6 @@ for i in 1:N
     h = connection(layers[i](h), u, v)
 end
 ```
-
-## Returns
-
-  - See Inputs section for how the return value is computed
-  - Updated model state for all the contained layers
 
 ## Parameters
 
@@ -187,8 +190,8 @@ function FullyConnected(in_dims::Int, hidden_dims::NTuple{N, T}, activation::Fun
     return FullyConnected(in_dims, hidden_dims, activation, Val(outermost))
 end
 
-function FullyConnected(in_dims::Int, hidden_dims::Int, num_layers::Int, activation;
-                        outermost=true)
+function FullyConnected(in_dims::Int, hidden_dims::Int, num_layers::Int,
+                        activation::Function; outermost=true)
     return FullyConnected(in_dims, ntuple(i -> hidden_dims, num_layers), activation,
                           Val(outermost))
 end
@@ -218,7 +221,7 @@ s = Sine(2, 2, identity) # last layer
 ```
 """
 struct Sine{is_first, F} <: AbstractExplicitLayer
-    activation::F
+    activation::Union{typeof(sin), typeof(identity)}
     in_dims::Int
     out_dims::Int
     init_omega::Union{Function, Nothing}

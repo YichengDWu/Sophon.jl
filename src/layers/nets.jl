@@ -1,6 +1,6 @@
 """
     PINNAttention(H_net, U_net, V_net, fusion_layers)
-    PINNAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation)
+    PINNAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation=swish)
 
 The output dimesion of `H_net` and the input dimension of `fusion_layers` must be the same.
 For the second and the third constructor, `Dense` layers is used for `H_net`, `U_net`, and `V_net`.
@@ -44,7 +44,8 @@ function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLaye
                                                                                       fusion)
 end
 
-function PINNAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation::Function)
+function PINNAttention(in_dims::Int, hidden_dim::Int, num_layers::Int,
+                       activation::Function=swish)
     H_net = Dense(in_dims, hidden_dim, activation)
     U_net = Dense(in_dims, hidden_dim, activation)
     V_net = Dense(in_dims, hidden_dim, activation)
@@ -64,7 +65,7 @@ end
 attention_connection(z, u, v) = (1 .- z) .* u .+ z .* v
 
 """
-    FourierAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation; modes)
+    FourierAttention(in_dims::Int, hidden_dim::Int=512, num_layers::Int=6, activation=swish; modes)
 
 ```
 x → [FourierFeature(x); x] → PINNAttention
@@ -80,7 +81,8 @@ x → [FourierFeature(x); x] → PINNAttention
 
   - `modes`: A tuple of pairs of random frequencies and the number of samples.
 """
-function FourierAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation; modes)
+function FourierAttention(in_dims::Int, hidden_dim::Int=512, num_layers::Int=6,
+                          activation::Function=swish; modes)
     fourierfeature = FourierFeature(in_dims, modes)
     encoder = SkipConnection(fourierfeature, vcat)
     attention_layer = PINNAttention(fourierfeature.out_dims + in_dims, hidden_dim,
@@ -110,7 +112,7 @@ x → FourierFeature → FullyConnected → y
 """
 function MultiscaleFourier(in_dims::Int,
                            out_dims::NTuple{N1, Int}=(ntuple(i -> 512, 6)..., 1),
-                           activation::Function=identity,
+                           activation::Function=swish,
                            modes::NTuple{N2, Pair{S, Int}}=(1 => 64, 10 => 64, 20 => 64,
                                                             50 => 32, 100 => 32)) where {N1,
                                                                                          N2,
