@@ -53,3 +53,9 @@ axislegend(axis)
 display(fig)
 ```
 ![possion](https://github.com/MilkshakeForReal/Sophon.jl/blob/main/assets/poisson.png)
+
+## Related Libraries
+
+- [PaddleScience](https://github.com/PaddlePaddle/PaddleScience)
+- [MindScience](https://gitee.com/mindspore/mindscience)
+- [Modulus](https://docs.nvidia.com/deeplearning/modulus/index.html#)
