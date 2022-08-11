@@ -25,9 +25,9 @@ rng = Random.default_rng()
             @test values(map(x -> x.out_dims, fc3.layers)) == (4, 4, 4)
             @test fc3.layers[end].activation == identity
 
-            fc4 = FullyConnected(2, (4, 5, 6), sin; outermost=true)
+            fc4 = FullyConnected(2, (4, 5, 6), sin; outermost=false)
             @test fc4.layers[end].activation == sin
-            fc5 = FullyConnected(2, 4, 5, sin; outermost=true)
+            fc5 = FullyConnected(2, 4, 5, sin; outermost=false)
             @test fc5.layers[end].activation == sin
         end
         @testset "Sine" begin

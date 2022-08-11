@@ -165,8 +165,8 @@ end
 Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 
 """
-    FullyConnected(in_dims, hidden_dims::NTuple{N, Int}, activation; outermost = false)
-    FullyConnected(in_dims, hidden_dims, num_layers, activation; outermost = false)
+    FullyConnected(in_dims, hidden_dims::NTuple{N, Int}, activation; outermost = true)
+    FullyConnected(in_dims, hidden_dims, num_layers, activation; outermost = true)
 
 Create fully connected layers.
 
@@ -179,15 +179,16 @@ Create fully connected layers.
 
 ## Keyword Arguments
 
-  - `outermost`: Whether to use activation function for the last layer.
+  - `outermost`: Whether to use activation function for the last layer. If `false`, the activation function is applied
+    to the output of the last layer.
 """
 function FullyConnected(in_dims::Int, hidden_dims::NTuple{N, T}, activation::Function;
-                        outermost::Bool=false) where {N, T <: Int}
+                        outermost::Bool=true) where {N, T <: Int}
     return FullyConnected(in_dims, hidden_dims, activation, Val(outermost))
 end
 
 function FullyConnected(in_dims::Int, hidden_dims::Int, num_layers::Int, activation;
-                        outermost=false)
+                        outermost=true)
     return FullyConnected(in_dims, ntuple(i -> hidden_dims, num_layers), activation,
                           Val(outermost))
 end
@@ -199,7 +200,7 @@ end
     layers = [:(Dense(in_dims => hidden_dims[1], activation))]
     append!(layers, [get_layer(i) for i in 1:(N - 2)])
     append!(layers,
-            F ? [get_layer(N - 1)] : [:(Dense(hidden_dims[$(N - 1)] => hidden_dims[$N]))])
+            F ? [:(Dense(hidden_dims[$(N - 1)] => hidden_dims[$N]))] : [get_layer(N - 1)])
     return :(Chain($(layers...)))
 end
 
