@@ -6,7 +6,7 @@ This example is taken from [here](https://royalsocietypublishing.org/doi/epdf/10
 The following  discontinuous  function  with  discontinuity  at ``x=0``  location  isapproximated by [`Siren`](@ref).
 
 ```math
-u(x)= \begin{cases}0.2 \sin (18 x) & \text { if } x \leq 0 \\ 1+0.1 x \cos (54 x) & \text { otherwise }\end{cases}
+u(x)= \begin{cases}0.2 \sin (18 x) & \text { if } x \leq 0 \\ 1+0.3 x \cos (54 x) & \text { otherwise }\end{cases}
 ```
 The domain is ``[-1,1]``. The number of training points used is `300`.
 
@@ -23,7 +23,7 @@ function u(x)
     if x <= 0
         return 0.2 * sin(18 * x)
     else
-        return 1 + 0.1 * cos(54 * x)
+        return 1 + 0.6 * x * cos(54 * x)
     end
 end
 
