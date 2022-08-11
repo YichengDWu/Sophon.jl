@@ -11,7 +11,7 @@ makedocs(; modules=[Sophon],
                                 canonical="https://MilkshakeForReal.github.io/Sophon.jl",
                                 edit_link="main", assets=String[]),
          pages=["Home" => "index.md",
-                "Tutorial" => [
+                "Tutorials" => [
                     "Fitting a nonlinear discontinuous function" => "tutorials/discontinuous.md",
                 ]])
 
