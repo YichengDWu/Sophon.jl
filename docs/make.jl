@@ -10,6 +10,9 @@ makedocs(; modules=[Sophon],
          format=Documenter.HTML(; prettyurls=get(ENV, "CI", "false") == "true",
                                 canonical="https://MilkshakeForReal.github.io/Sophon.jl",
                                 edit_link="main", assets=String[]),
-         pages=["Home" => "index.md"])
+         pages=["Home" => "index.md",
+                "Tutorial" => [
+                    "Fitting a nonlinear discontinuous function" => "tutorials/discontinuous.md",
+                ]])
 
 deploydocs(; repo="github.com/MilkshakeForReal/Sophon.jl", devbranch="main")
