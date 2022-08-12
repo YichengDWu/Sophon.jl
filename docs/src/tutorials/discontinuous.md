@@ -10,7 +10,7 @@ u(x)= \begin{cases}0.2 \sin (18 x) & \text { if } x \leq 0 \\ 1+0.3 x \cos (54 x
 ```
 The domain is ``[-1,1]``. The number of training points used is `300`.
 
-
+## Import pacakges
 ```@example ds
 using Lux, Sophon
 using NNlib, Optimisers, Plots, Random, Statistics, Zygote
@@ -23,7 +23,7 @@ function u(x)
     if x <= 0
         return 0.2 * sin(18 * x)
     else
-        return 1 + 0.6 * x * cos(54 * x)
+        return 1 + 0.3 * x * cos(54 * x)
     end
 end
 
@@ -38,9 +38,11 @@ Let's visualize the data.
 
 ```@example ds
 x, y = generate_data()
-
 Plots.plot(vec(x), vec(y),label=false)
+savefig("u.svg"); nothing # hide
 ```
+![](u.svg)
+
 ## Model
 We use four hidden layers with 50 neurons in each.
 ```@example ds
@@ -74,7 +76,7 @@ end
 y_pred = model(x,ps,st)[1]
 Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
 Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
-savefig("ds.svg"); nothing # hide
+savefig("result.svg"); nothing # hide
 ```
 
-![](ds.svg)
+![](result.svg)
