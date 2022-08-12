@@ -1,9 +1,11 @@
 """
     PINNAttention(H_net, U_net, V_net, fusion_layers)
-    PINNAttention(in_dims::Int, hidden_dim::Int, num_layers::Int, activation=swish)
+    PINNAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
+                  hidden_dims::Int, num_layers::Int)
 
 The output dimesion of `H_net` and the input dimension of `fusion_layers` must be the same.
 For the second and the third constructor, `Dense` layers is used for `H_net`, `U_net`, and `V_net`.
+Note that the first constructer does not contain the output layer.
 
 ```
                  x → U_net → u                           u
@@ -15,13 +17,15 @@ x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connect
 
 ## Arguments
 
-    - `H_net`: `AbstractExplicitLayer`
-    - `U_net`: `AbstractExplicitLayer`
-    - `V_net`: `AbstractExplicitLayer`
-    - `in_dims`: The input dimension.
-    - `hidden_dims`: The output dimension of `H_net`.
-    - `fusion_layers`: `AbstractExplicitLayer` or a tuple of integeters. In the latter case,
-        fully connected layers are used.
+    - `H_net`: `AbstractExplicitLayer`.
+    - `U_net`: `AbstractExplicitLayer`.
+    - `V_net`: `AbstractExplicitLayer`.
+    - `fusion_layers`: `Chain`.
+
+## Keyword Arguments
+
+  - `num_layers`: The number of hidden layers.
+  - `hidden_dims`: The number of hidden dimensions of each hidden layer.
 
 ## References
 
@@ -44,13 +48,13 @@ function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLaye
                                                                                       fusion)
 end
 
-function PINNAttention(in_dims::Int, hidden_dim::Int, num_layers::Int,
-                       activation::Function=swish)
-    H_net = Dense(in_dims, hidden_dim, activation)
-    U_net = Dense(in_dims, hidden_dim, activation)
-    V_net = Dense(in_dims, hidden_dim, activation)
-    fusion_layers = FullyConnected(hidden_dim, hidden_dim, num_layers, activation)
-    return PINNAttention(H_net, U_net, V_net, fusion_layers)
+function PINNAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
+                       hidden_dims::Int, num_layers::Int)
+    H_net = Dense(in_dims, hidden_dims, activation)
+    U_net = Dense(in_dims, hidden_dims, activation)
+    V_net = Dense(in_dims, hidden_dims, activation)
+    fusion_layers = FullyConnected(hidden_dims, ntuple(_ -> hidden_dims, num_layers), activation; outermost=false)
+    return Chain(PINNAttention(H_net, U_net, V_net, fusion_layers), Dense(hidden_dims, out_dims))
 end
 
 function (m::PINNAttention)(x::AbstractArray, ps, st::NamedTuple)
@@ -65,28 +69,50 @@ end
 attention_connection(z, u, v) = (1 .- z) .* u .+ z .* v
 
 """
-    FourierAttention(in_dims::Int, hidden_dim::Int=512, num_layers::Int=6, activation=swish; modes)
+    FourierAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
+                     hidden_dims::Int=512, num_layers::Int=6, modes::NTuple)
 
 ```
 x → [FourierFeature(x); x] → PINNAttention
 ```
 
-# Arguments
+## Arguments
 
   - `in_dims`: The input dimension.
+
+## Keyword Arguments
+
+  - `modes`: A tuple of pairs of random frequencies and the number of samples.
   - `hidden_dim`: The hidden dimension of each hidden layer.
   - `num_layers`: The number of hidden layers.
 
-# Keyword Arguments
+## Examples
 
-  - `modes`: A tuple of pairs of random frequencies and the number of samples.
+```julia
+julia> FourierAttention(3,1,sin; hidden_dims = 10, num_layers = 3, modes = (1=>10,10=>10,50=>10))
+Chain(
+    layer_1 = SkipConnection(
+        FourierFeature(3 => 60),
+        vcat
+    ),
+    layer_2 = PINNAttention(
+        H_net = Dense(63 => 10, sin),   # 640 parameters
+        U_net = Dense(63 => 10, sin),   # 640 parameters
+        V_net = Dense(63 => 10, sin),   # 640 parameters
+        fusion = TriplewiseFusion(
+            layers = (layer_1 = Dense(10 => 10, sin), layer_2 = Dense(10 => 10, sin), layer_3 = Dense(10 => 10, sin), layer_4 = Dense(10 => 1)),  # 341 parameters
+        ),
+    ),
+)         # Total: 2_261 parameters,
+          #        plus 90 states, summarysize 176 bytes.
+```
 """
-function FourierAttention(in_dims::Int, hidden_dim::Int=512, num_layers::Int=6,
-                          activation::Function=swish; modes)
+function FourierAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
+                          hidden_dims::Int=512, num_layers::Int=6, modes::NTuple)
     fourierfeature = FourierFeature(in_dims, modes)
     encoder = SkipConnection(fourierfeature, vcat)
-    attention_layer = PINNAttention(fourierfeature.out_dims + in_dims, hidden_dim,
-                                    num_layers, activation)
+    attention_layer = PINNAttention(fourierfeature.out_dims + in_dims, out_dims, activation;
+                                    hidden_dims=hidden_dims, num_layers=num_layers)
     return Chain(encoder, attention_layer)
 end
 
@@ -113,7 +139,7 @@ x → FourierFeature → FullyConnected → y
 # Examples
 
 ```julia
-m = MultiscaleFourier(2, (30, 30, 1), swish; modes=(1 => 10, 10 => 10, 50 => 10))
+m = MultiscaleFourier(2, (30, 30, 1), sin; modes=(1 => 10, 10 => 10, 50 => 10))
 ```
 
 # References
@@ -122,7 +148,7 @@ m = MultiscaleFourier(2, (30, 30, 1), swish; modes=(1 => 10, 10 => 10, 50 => 10)
 """
 function MultiscaleFourier(in_dims::Int,
                            out_dims::NTuple{N1, Int}=(ntuple(i -> 512, 6)..., 1),
-                           activation::Function=swish;
+                           activation::Function=sin;
                            modes::NTuple{N2, Pair{S, Int}}=(1 => 64, 10 => 64, 20 => 64,
                                                             50 => 32, 100 => 32)) where {N1,
                                                                                          N2,

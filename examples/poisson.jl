@@ -29,7 +29,7 @@ res = Optimization.solve(prob, LBFGS(); maxiters=500, callback=callback)
 
 using CairoMakie
 phi = discretization.phi
-xs = 0:0.01:1
+xs = 0:0.001:1
 u_true = @. sin(2 * pi * xs) + 0.1 * sin(50 * pi * xs)
 us = phi(xs', res.u)
 fig = Figure()
