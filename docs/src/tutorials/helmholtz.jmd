@@ -32,7 +32,7 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 
 @named pde = PDESystem(eq, bcs, domain, [x,y], [u(x,y)])
 
-chain = PINNAttention(2, 50, 4, sin)
+chain = PINNAttention(2, 50, 4,)
 ps, _ = Lux.setup(Random.default_rng(), chain)
 ps = ps |> ComponentArray |> gpu .|> Float64
 discretization = PhysicsInformedNN(chain, GridTraining(0.01); 
