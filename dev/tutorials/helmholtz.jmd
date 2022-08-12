@@ -17,6 +17,7 @@ The excat solution is ``u(x,y)=\sin{a_1\pi x}\sin{a_2\pi y}``. We chose ``k=1, a
 ```julia
 using NeuralPDE, IntervalSets, Sophon, Lux, Random, NNlib
 using Optimization, OptimizationOptimisers, OptimizationOptimJL
+using Statistics: mean
 
 @parameters x,y
 @variables u(..)
@@ -31,8 +32,12 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 
 @named pde = PDESystem(eq, bcs, domain, [x,y], [u(x,y)])
 
-chain = Siren(2,(32,32,32,32,1))
-discretization = PhysicsInformedNN(chain, GridTraining(0.01))
+chain = Siren(2,(50,50,50,50,1))
+ps, _ = Lux.setup(Random.default_rng(), chain)
+ps = ps |> ComponentArray |> gpu .|> Float64
+discretization = PhysicsInformedNN(chain, GridTraining(0.01); 
+                                   adaptive_loss = NonAdaptiveLoss(bc_loss_weights = 5),
+                                   init_params = ps)
 prob = discretize(pde, discretization)
 phi = discretization.phi
 
@@ -67,3 +72,8 @@ Colorbar(fig[:, end+1], hm3)
 
 display(fig)
 ```
+
+```julia
+print("MSE error", mean(abs, (u_pred-u_real)))
+```
+
