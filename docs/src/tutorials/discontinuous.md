@@ -74,5 +74,7 @@ end
 y_pred = model(x,ps,st)[1]
 Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
 Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
+savefig("ds.svg"); nothing # hide
 ```
 
+![](ds.svg)
