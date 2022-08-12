@@ -51,7 +51,7 @@ model = Siren(1,(50,50,50,50,1))
 ## Train the model
 
 ```@example ds
-function train()
+function train(model)
     ps, st = Lux.setup(Random.default_rng(), model)
 
     opt = Adam()
@@ -69,13 +69,13 @@ function train()
             println("Epoch $i ||  ", loss(model,ps,st,x,y))
         end
     end
-    return model, ps, st
+    return ps, st
 end
 
 ```
 ## Results
 ```@example ds
-model, ps, st = train()
+ps, st = train(model)
 y_pred = model(x,ps,st)[1]
 Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
 Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)

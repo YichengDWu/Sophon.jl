@@ -102,9 +102,19 @@ x → FourierFeature → FullyConnected → y
 # Arguments
 
   - `in_dims`: The number of input dimensions.
-  - `out_dims`: A tuple of output dimensions used to construct `FullyConnected`.
+  - `hidden_dims`: A tuple of hidden dimensions used to construct `FullyConnected`.
   - `activation`: The activation function used to construct `FullyConnected`.
   - `modes`: A tuple of modes used to construct `FourierFeature`.
+
+# Keyword Arguments
+
+  - `modes`: A tuple of modes used to construct `FourierFeature`.
+
+# Examples
+
+```julia
+m = MultiscaleFourier(2, (30, 30, 1), swish; modes(1 => 10, 10 => 10, 50 => 10))
+```
 
 # References
 
@@ -112,14 +122,14 @@ x → FourierFeature → FullyConnected → y
 """
 function MultiscaleFourier(in_dims::Int,
                            out_dims::NTuple{N1, Int}=(ntuple(i -> 512, 6)..., 1),
-                           activation::Function=swish,
+                           activation::Function=swish;
                            modes::NTuple{N2, Pair{S, Int}}=(1 => 64, 10 => 64, 20 => 64,
                                                             50 => 32, 100 => 32)) where {N1,
                                                                                          N2,
                                                                                          S}
     fourierfeature = FourierFeature(in_dims, modes)
-    chain = FullyConnected(fourierfeature.out_dims, out_dims, activation)
-    return Chain(fourierfeature, chain)
+    fc = FullyConnected(fourierfeature.out_dims, out_dims, activation)
+    return Chain(fourierfeature, fc)
 end
 
 """

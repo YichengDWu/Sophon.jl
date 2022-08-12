@@ -1,7 +1,11 @@
-"""
+@doc raw"""
     FourierFeature(in_dims::Int, modes::NTuple{N,Pair{S,T}}) where {N,S,T<:Int}
 
 Fourier Feature Network.
+
+```math
+\phi^{(i)}(x)=\left[\sin \left(2 \pi W^{(i)} x\right) ; \cos 2 \pi W^{(i)} x\right], \quad W^{(i)} \sim \mathcal{N}\left(0, \sigma^{(i)}\right)
+```
 
 # Arguments
 
@@ -61,15 +65,19 @@ function initialstates(rng::AbstractRNG, f::FourierFeature)
 end
 
 function (f::FourierFeature)(x::AbstractVecOrMat, ps, st::NamedTuple)
-    frequencies = reduce(vcat, st)
-    x = 2 * eltype(x)(π) .* frequencies * x
-    return vcat(sin.(x), cos.(x)), st
+    x = 2 * eltype(x)(π) .* x
+    y = mapreduce(vcat, st) do f
+        return [sin.(f * x); cos.(f * x)]
+    end
+    return y, st
 end
 
 function (f::FourierFeature)(x::AbstractArray, ps, st::NamedTuple)
-    frequencies = reduce(vcat, st)
-    x = 2 * eltype(x)(π) .* batched_mul(frequencies, x)
-    return vcat(sin.(x), cos.(x)), st
+    x = 2 * eltype(x)(π) .* x
+    y = mapreduce(vcat, st) do f
+        return [sin.(batched_mul(f, x)); cos.(batched_mul(f, x))]
+    end
+    return y, st
 end
 
 function Base.show(io::IO, f::FourierFeature)
