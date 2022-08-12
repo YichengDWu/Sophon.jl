@@ -57,5 +57,5 @@ display(fig)
 ## Related Libraries
 
 - [PaddleScience](https://github.com/PaddlePaddle/PaddleScience)
-- [MindElec](https://www.mindspore.cn/mindscience/docs/en/master/mindelec/intro_and_install.html)
+- [MindElec](https://gitee.com/mindspore/mindscience/blob/master/MindElec/README.md)
 - [Modulus](https://docs.nvidia.com/deeplearning/modulus/index.html#)
