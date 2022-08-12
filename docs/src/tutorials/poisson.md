@@ -1,3 +1,6 @@
+# 1D Poisson's Equation
+
+```julia
 using NeuralPDE, IntervalSets, Lux, Sophon
 using Optimization, OptimizationOptimisers, OptimizationOptimJL
 using CairoMakie
@@ -24,7 +27,6 @@ end
 res = Optimization.solve(prob, Adam(5.0f-3); maxiters=1000, callback=callback)
 
 prob = remake(prob; u0=res.u)
-println("Training with BFGS")
 res = Optimization.solve(prob, LBFGS(); maxiters=500, callback=callback)
 
 using CairoMakie
@@ -38,3 +40,4 @@ lines!(xs, u_true; label="Ground truth")
 lines!(xs, vec(us); label="prediction")
 axislegend(axis)
 display(fig)
+```
