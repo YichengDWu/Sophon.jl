@@ -168,7 +168,7 @@ end
                                                                 st.$(names[i]));
                $(y_symbols[N + 1]) = connection($(y_symbols[i]), $(getuv(i)...)))
              for i in 1:N])
-    push!(calls, :(st = NamedTuple{$names}(($(Tuple(st_symbols))))))
+    push!(calls, :(st = NamedTuple{$names}((($(Tuple(st_symbols)...),)))))
     push!(calls, :(return $(y_symbols[N + 1]), st))
     return Expr(:block, calls...)
 end
@@ -222,7 +222,7 @@ end
 
 function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
                         num_layers::Int, outermost::Bool=true)
-    return FullyConnected(in_dims, (ntuple(i -> hidden_dims, num_layers)..., out_dims), activation,
+    return FullyConnected(in_dims, (ntuple(_ -> hidden_dims, num_layers)..., out_dims), activation,
                           Val(outermost))
 end
 
