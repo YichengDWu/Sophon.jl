@@ -177,8 +177,8 @@ Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 
 """
     FullyConnected(in_dims, hidden_dims::NTuple{N, Int}, activation; outermost = true)
-    FullyConnected(in_dims, hidden_dims, num_layers, activation; outermost = true)
-
+    FullyConnected(in_dims::Int, out_dims::Int, activation::Function;
+                   hidden_dims::Int, num_layers::Int, outermost=true)
 Create fully connected layers.
 
 ## Arguments
@@ -192,15 +192,37 @@ Create fully connected layers.
 
   - `outermost`: Whether to use activation function for the last layer. If `false`, the activation function is applied
     to the output of the last layer.
+
+## Example
+
+```julia
+julia> fc = FullyConnected(1, (12,24,32), relu)
+Chain(
+    layer_1 = Dense(1 => 12, relu),     # 24 parameters
+    layer_2 = Dense(12 => 24, relu),    # 312 parameters
+    layer_3 = Dense(24 => 32),          # 800 parameters
+)         # Total: 1_136 parameters,
+          #        plus 0 states, summarysize 48 bytes.
+
+julia> fc = FullyConnected(1, 10, relu; hidden_dims=20, num_layers=3)
+Chain(
+    layer_1 = Dense(1 => 20, relu),     # 40 parameters
+    layer_2 = Dense(20 => 20, relu),    # 420 parameters
+    layer_3 = Dense(20 => 20, relu),    # 420 parameters
+    layer_4 = Dense(20 => 10),          # 210 parameters
+)         # Total: 1_090 parameters,
+          #        plus 0 states, summarysize 64 bytes.
+
+```
 """
 function FullyConnected(in_dims::Int, hidden_dims::NTuple{N, T}, activation::Function;
                         outermost::Bool=true) where {N, T <: Int}
     return FullyConnected(in_dims, hidden_dims, activation, Val(outermost))
 end
 
-function FullyConnected(in_dims::Int, hidden_dims::Int, num_layers::Int,
-                        activation::Function; outermost=true)
-    return FullyConnected(in_dims, ntuple(i -> hidden_dims, num_layers), activation,
+function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
+                        num_layers::Int, outermost::Bool=true)
+    return FullyConnected(in_dims, (ntuple(i -> hidden_dims, num_layers)..., out_dims), activation,
                           Val(outermost))
 end
 

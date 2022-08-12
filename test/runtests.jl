@@ -22,13 +22,13 @@ rng = Random.default_rng()
             fc2 = FullyConnected(2, (4, 5, 6), sin)
             @test values(map(x -> x.out_dims, fc2.layers)) == (4, 5, 6)
             @test fc2.layers[end].activation == identity
-            fc3 = FullyConnected(2, 4, 3, sin)
+            fc3 = FullyConnected(2, 4, sin; hidden_dims=4, num_layers=2)
             @test values(map(x -> x.out_dims, fc3.layers)) == (4, 4, 4)
             @test fc3.layers[end].activation == identity
 
             fc4 = FullyConnected(2, (4, 5, 6), sin; outermost=false)
             @test fc4.layers[end].activation == sin
-            fc5 = FullyConnected(2, 4, 5, sin; outermost=false)
+            fc5 = FullyConnected(2, 4, sin; hidden_dims=4, num_layers=4, outermost=false)
             @test fc5.layers[end].activation == sin
         end
         @testset "Sine" begin
@@ -68,7 +68,7 @@ rng = Random.default_rng()
             y, st = m(x, ps, st)
             @test size(y) == (4, 5)
 
-            m3 = PINNAttention(3, 4, 3, relu)
+            m3 = PINNAttention(3, 4, relu; num_layers=3,hidden_dims = 10)
             ps3, st3 = Lux.setup(rng, m3)
             y3, st3 = m3(x, ps3, st3)
             @test size(y3) == (4, 5)
@@ -82,7 +82,7 @@ rng = Random.default_rng()
             @test size(y) == (1, 5)
         end
         @testset "FourierAttention" begin
-            fa = FourierAttention(2, 4, 3, Lux.relu; modes=(1 => 2, 10 => 3))
+            fa = FourierAttention(2, 4, relu; hidden_dims = 10, num_layers = 3, modes=(1 => 2, 10 => 3))
             x = rand(Float32, 2, 5)
             ps, st = Lux.setup(rng, fa)
             y, st = fa(x, ps, st)

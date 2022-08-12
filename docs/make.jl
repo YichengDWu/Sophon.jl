@@ -22,6 +22,7 @@ makedocs(; modules=[Sophon],
              "Home" => "index.md",
              "Tutorials" => [
                  "Fitting a nonlinear discontinuous function" => "tutorials/discontinuous.md",
+                 "1D Poisson's Equation" => "tutorials/poisson.md",
              ],
          ])
 
