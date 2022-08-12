@@ -51,28 +51,31 @@ model = Siren(1,(50,50,50,50,1))
 ## Train the model
 
 ```@example ds
-using Optimisers
+function train()
+    ps, st = Lux.setup(Random.default_rng(), model)
 
-ps, st = Lux.setup(Random.default_rng(), model)
-
-opt = Adam()
-st_opt = Optimisers.setup(opt,ps)
-function loss(model, ps, st, x, y)
-    y_pred, _ = model(x, ps, st)
-    mes = mean(abs2, y_pred .- y)
-    return mes
-end
-
-for i in 1:2000
-    gs = gradient(p->loss(model,p,st,x,y), ps)[1]
-    st_opt, ps = Optimisers.update(st_opt, ps, gs)
-    if i % 10 == 1 || i == 100
-        println("Epoch $i ||  ", loss(model,ps,st,x,y))
+    opt = Adam()
+    st_opt = Optimisers.setup(opt,ps)
+    function loss(model, ps, st, x, y)
+        y_pred, _ = model(x, ps, st)
+        mes = mean(abs2, y_pred .- y)
+        return mes
     end
+
+    for i in 1:2000
+        gs = gradient(p->loss(model,p,st,x,y), ps)[1]
+        st_opt, ps = Optimisers.update(st_opt, ps, gs)
+        if i % 10 == 1 || i == 100
+            println("Epoch $i ||  ", loss(model,ps,st,x,y))
+        end
+    end
+    return model, ps, st
 end
+
 ```
 ## Results
 ```@example ds
+model, ps, st = train()
 y_pred = model(x,ps,st)[1]
 Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
 Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
