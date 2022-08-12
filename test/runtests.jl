@@ -14,6 +14,7 @@ rng = Random.default_rng()
             y, st = f2(rand(Float32, 2, 2), ps, st)
             @test size(y) == (18, 2)
             @test f2.out_dims == 18
+            @test eltype(y) == Float32
         end
         @testset "FullyConnected" begin
             fc = FullyConnected(2, (4,), sin)
@@ -74,7 +75,8 @@ rng = Random.default_rng()
         end
         @testset "MultiscaleFourier" begin
             x = rand(Float32, 2, 5)
-            m =  MultiscaleFourier(2, (30, 30, 1), swish; modes(1 => 10, 10 => 10, 50 => 10))
+            m = MultiscaleFourier(2, (30, 30, 1), swish;
+                                  modes=(1 => 10, 10 => 10, 50 => 10))
             ps, st = Lux.setup(rng, m)
             y, st = m(x, ps, st)
             @test size(y) == (1, 5)

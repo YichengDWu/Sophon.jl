@@ -113,7 +113,7 @@ x → FourierFeature → FullyConnected → y
 # Examples
 
 ```julia
-m = MultiscaleFourier(2, (30, 30, 1), swish; modes(1 => 10, 10 => 10, 50 => 10))
+m = MultiscaleFourier(2, (30, 30, 1), swish; modes=(1 => 10, 10 => 10, 50 => 10))
 ```
 
 # References
