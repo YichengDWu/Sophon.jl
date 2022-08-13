@@ -32,10 +32,10 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 
 @named pde = PDESystem(eq, bcs, domains, [x,y], [u(x,y)])
 
-chain = PINNAttention(2, 1, sin; hidden_dims = 50, num_layers = 4)
+chain = SirenAttention(2, 1, sin; hidden_dims = 50, num_layers = 4)
 ps= Lux.setup(Random.default_rng(), chain)[1]
-ps = ps |> ComponentArray |> gpu .|> Float64
-discretization = PhysicsInformedNN(chain, QuasiRandomTraining(128); init_params = ps)
+ps = ps |> ComponentArray .|> Float64#|> gpu .|> Float64
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(128; bcs_points = 4*128); init_params = ps, derivative=(phi,u,x,ϵs, order,θ)->NeuralPDE.numeric_derivative(phi, u, x, ϵs, 2, θ))
 prob = discretize(pde, discretization)
 phi = discretization.phi
 
@@ -43,11 +43,13 @@ callback = function (p, l)
     println("Current loss is: $l")
     return false
 end
-res = Optimization.solve(prob, Adam(5f-2); maxiters=2000, callback=callback)
+
+opt = Scheduler(Adam(), Sophon.Step(;λ = 1f-3, γ = 0.95, step_sizes = 200))
+res = Optimization.solve(prob, opt; maxiters=2000, callback=callback)
 
 prob = remake(prob; u0=res.u)
 println("Training with BFGS")
-res = Optimization.solve(prob, LBFGS(); maxiters=100, callback=callback)
+res = Optimization.solve(prob, LBFGS(); maxiters=1000, callback=callback)
 
 xs, ys= [infimum(d.domain):0.01:supremum(d.domain) for d in domain]
 x_mesh = NNlib.unsqueeze(xs .* ones(length(ys))')

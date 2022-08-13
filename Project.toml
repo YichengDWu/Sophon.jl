@@ -7,12 +7,14 @@ version = "0.1.0"
 Lux = "b2108857-7c20-44ae-9111-449ecde12c47"
 NNlib = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
 NNlibCUDA = "a00861dc-f156-4864-bf3c-e6376f28a68d"
+Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
+ParameterSchedulers = "d7d3b36b-41b8-4d0d-a2bf-768c6151755e"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
 Lux = "0.4"
-NNlibCUDA = "0.2"
 NNlib = "0.8"
+NNlibCUDA = "0.2"
 julia = "1.7"
 
 [extras]

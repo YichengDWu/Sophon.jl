@@ -115,9 +115,27 @@ function FourierAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
                           hidden_dims::Int=512, num_layers::Int=6, modes::NTuple)
     fourierfeature = FourierFeature(in_dims, modes)
     encoder = SkipConnection(fourierfeature, vcat)
-    attention_layer = PINNAttention(fourierfeature.out_dims + in_dims, out_dims, activation;
-                                    hidden_dims=hidden_dims, num_layers=num_layers)
-    return Chain(encoder, attention_layer)
+    attention_layers = PINNAttention(fourierfeature.out_dims + in_dims, out_dims,
+                                     activation; hidden_dims=hidden_dims,
+                                     num_layers=num_layers)
+    return Chain(encoder, attention_layers)
+end
+
+"""
+    SirenAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
+    hidden_dims::Int=512, num_layers::Int=6)
+
+```
+x -> Sine -> PINNAttention
+```
+"""
+function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
+                        hidden_dims::Int=512, num_layers::Int=6, omega = 30f0)
+    sine = Sine(int_dims, hidden_dims[1]; is_first=true, omega = omega)
+    attention_layers = PINNAttention(fourierfeature.out_dims + in_dims, out_dims,
+                                     activation; hidden_dims=hidden_dims,
+                                     num_layers=num_layers - 1)
+    return Chain(sine, attention_layers)
 end
 
 """
