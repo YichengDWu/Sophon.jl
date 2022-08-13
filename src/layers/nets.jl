@@ -53,8 +53,11 @@ function PINNAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
     H_net = Dense(in_dims, hidden_dims, activation)
     U_net = Dense(in_dims, hidden_dims, activation)
     V_net = Dense(in_dims, hidden_dims, activation)
-    fusion_layers = FullyConnected(hidden_dims, ntuple(_ -> hidden_dims, num_layers), activation; outermost=false)
-    return Chain(PINNAttention(H_net, U_net, V_net, fusion_layers), Dense(hidden_dims, out_dims))
+    fusion_layers = FullyConnected(hidden_dims, hidden_dims, activation;
+                                   hidden_dims=hidden_dims, num_layers=num_layers,
+                                   outermost=false)
+    return Chain(PINNAttention(H_net, U_net, V_net, fusion_layers),
+                 Dense(hidden_dims, out_dims))
 end
 
 function (m::PINNAttention)(x::AbstractArray, ps, st::NamedTuple)
@@ -89,7 +92,8 @@ x → [FourierFeature(x); x] → PINNAttention
 ## Examples
 
 ```julia
-julia> FourierAttention(3,1,sin; hidden_dims = 10, num_layers = 3, modes = (1=>10,10=>10,50=>10))
+julia> FourierAttention(3, 1, sin; hidden_dims=10, num_layers=3,
+                        modes=(1 => 10, 10 => 10, 50 => 10))
 Chain(
     layer_1 = SkipConnection(
         FourierFeature(3 => 60),
@@ -111,9 +115,27 @@ function FourierAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
                           hidden_dims::Int=512, num_layers::Int=6, modes::NTuple)
     fourierfeature = FourierFeature(in_dims, modes)
     encoder = SkipConnection(fourierfeature, vcat)
-    attention_layer = PINNAttention(fourierfeature.out_dims + in_dims, out_dims, activation;
-                                    hidden_dims=hidden_dims, num_layers=num_layers)
-    return Chain(encoder, attention_layer)
+    attention_layers = PINNAttention(fourierfeature.out_dims + in_dims, out_dims,
+                                     activation; hidden_dims=hidden_dims,
+                                     num_layers=num_layers)
+    return Chain(encoder, attention_layers)
+end
+
+"""
+    SirenAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
+    hidden_dims::Int=512, num_layers::Int=6)
+
+```
+x -> Sine -> PINNAttention
+```
+"""
+function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
+                        hidden_dims::Int=512, num_layers::Int=6, omega = 30f0)
+    sine = Sine(in_dims, hidden_dims[1]; is_first=true, omega = omega)
+    attention_layers = PINNAttention(hidden_dims[1], out_dims,
+                                     activation; hidden_dims=hidden_dims,
+                                     num_layers=num_layers - 1)
+    return Chain(sine, attention_layers)
 end
 
 """
