@@ -1,6 +1,6 @@
 # 1D Poisson's Equation
 
-```julia
+```@example
 using NeuralPDE, IntervalSets, Lux, Sophon
 using Optimization, OptimizationOptimisers, OptimizationOptimJL
 using CairoMakie
