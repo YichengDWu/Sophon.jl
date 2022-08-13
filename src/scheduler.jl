@@ -1,4 +1,4 @@
-struct Scheduler{O, S}
+struct Scheduler{O, S} <: SciMLBase.AbstractOptimizationAlgorithm
     opt::O
     schedule::S
 end
