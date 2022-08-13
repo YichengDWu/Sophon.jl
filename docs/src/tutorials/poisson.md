@@ -39,7 +39,7 @@ axis = Axis(fig[1, 1])
 lines!(xs, u_true; label="Ground truth")
 lines!(xs, vec(us); label="prediction")
 axislegend(axis)
-savefig("result.png", fig); nothing # hide
+save("result.png", fig); nothing # hide
 ```
 
 ![](result.png)
