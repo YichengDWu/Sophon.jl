@@ -93,6 +93,12 @@ git-tree-sha1 = "a1e2cf6ced6505cbad2490532388683f1e88c3ed"
 uuid = "dd5226c6-a4d4-4bc7-8575-46859f9c95b9"
 version = "0.1.0"
 
+[[deps.ArrayLayouts]]
+deps = ["FillArrays", "LinearAlgebra", "SparseArrays"]
+git-tree-sha1 = "ac5cc6021f32a272ee572dd2a325049a1fa0d034"
+uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
+version = "0.8.11"
+
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
@@ -817,6 +823,17 @@ git-tree-sha1 = "012e604e1c7458645cb8b436f8fba789a51b257f"
 uuid = "9b13fd28-a010-5f03-acff-a1bbcff69959"
 version = "1.0.0"
 
+[[deps.InfiniteArrays]]
+deps = ["ArrayLayouts", "FillArrays", "Infinities", "LazyArrays", "LinearAlgebra", "Statistics"]
+git-tree-sha1 = "e84e4ea66ca02755eaf7063e07169bf22370ee2c"
+uuid = "4858937d-0d70-526a-a4dd-2d5cb5dd786c"
+version = "0.12.6"
+
+[[deps.Infinities]]
+git-tree-sha1 = "73928e97dd0ec12eb228de3ac384c31fdcdb10cd"
+uuid = "e1ba4f0e-776d-440f-acd9-e1d2e9742647"
+version = "0.1.5"
+
 [[deps.Inflate]]
 git-tree-sha1 = "f5fc07d4e706b84f72d54eedcc1c13d92fb0871c"
 uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
@@ -1035,6 +1052,12 @@ git-tree-sha1 = "b67e749fb35530979839e7b4b606a97105fe4f1c"
 uuid = "10f19ff3-798f-405d-979b-55457f8fc047"
 version = "0.1.10"
 
+[[deps.LazyArrays]]
+deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "MacroTools", "MatrixFactorizations", "SparseArrays", "StaticArrays"]
+git-tree-sha1 = "d9a962fac652cc6b0224622b18199f0ed46d316a"
+uuid = "5078a376-72f3-5289-bfd5-ec5146d43c02"
+version = "0.22.11"
+
 [[deps.LazyArtifacts]]
 deps = ["Artifacts", "Pkg"]
 uuid = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
@@ -1219,6 +1242,12 @@ deps = ["AbstractTrees", "Automa", "DataStructures", "FreeTypeAbstraction", "Geo
 git-tree-sha1 = "114ef48a73aea632b8aebcb84f796afcc510ac7c"
 uuid = "0a4f8689-d25c-4efe-a92b-7142dfc1aa53"
 version = "0.4.3"
+
+[[deps.MatrixFactorizations]]
+deps = ["ArrayLayouts", "LinearAlgebra", "Printf", "Random"]
+git-tree-sha1 = "2320f1e1d87c98693df7fd30c2adcfca923f42da"
+uuid = "a3b82374-2e81-5b9e-98ce-41277c0e4c87"
+version = "0.9.2"
 
 [[deps.MbedTLS]]
 deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "Random", "Sockets"]
@@ -1481,6 +1510,12 @@ deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jl
 git-tree-sha1 = "3a121dfbba67c94a5bec9dde613c3d0cbcf3a12b"
 uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
 version = "1.50.3+0"
+
+[[deps.ParameterSchedulers]]
+deps = ["Flux", "InfiniteArrays"]
+git-tree-sha1 = "68f63744d5d3e1714f989a9b4f38182275d3f348"
+uuid = "d7d3b36b-41b8-4d0d-a2bf-768c6151755e"
+version = "0.3.3"
 
 [[deps.Parameters]]
 deps = ["OrderedCollections", "UnPack"]
@@ -1839,7 +1874,7 @@ version = "1.5.0"
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[deps.Sophon]]
-deps = ["Lux", "NNlib", "NNlibCUDA", "Random"]
+deps = ["Adapt", "ChainRulesCore", "ComponentArrays", "Lux", "NNlib", "NNlibCUDA", "NeuralPDE", "Optimisers", "Optimization", "OptimizationOptimisers", "ParameterSchedulers", "QuasiMonteCarlo", "Random", "SciMLBase", "StatsBase"]
 path = ".."
 uuid = "077df616-1c15-4d29-b519-7542a62df138"
 version = "0.1.0"
