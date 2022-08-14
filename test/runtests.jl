@@ -16,6 +16,13 @@ rng = Random.default_rng()
             @test f2.out_dims == 18
             @test eltype(y) == Float32
         end
+        @testset "RBF" begin
+            rbf = RBF(2, 4; num_centers = 3)
+            ps, st = Lux.setup(rng, rbf)
+            y, st = rbf(rand(Float32, 2, 5), ps, st)
+            @test size(y) == (4, 5)
+        end
+
         @testset "FullyConnected" begin
             fc = FullyConnected(2, (4,), sin)
             @test fc == Dense(2, 4, sin)

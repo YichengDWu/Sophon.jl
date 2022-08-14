@@ -25,6 +25,6 @@ export Scheduler, get_opt
 export RADTraining
 #export gaussian, quadratic, laplacian, expsin
 export RADTraining
-export FourierFeature, TriplewiseFusion, FullyConnected, Sine
+export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF
 export PINNAttention, MultiscaleFourier, FourierAttention, Siren, SirenAttention
 end
