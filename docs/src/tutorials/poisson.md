@@ -22,11 +22,11 @@ bcs = [u(0) ~ 0, u(1) ~ 0]
 
 @named poisson = PDESystem(eq, bcs, domain, [x], [u(x)])
 
-chain = Siren(1, (32, 32, 32, 32, 1))
+chain = FullyConnected(1,(32,32,32,32,1), Lux.swish)#Siren(1, (32, 32, 32, 32, 1))
 discretization = PhysicsInformedNN(chain,  GridTraining(0.01))
 prob = discretize(poisson, discretization)
 
-res = Optimization.solve(prob, Adam(); maxiters=2000)
+res = Optimization.solve(prob, Adam(5.0f-3); maxiters=2000)
 
 prob = remake(prob; u0=res.u)
 res = Optimization.solve(prob, LBFGS(); maxiters=500)
@@ -52,7 +52,7 @@ save("result.png", fig); nothing # hide
 using Integrals
 
 u_analytical(x,p) = sin.(2 * pi .* x) + 0.1 * sin.(50 * pi .* x)
-f(x,p) = abs2.(vec(phi(reshape(x,1,:),res.u)) - u_analytical(x,p))
+error(x,p) = abs2.(vec(phi([x;;],res.u)) .- u_analytical(x,p))
 
-relative_L2_error = solve(IntegralProblem(f,[0],[1]),HCubatureJL(),reltol=1e-3,abstol=1e-3) / solve(IntegralProblem((x,p) -> abs2.(u_analytical(x,p)),[0],[1]),HCubatureJL(),reltol=1e-3,abstol=1e-3)
+relative_L2_error = solve(IntegralProblem(error,0,1),HCubatureJL(),reltol=1e-3,abstol=1e-3) ./ solve(IntegralProblem((x,p) -> abs2.(u_analytical(x,p)),0, 1),HCubatureJL(),reltol=1e-3,abstol=1e-3)
 ```
