@@ -17,7 +17,7 @@ bcs = [u(0) ~ 0, u(1) ~ 0]
 @named possion = PDESystem(eq, bcs, domain, [x], [u(x)])
 
 chain = Siren(1, (32, 32, 32, 32, 1))
-discretization = PhysicsInformedNN(chain, RADTraining(2000; resample_at = 200))
+discretization = PhysicsInformedNN(chain, RADTraining(100; resample_at = 200))
 prob = discretize(possion, discretization)
 
 callback = function (p, l)
