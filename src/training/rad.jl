@@ -60,11 +60,18 @@ function NeuralPDE.get_loss_function(loss_function, bound, eltypeθ, strategy::R
     c = strategy.c
 
     loss = θ -> begin
-        sets = NeuralPDE.generate_quasi_random_points(points, bound, eltypeθ, sampling_alg)
-        sets_ = Adapt.adapt(SciMLBase.parameterless_type(ComponentArrays.getdata(θ)), sets)
-        ϵ = (abs.(loss_function(sets_, θ))) .^ k .+ c
-        subsets = wsample(set, ϵ, points)
-        mean(abs2, loss_function(subsets, θ))
+        set = NeuralPDE.generate_quasi_random_points(points, bound, eltypeθ, sampling_alg)
+        subset = residual_based_sample(loss_function, set, θ, points, k, c)
+        mean(abs2, loss_function(subset, θ))
     end
     return loss
+end
+
+@ChainRulesCore.ignore_derivatives function residual_based_sample(loss_function, set, θ, n, k=2.0, c= k/100)
+    ϵᵏ = (loss_function(set, θ)).^ k
+    w = vec(ϵᵏ .+ c * mean(ϵᵏ))
+    subset = wsample([p for p in eachcol(sets)], w, n)
+    subset = reduce(hcat, subset)
+    subset = adapt(SciMLBase.parameterless_type(ComponentArrays.getdata(θ)), subset)
+    return subset
 end
