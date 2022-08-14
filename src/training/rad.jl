@@ -5,13 +5,15 @@ struct RADTraining <: NeuralPDE.AbstractTrainingStrategy
     c::Float64
     resample_at::Int64
     training_strategy::QuasiRandomTraining
+    refinement::Bool
 end
 
-function RADTraining(points; resample_at, k=2.0, c=k/100, sampling_alg=LatinHypercubeSample(),
-                     bcs_points=points)
+function RADTraining(points; resample_at = 1, k=1.0, c=k/100,
+                     sampling_alg=LatinHypercubeSample(), bcs_points=points,
+                     refinement = true)
     training_strategy = QuasiRandomTraining(points; bcs_points=bcs_points,
                                             sampling_alg=sampling_alg)
-    return RADTraining(points, bcs_points, k, c, resample_at, training_strategy)
+    return RADTraining(points, bcs_points, k, c, resample_at, training_strategy,refinement)
 end
 
 function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepresentation,
@@ -26,18 +28,10 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
     pde_bounds, bcs_bounds = bounds
 
     if iteration[1] <= strategy.resample_at
-        pde_loss_functions = [NeuralPDE.get_loss_function(_loss, bound, eltypeθ,
-                                                strategy.training_strategy)
-                              for (_loss, bound) in zip(datafree_pde_loss_function,
-                                                        pde_bounds)]
-
-        strategy_ = QuasiRandomTraining(strategy.training_strategy.bcs_points;
-                                        sampling_alg=strategy.training_strategy.sampling_alg)
-        bc_loss_functions = [NeuralPDE.get_loss_function(_loss, bound, eltypeθ, strategy_)
-                             for (_loss, bound) in zip(datafree_bc_loss_function,
-                                                       bcs_bounds)]
-
-        return pde_loss_functions, bc_loss_functions
+        return NeuralPDE.merge_strategy_with_loss_function(pinnrep,
+                                                           strategy.training_strategy,
+                                                           datafree_pde_loss_function,
+                                                           datafree_bc_loss_function)
 
     else
         pde_loss_functions = [NeuralPDE.get_loss_function(_loss, bound, eltypeθ, strategy)
@@ -62,13 +56,15 @@ function NeuralPDE.get_loss_function(loss_function, bound, eltypeθ, strategy::R
     loss = θ -> begin
         set = NeuralPDE.generate_quasi_random_points(points, bound, eltypeθ, sampling_alg)
         subset = residual_based_sample(loss_function, set, θ, points, k, c)
-        mean(abs2, loss_function(subset, θ))
+        dataset = strategy.refinement ? hcat(subset, set) : subset
+        mean(abs2, loss_function(dataset, θ))
     end
     return loss
 end
 
-@ChainRulesCore.ignore_derivatives function residual_based_sample(loss_function, set, θ, n, k=2.0, c= k/100)
-    ϵᵏ = (loss_function(set, θ)).^ k
+ChainRulesCore.@ignore_derivatives function residual_based_sample(loss_function, set, θ, n,
+                                                                  k=2.0, c=k / 100)
+    ϵᵏ = (loss_function(set, θ)) .^ k
     w = vec(ϵᵏ .+ c * mean(ϵᵏ))
     subset = wsample([p for p in eachcol(sets)], w, n)
     subset = reduce(hcat, subset)
