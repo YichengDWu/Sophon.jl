@@ -18,6 +18,7 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Lux = "0.4"
 NNlib = "0.8"
 NNlibCUDA = "0.2"
+SciMLBase = "1"
 Optimisers = "0.2"
 julia = "1.7"
 
