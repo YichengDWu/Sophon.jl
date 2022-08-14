@@ -30,15 +30,10 @@ chain = Siren(1, (32,32,32,32,1))
 discretization = PhysicsInformedNN(chain, GridTraining(1f-2))
 prob = discretize(possion, discretization)
 
-callback = function (p,l)
-    println("Current loss is: $l")
-    return false
-end
-res = Optimization.solve(prob, Adam(5f-3), maxiters = 1000, callback = callback)
+res = Optimization.solve(prob, Adam(5f-3), maxiters = 2000)
 
 prob = remake(prob,u0=res.u)
-println("Training with BFGS")
-res = Optimization.solve(prob, BFGS(), maxiters = 500, callback = callback)
+res = Optimization.solve(prob, BFGS(), maxiters = 1000)
 
 using CairoMakie
 phi = discretization.phi
