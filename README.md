@@ -33,7 +33,7 @@ prob = discretize(possion, discretization)
 res = Optimization.solve(prob, Adam(5f-3), maxiters = 2000)
 
 prob = remake(prob,u0=res.u)
-res = Optimization.solve(prob, BFGS(), maxiters = 500)
+res = Optimization.solve(prob, BFGS(), maxiters = 1000)
 
 using CairoMakie
 phi = discretization.phi
