@@ -5,9 +5,9 @@ import Lux: initialparameters, initialstates, AbstractExplicitLayer,
             AbstractExplicitContainerLayer
 
 using Optimisers, Optimization, OptimizationOptimisers
-import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, TriangleExp, Sin,
-                           SinDecay2, SinExp, CosAnneal, Sequence, Loop, Interpolator,
-                           Shifted, ComposedSchedule
+import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, TriangleExp,
+                            Sin, SinDecay2, SinExp, CosAnneal, Sequence, Loop, Interpolator,
+                            Shifted, ComposedSchedule
 
 using SciMLBase, NeuralPDE, ComponentArrays
 using StatsBase, QuasiMonteCarlo
@@ -19,7 +19,6 @@ include("utils.jl")
 include("activations.jl")
 include("scheduler.jl")
 include("training/rad.jl")
-
 
 export Scheduler, get_opt
 export RADTraining

@@ -319,8 +319,7 @@ end
 end
 
 """
-    RBF(in_dims::Int, out_dims::Int; num_centers::Int, sigma::AbstractFloat=0.2f0,
-    init_center::Lux.glorot_uniform, init_weight::Lux.glorot_normal)
+    RBF(in_dims::Int, out_dims::Int, num_centers::Int;, sigma::AbstractFloat=0.2f0)
 
 Radial Basis Fuction Network.
 """
@@ -333,13 +332,13 @@ struct RBF{F1, F2} <: AbstractExplicitLayer
     init_weight::F2
 end
 
-function RBF(in_dims::Int, out_dims::Int; num_centers::Int, sigma::AbstractFloat=0.2f0,
+function RBF(in_dims::Int, out_dims::Int, num_centers::Int, sigma::AbstractFloat=0.2f0,
              init_center=Lux.glorot_uniform, init_weight=Lux.glorot_normal)
     return RBF{typeof(init_center), typeof(init_weight)}(in_dims, out_dims, num_centers,
                                                          sigma, init_center, init_weight)
 end
 
-function RBF(mapping::Pair{<:Int, <:Int}; num_centers::Int, sigma::AbstractFloat=0.2f0,
+function RBF(mapping::Pair{<:Int, <:Int}, num_centers::Int, sigma::AbstractFloat=0.2f0,
              init_center=Lux.glorot_uniform, init_weight=Lux.glorot_normal)
     return RBF(first(mapping), last(mapping), num_centers, sigma, init_center, init_weight)
 end
@@ -354,7 +353,7 @@ function (rbf::RBF)(x::AbstractVecOrMat, ps, st::NamedTuple)
     x_norm = sum(abs2, x; dims=1)
     center_norm = sum(abs2, ps.center; dims=2)
     d = -2 * ps.center * x .+ x_norm .+ center_norm
-    r = exp.(-1/rbf.sigma .* d)
+    r = exp.(-1 / rbf.sigma .* d)
     y = ps.weight * r
     return y, st
 end

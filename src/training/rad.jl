@@ -8,12 +8,12 @@ struct RADTraining <: NeuralPDE.AbstractTrainingStrategy
     refinement::Bool
 end
 
-function RADTraining(points; resample_at = 1, k=1.0, c=k/100,
+function RADTraining(points; resample_at=1, k=1.0, c=k / 100,
                      sampling_alg=LatinHypercubeSample(), bcs_points=points,
-                     refinement = true)
+                     refinement=true)
     training_strategy = QuasiRandomTraining(points; bcs_points=bcs_points,
                                             sampling_alg=sampling_alg)
-    return RADTraining(points, bcs_points, k, c, resample_at, training_strategy,refinement)
+    return RADTraining(points, bcs_points, k, c, resample_at, training_strategy, refinement)
 end
 
 function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepresentation,
