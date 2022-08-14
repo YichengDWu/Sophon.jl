@@ -11,7 +11,7 @@ import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, Tria
 
 using SciMLBase, NeuralPDE, ComponentArrays
 using StatsBase, QuasiMonteCarlo
-using Adapt
+using Adapt, ChainRulesCore
 
 include("layers/basic.jl")
 include("layers/nets.jl")
@@ -22,6 +22,7 @@ include("training/rad.jl")
 
 
 export Scheduler, get_opt
+export RADTraining
 #export gaussian, quadratic, laplacian, expsin
 export RADTraining
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine
