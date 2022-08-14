@@ -130,11 +130,10 @@ x -> Sine -> PINNAttention
 ```
 """
 function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
-                        hidden_dims::Int=512, num_layers::Int=6, omega = 30f0)
-    sine = Sine(in_dims, hidden_dims[1]; is_first=true, omega = omega)
-    attention_layers = PINNAttention(hidden_dims[1], out_dims,
-                                     activation; hidden_dims=hidden_dims,
-                                     num_layers=num_layers - 1)
+                        hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0)
+    sine = Sine(in_dims, hidden_dims[1]; is_first=true, omega=omega)
+    attention_layers = PINNAttention(hidden_dims[1], out_dims, activation;
+                                     hidden_dims=hidden_dims, num_layers=num_layers - 1)
     return Chain(sine, attention_layers)
 end
 

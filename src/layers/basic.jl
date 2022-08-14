@@ -179,6 +179,7 @@ Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
     FullyConnected(in_dims, hidden_dims::NTuple{N, Int}, activation; outermost = true)
     FullyConnected(in_dims::Int, out_dims::Int, activation::Function;
                    hidden_dims::Int, num_layers::Int, outermost=true)
+
 Create fully connected layers.
 
 ## Arguments
@@ -196,7 +197,7 @@ Create fully connected layers.
 ## Example
 
 ```julia
-julia> fc = FullyConnected(1, (12,24,32), relu)
+julia> fc = FullyConnected(1, (12, 24, 32), relu)
 Chain(
     layer_1 = Dense(1 => 12, relu),     # 24 parameters
     layer_2 = Dense(12 => 24, relu),    # 312 parameters
@@ -212,7 +213,6 @@ Chain(
     layer_4 = Dense(20 => 10),          # 210 parameters
 )         # Total: 1_090 parameters,
           #        plus 0 states, summarysize 64 bytes.
-
 ```
 """
 function FullyConnected(in_dims::Int, hidden_dims::NTuple{N, T}, activation::Function;
@@ -222,8 +222,8 @@ end
 
 function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
                         num_layers::Int, outermost::Bool=true)
-    return FullyConnected(in_dims, (ntuple(_ -> hidden_dims, num_layers)..., out_dims), activation,
-                          Val(outermost))
+    return FullyConnected(in_dims, (ntuple(_ -> hidden_dims, num_layers)..., out_dims),
+                          activation, Val(outermost))
 end
 
 @generated function FullyConnected(in_dims::Int, hidden_dims::NTuple{N, T},
@@ -316,4 +316,50 @@ end
 
 @inline function (m::Sine{false, typeof(identity)})(x::AbstractArray, ps, st::NamedTuple)
     return batched_mul(ps.weight, x) .+ ps.bias, st
+end
+
+"""
+    RBF(in_dims::Int, out_dims::Int, num_centers::Int=out_dims; sigma::AbstractFloat=0.2f0)
+
+Radial Basis Fuction Network.
+"""
+struct RBF{F1, F2} <: AbstractExplicitLayer
+    in_dims::Int
+    out_dims::Int
+    num_centers::Int
+    sigma::Float32
+    init_center::F1
+    init_weight::F2
+end
+
+function RBF(in_dims::Int, out_dims::Int, num_centers::Int=out_dims,
+             sigma::AbstractFloat=0.2f0, init_center=Lux.glorot_uniform,
+             init_weight=Lux.glorot_normal)
+    return RBF{typeof(init_center), typeof(init_weight)}(in_dims, out_dims, num_centers,
+                                                         sigma, init_center, init_weight)
+end
+
+function RBF(mapping::Pair{<:Int, <:Int}, num_centers::Int=out_dims,
+             sigma::AbstractFloat=0.2f0, init_center=Lux.glorot_uniform,
+             init_weight=Lux.glorot_normal)
+    return RBF(first(mapping), last(mapping), num_centers, sigma, init_center, init_weight)
+end
+
+function initialparameters(rng::AbstractRNG, s::RBF)
+    center = s.init_center(rng, s.num_centers, s.in_dims)
+    weight = s.init_weight(rng, s.out_dims, s.num_centers)
+    return (center=center, weight=weight)
+end
+
+function (rbf::RBF)(x::AbstractVecOrMat, ps, st::NamedTuple)
+    x_norm = sum(abs2, x; dims=1)
+    center_norm = sum(abs2, ps.center; dims=2)
+    d = -2 * ps.center * x .+ x_norm .+ center_norm
+    r = exp.(-1 / rbf.sigma .* d)
+    y = ps.weight * r
+    return y, st
+end
+
+function Base.show(io::IO, rbf::RBF)
+    return print(io, "RBF($(rbf.in_dims) => $(rbf.out_dims))")
 end
