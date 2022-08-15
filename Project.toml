@@ -21,14 +21,15 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
+ChainRulesCore = "1"
 Lux = "0.4"
 NNlib = "0.8"
 NNlibCUDA = "0.2"
+Optimisers = "0.2"
+Optimization = "3"
 OptimizationOptimisers = "0.1"
 ParameterSchedulers = "0.3"
-Optimization = "3"
 SciMLBase = "1"
-Optimisers = "0.2"
 julia = "1.7"
 
 [extras]
