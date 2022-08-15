@@ -1,4 +1,9 @@
+"""
 
+## References
+
+[1] Wang S, Sankaran S, Perdikaris P. Respecting causality is all you need for training physics-informed neural networks[J]. arXiv preprint arXiv:2203.07404, 2022.
+"""
 struct CausalTraining <: NeuralPDE.AbstractTrainingStrategy
     points::Int64
     bcs_points::Int64
