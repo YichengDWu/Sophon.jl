@@ -13,10 +13,10 @@ using CairoMakie
 
 @parameters x
 @variables u(..)
-Dxx = Differential(x)^2
+Dₓ² = Differential(x)^2
 
 f(x) = -4 * π^2 * sin(2 * π * x) - 250 * π^2 * sin(50 * π * x)
-eq = Dxx(u(x)) ~ f(x)
+eq = Dₓ²(u(x)) ~ f(x)
 domain = [x ∈ 0 .. 1]
 bcs = [u(0) ~ 0, u(1) ~ 0]
 
