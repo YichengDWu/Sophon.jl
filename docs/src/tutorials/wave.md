@@ -53,7 +53,7 @@ Let's visualize the results.
 ```julia
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domain]
 u_analytic(x,t) = sin(x)*(sin(t)+cos(t))
-predict(x,t) = first(phi([x,t],res.u))
+predict(x,t) = first(phi(gpu([x,t]),res.u))
 u_real = u_analytic.(xs,ts')
 u_pred = predict.(xs,ts')
 
@@ -69,18 +69,17 @@ Colorbar(fig[:, end+1], hm3)
 fig
 ```
 
+Let's see how causal training can help imporve the results.
+
 ```julia
-discretization = PhysicsInformedNN(net, CausalTraining(200;epsilon = 0.05); init_params = ps)
+discretization = PhysicsInformedNN(net, CausalTraining(200;epsilon = 0.01); init_params = ps)
 phi = discretization.phi
 
 prob = discretize(pde_system, discretization)
-
-opt = Scheduler(Adam(), Sophon.Step(λ = 1e-3, γ = 0.95, step_sizes=100))
 @time res = Optimization.solve(prob,opt; maxiters=2000)
 ```
 
 ```julia; echo = false
-
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domain]
 u_analytic(x,t) = sin(x)*(sin(t)+cos(t))
 predict(x,t) = first(phi([x,t],res.u))
