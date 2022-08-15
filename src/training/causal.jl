@@ -1,4 +1,9 @@
 """
+    CausalTraining(points; epsilon, bcs_points=points, sampling_alg=LatinHypercubeSample())
+
+## Keyword arguments
+
+- `epsilon`: How much you respect causality. If `epsilon` is 0, then it falls back to `QuasiRandomTraining`.
 
 ## References
 
@@ -68,7 +73,7 @@ NeuralPDE.@nograd function get_causal_weights(loss_function, θ, type_, set, tid
     set = sortslices(set, dims=2, alg=InsertionSort, lt=(x,y)->isless(x[tidx],y[tidx]))
     set_ = adapt(type_, set)
     L = abs2.(loss_function(set_, θ))
-    W = exp.(- ϵ .* cumsum(L, dims = 2))
+    W = exp.(- ϵ/size(set_, 2) .* cumsum(L, dims = 2))
     W = hcat(adapt(type_,[one(eltype(W));;]), W[:,1:end-1])
     return W, set_
 end
