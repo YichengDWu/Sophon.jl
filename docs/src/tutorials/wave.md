@@ -72,7 +72,7 @@ fig
 Let's see how causal training can help imporve the results.
 
 ```julia
-discretization = PhysicsInformedNN(net, CausalTraining(200;epsilon = 0.01); init_params = ps)
+discretization = PhysicsInformedNN(net, CausalTraining(200;epsilon = 20); init_params = ps)
 phi = discretization.phi
 
 prob = discretize(pde_system, discretization)
