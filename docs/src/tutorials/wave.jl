@@ -1,4 +1,4 @@
-using NeuralPDE, Lux, Optimization, OptimizationOptimJL, Sophon
+using NeuralPDE, Lux, Optimization, OptimizationOptimJL, Sophon, OptimizationOptimisers
 import ModelingToolkit: Interval
 
 @parameters t, x
@@ -34,6 +34,7 @@ callback = function (p,l)
 end
 
 # optimizer
-opt = OptimizationOptimJL.BFGS()
-res = Optimization.solve(prob,opt; callback = callback, maxiters=1200)
+res = Optimization.solve(prob,Adam(); callback = callback, maxiters=1200)
 phi = discretization.phi
+
+opt = OptimizationOptimJL.BFGS()
