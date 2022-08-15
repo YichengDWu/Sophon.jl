@@ -19,11 +19,12 @@ include("utils.jl")
 include("activations.jl")
 include("scheduler.jl")
 include("training/rad.jl")
+include("training/causal.jl")
 
 export Scheduler, get_opt
 export RADTraining
 #export gaussian, quadratic, laplacian, expsin
-export RADTraining
+export RADTraining, CausalTraining
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF
 export PINNAttention, MultiscaleFourier, FourierAttention, Siren, SirenAttention
 end
