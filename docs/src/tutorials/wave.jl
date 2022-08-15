@@ -34,7 +34,21 @@ callback = function (p,l)
 end
 
 # optimizer
-res = Optimization.solve(prob,Adam(); callback = callback, maxiters=1200)
+res = Optimization.solve(prob,Adam(); callback = callback, maxiters=3000)
 phi = discretization.phi
 
 opt = OptimizationOptimJL.BFGS()
+
+using Plots
+
+ts,xs = [infimum(d.domain):0.1:supremum(d.domain) for d in domains]
+analytic_sol_func(t,x) =  sum([(8/(k^3*pi^3)) * sin(k*pi*x)*cos(C*k*pi*t) for k in 1:2:50000])
+
+u_predict = reshape([first(phi([t,x],res.u)) for t in ts for x in xs],(length(ts),length(xs)))
+u_real = reshape([analytic_sol_func(t,x) for t in ts for x in xs], (length(ts),length(xs)))
+
+diff_u = abs.(u_predict .- u_real)
+p1 = plot(ts, xs, u_real, linetype=:contourf,title = "analytic");
+p2 =plot(ts, xs, u_predict, linetype=:contourf,title = "predict");
+p3 = plot(ts, xs, diff_u,linetype=:contourf,title = "error");
+plot(p1,p2,p3)
