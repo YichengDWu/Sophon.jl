@@ -1,4 +1,9 @@
 """
+    CausalTraining(points; epsilon, bcs_points=points, sampling_alg=LatinHypercubeSample())
+
+## Keyword arguments
+
+- `epsilon`: How much you respect causality.
 
 ## References
 
