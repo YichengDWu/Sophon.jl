@@ -3,7 +3,7 @@
 
 ## Keyword arguments
 
-- `epsilon`: How much you respect causality.
+- `epsilon`: How much you respect causality. If `epsilon` is 0, then it falls back to `QuasiRandomTraining`.
 
 ## References
 
