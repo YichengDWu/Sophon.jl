@@ -34,6 +34,7 @@ Optimisers = "0.2"
 Optimization = "3"
 OptimizationOptimisers = "0.1"
 ParameterSchedulers = "0.3"
+QuasiMonteCarlo = "0.2"
 SciMLBase = "1"
 julia = "1.7"
 
