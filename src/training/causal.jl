@@ -77,7 +77,7 @@ function get_temporal_loss_function(init_loss_functions, loss_function, bound, t
     return loss
 end
 
-NeuralPDE.@nograd function get_causal_weights(init_loss_functions, loss_function, θ, type_, set, tidx, ϵ)
+ChainRulesCore.@non_differentiable function get_causal_weights(init_loss_functions, loss_function, θ, type_, set, tidx, ϵ)
     set = sortslices(set, dims=2, alg=InsertionSort, lt=(x,y)->isless(x[tidx],y[tidx]))
     set_ = adapt(type_, set)
     L = abs2.(loss_function(set_, θ))
@@ -85,5 +85,7 @@ NeuralPDE.@nograd function get_causal_weights(init_loss_functions, loss_function
     L = hcat(adapt(type_, [L_ic;;]), L)
     W = exp.(- ϵ/size(set_, 2) .* cumsum(L, dims = 2))
     W = W[1:end-1]
+    Main.a[] = L
+    Main.b[] = W
     return W, set_
 end

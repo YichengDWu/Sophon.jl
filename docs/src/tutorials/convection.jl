@@ -6,17 +6,19 @@ using Optimization, OptimizationOptimJL, OptimizationOptimisers
 Dₜ = Differential(t)
 Dₓ = Differential(x)
 
-β = 10
+β =30
 eq = Dₜ(u(x,t)) + β * Dₓ(u(x,t)) ~ 0
 
 domains = [x ∈ 0..2π, t ∈ 0..1]
-bcs = [u(0,t) ~ u(2π,t), u(x,0) ~ sin(x)]
+bcs = [u(0,t) ~ sin(-β*t),
+       u(2π,t) ~ sin(2π-β*t),
+       u(x,0) ~ sin(x)]
 
 @named convection = PDESystem(eq, bcs, domains, [x,t], [u(x,t)])
 
-#chain = Siren(2,(32,32,32,1))
-chain = FullyConnected(2,(50,50,50,50,1), tanh)
-discretization = PhysicsInformedNN(chain, GridTraining(0.1))
+chain = FullyConnected(2, 1, tanh; num_layers = 5, hidden_dims = 50)
+ps = Lux.setup(Random.default_rng(), chain)[1] |> Lux.ComponentArray |> gpu .|> Float64
+discretization = PhysicsInformedNN(chain, GridTraining(0.01); init_params=ps)
 prob = discretize(convection, discretization)
 
 callback = function (p,l)
@@ -24,13 +26,25 @@ callback = function (p,l)
     return false
 end
 
-res = Optimization.solve(prob, Adam(); maxiters = 2000, callback = callback)
+@time res = Optimization.solve(prob, LBFGS(); maxiters = 1000, callback = callback)
 phi = discretization.phi
 
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
-predict(x,t) = first(phi([x,t],res.u))
+predict(x,t) = sum(phi(gpu([x,t]),res.u))
 u_pred = predict.(xs,ts')
 
 using CairoMakie
-axis = (xlabel="t", ylabel="x", title="Analytical Solution")
+axis = (xlabel="t", ylabel="x", title="β = $β")
+fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
+
+################################################################################
+
+discretization = PhysicsInformedNN(chain, CausalTraining(500;epsilon = 10); init_params=ps)
+prob = discretize(convection, discretization)
+
+res = Optimization.solve(prob, Adam(); maxiters = 1000, callback = callback)
+
+predict(x,t) = sum(phi(gpu([x,t]),res.u))
+u_pred = predict.(xs,ts')
+
 fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
