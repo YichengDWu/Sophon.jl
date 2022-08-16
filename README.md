@@ -5,7 +5,13 @@
 [![Build Status](https://github.com/MilkshakeForReal/Sophon.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/MilkshakeForReal/Sophon.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/MilkshakeForReal/Sophon.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/MilkshakeForReal/Sophon.jl)
 
-`Sophon.jl` provides suitable neural networks/operators for Physics-informed machine learning.
+`Sophon.jl` provides specialized neural networks and operators for Physics-informed machine learning.
+
+## Installation
+
+```julia
+julia>] add "https://github.com/MilkshakeForReal/Sophon.jl"
+```
 
 ## Getting Started
 Simply replace premitive fully connected neural nets with those defined in this pacakge!
