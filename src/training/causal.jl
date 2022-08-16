@@ -85,7 +85,5 @@ ChainRulesCore.@non_differentiable function get_causal_weights(init_loss_functio
     L = hcat(adapt(type_, [L_ic;;]), L)
     W = exp.(- ϵ/size(set_, 2) .* cumsum(L, dims = 2))
     W = W[1:end-1]
-    Main.a[] = L
-    Main.b[] = W
     return W, set_
 end

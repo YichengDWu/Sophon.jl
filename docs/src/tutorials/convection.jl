@@ -17,8 +17,8 @@ bcs = [u(0,t) ~ sin(-β*t),
 @named convection = PDESystem(eq, bcs, domains, [x,t], [u(x,t)])
 
 chain = FullyConnected(2, 1, tanh; num_layers = 5, hidden_dims = 50)
-ps = Lux.setup(Random.default_rng(), chain)[1] |> Lux.ComponentArray |> gpu .|> Float64
-discretization = PhysicsInformedNN(chain, GridTraining(0.01); init_params=ps)
+ps = Lux.setup(Random.default_rng(), chain)[1] |> GPUComponentArray64
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(500); init_params=ps)
 prob = discretize(convection, discretization)
 
 callback = function (p,l)
@@ -42,7 +42,7 @@ fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
 discretization = PhysicsInformedNN(chain, CausalTraining(500;epsilon = 10); init_params=ps)
 prob = discretize(convection, discretization)
 
-res = Optimization.solve(prob, Adam(); maxiters = 1000, callback = callback)
+@time res = Optimization.solve(prob, LBFGS(); maxiters = 1000, callback = callback)
 
 predict(x,t) = sum(phi(gpu([x,t]),res.u))
 u_pred = predict.(xs,ts')
