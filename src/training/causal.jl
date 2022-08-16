@@ -38,42 +38,52 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
                                                      strategy::CausalTraining,
                                                      datafree_pde_loss_function,
                                                      datafree_bc_loss_function)
-    (;domains, eqs, bcs, dict_indvars, dict_depvars, flat_init_params, dict_indvars) = pinnrep
+    (;domains, eqs, bcs, dict_indvars, dict_depvars, flat_init_params, dict_indvars, bc_indvars) = pinnrep
 
     tidx = dict_indvars[:t]
+
+    init_conditions_idx = Int[]
+    for (i,s) in enumerate(bc_indvars)
+        :t ∉ s && push!(init_conditions_idx, i)
+    end
+
     eltypeθ = eltype(flat_init_params)
 
     bounds = get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars, strategy)
     pde_bounds, bcs_bounds = bounds
 
-    pde_loss_functions = [get_temporal_loss_function(_loss, bound, tidx, eltypeθ, strategy)
-                          for (_loss, bound) in zip(datafree_pde_loss_function, pde_bounds)]
-
     strategy_ = QuasiRandomTraining(strategy.bcs_points; sampling_alg=strategy.sampling_alg)
     bc_loss_functions = [NeuralPDE.get_loss_function(_loss, bound, eltypeθ, strategy_)
                          for (_loss, bound) in zip(datafree_bc_loss_function, bcs_bounds)]
 
+    init_loss_functions = bc_loss_functions[init_conditions_idx]
+    pde_loss_functions = [get_temporal_loss_function(init_loss_functions, _loss, bound, tidx, eltypeθ, strategy)
+                          for (_loss, bound) in zip(datafree_pde_loss_function, pde_bounds)]
+
+
     return pde_loss_functions, bc_loss_functions
 end
 
-function get_temporal_loss_function(loss_function, bound, tidx, eltypeθ, strategy::CausalTraining)
+function get_temporal_loss_function(init_loss_functions, loss_function, bound, tidx, eltypeθ, strategy::CausalTraining)
     sampling_alg = strategy.sampling_alg
     points = strategy.points
     ϵ = strategy.epsilon
 
     loss = θ -> begin
             set = NeuralPDE.generate_quasi_random_points(points, bound, eltypeθ, sampling_alg)
-            W, set_ = get_causal_weights(loss_function, θ, SciMLBase.parameterless_type(ComponentArrays.getdata(θ)), set, tidx, ϵ)
+            W, set_ = get_causal_weights(init_loss_functions,loss_function, θ, SciMLBase.parameterless_type(ComponentArrays.getdata(θ)), set, tidx, ϵ)
             mean(abs2, W .* loss_function(set_, θ))
         end
     return loss
 end
 
-NeuralPDE.@nograd function get_causal_weights(loss_function, θ, type_, set, tidx, ϵ)
+NeuralPDE.@nograd function get_causal_weights(init_loss_functions, loss_function, θ, type_, set, tidx, ϵ)
     set = sortslices(set, dims=2, alg=InsertionSort, lt=(x,y)->isless(x[tidx],y[tidx]))
     set_ = adapt(type_, set)
     L = abs2.(loss_function(set_, θ))
+    L_ic = sum([init_loss(θ) for init_loss in init_loss_functions])
+    L = hcat(adapt(type_, [L_ic;;]), L)
     W = exp.(- ϵ/size(set_, 2) .* cumsum(L, dims = 2))
-    W = hcat(adapt(type_,[one(eltype(W));;]), W[:,1:end-1])
+    W = W[1:end-1]
     return W, set_
 end
