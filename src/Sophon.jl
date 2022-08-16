@@ -1,5 +1,6 @@
 module Sophon
 
+using LinearAlgebra
 using Lux, Random, NNlib, NNlibCUDA, GPUArrays
 import Lux: initialparameters, initialstates, AbstractExplicitLayer,
             AbstractExplicitContainerLayer
@@ -29,4 +30,5 @@ export RADTraining
 export RADTraining, CausalTraining
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF
 export PINNAttention, MultiscaleFourier, FourierAttention, Siren, SirenAttention
+
 end
