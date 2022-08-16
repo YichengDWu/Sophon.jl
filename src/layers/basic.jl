@@ -341,7 +341,7 @@ end
 
 function RBF(mapping::Pair{<:Int, <:Int}, num_centers::Int=out_dims,
              sigma::AbstractFloat=0.2f0, init_center=Lux.glorot_uniform,
-             init_weight=Lux.glorot_normal)
+             init_weight=Lux.glorot_uniform)
     return RBF(first(mapping), last(mapping), num_centers, sigma, init_center, init_weight)
 end
 
@@ -355,7 +355,10 @@ function (rbf::RBF)(x::AbstractVecOrMat, ps, st::NamedTuple)
     x_norm = sum(abs2, x; dims=1)
     center_norm = sum(abs2, ps.center; dims=2)
     d = -2 * ps.center * x .+ x_norm .+ center_norm
-    r = exp.(-1 / rbf.sigma .* d)
+    z = -1 / rbf.sigma .* d
+    z_shit = z .- maximum(z, dims = 1)
+    r = exp.(z_shit)
+    r = r ./ reshape(sum(r, dims = 1), 1, :)
     y = ps.weight * r
     return y, st
 end
