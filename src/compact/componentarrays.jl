@@ -1,5 +1,5 @@
-function Base.fill!(A::ComponentArrays.ComponentArray{T, N, A, Ax},
-                    x) where {T, N, A <: GPUArrays.AbstractGPUArray, Ax}
+function Base.fill!(A::ComponentArrays.ComponentArray{T, N, AA, Ax},
+                    x) where {T, N, AA <: GPUArrays.AbstractGPUArray, Ax}
     length(A) == 0 && return A
     GPUArrays.gpu_call(A, convert(T, x)) do ctx, a, val
         idx = GPUArrays.@linearidx(a)
