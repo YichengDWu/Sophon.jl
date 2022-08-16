@@ -14,7 +14,7 @@ julia>] add "https://github.com/MilkshakeForReal/Sophon.jl"
 ```
 
 ## Getting Started
-Simply replace premitive fully connected neural nets with those defined in this pacakge!
+Simply replace primitive fully connected neural nets with those defined in this pacakge!
 
 ```julia
 using NeuralPDE, IntervalSets, Lux, Sophon
