@@ -1,3 +1,9 @@
+"""
+
+## References
+
+[1] Wu, Chenxi, et al. "A comprehensive study of non-adaptive and residual-based adaptive sampling for physics-informed neural networks." arXiv preprint arXiv:2207.10289 (2022).
+"""
 struct RADTraining <: NeuralPDE.AbstractTrainingStrategy
     points::Int64
     bcs_points::Int64
