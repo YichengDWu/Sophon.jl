@@ -1,7 +1,7 @@
 module Sophon
 
 using LinearAlgebra
-using Lux, Random, NNlib, NNlibCUDA, GPUArrays
+using Lux, Random, NNlib, NNlibCUDA
 import Lux: initialparameters, initialstates, AbstractExplicitLayer,
             AbstractExplicitContainerLayer
 
@@ -12,7 +12,7 @@ import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, Tria
 
 using SciMLBase, NeuralPDE, ComponentArrays
 using StatsBase, QuasiMonteCarlo
-using Adapt, ChainRulesCore
+using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
 
 include("layers/basic.jl")
 include("layers/nets.jl")
