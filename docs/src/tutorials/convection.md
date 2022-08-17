@@ -1,3 +1,19 @@
+# 1D Convection Equation
+
+Consider the following 1D-convection equation
+
+```math
+\begin{aligned}
+&\frac{\partial u}{\partial t}+c \frac{\partial u}{\partial x}=0, x \in[0,1], t \in[0,1] \\
+&u(x, 0)=sin(2\pi x) \\
+&u(0,t) = -sin(2\pi *c *t)\\
+&u(1,t) = -sin(2\pi *c *t)
+\end{aligned}
+```
+
+where ``c = 50/2\pi``. First we solve it with `QuasiRandomTraining`.
+
+```@example convection
 using NeuralPDE, Lux, Random, Sophon, IntervalSets
 using Optimization, OptimizationOptimJL, OptimizationOptimisers
 using CUDA
@@ -26,12 +42,12 @@ ps = Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
 discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps)
 prob = discretize(convection, discretization)
 
-callback = function (p,l)
-    println("Current loss is: $l")
-    return false
-end
+@time res = Optimization.solve(prob, Adam(); maxiters = 3000)
+```
 
-@time res = Optimization.solve(prob, Adam(); maxiters = 3000, callback = callback)
+Let's visualize the result.
+
+```@example convection
 phi = discretization.phi
 
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
@@ -40,19 +56,28 @@ u_pred = predict.(xs,ts')
 
 using CairoMakie
 axis = (xlabel="t", ylabel="x", title="β = $β without causal training")
-fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
+fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
+save("result.png", fig); nothing # hide
+```
+![](result.png)
 
-###############################################################################
+Next we see how `[CausalTraining](@ref)` can accelerate training.
 
-discretization = PhysicsInformedNN(chain, CausalTraining(100; epsilon = 150); init_params=ps)
+```@example convection
+discretization = PhysicsInformedNN(chain, CausalTraining(100; epsilon = 50); init_params=ps)
 phi = discretization.phi
 
 prob = discretize(convection, discretization)
 
-@time res = Optimization.solve(prob, Adam(); maxiters = 3000, callback = callback)
+@time res = Optimization.solve(prob, Adam(); maxiters = 3000)
+```
 
+```@example convection
 predict(x,t) = sum(phi(gpu([x,t]),res.u))
 u_pred = predict.(xs,ts')
 
 axis = (xlabel="t", ylabel="x", title="β = $β with causal training")
-fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
+fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
+save("result2.png", fig); nothing # hide
+```
+![](result2.png)
