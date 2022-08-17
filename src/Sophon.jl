@@ -26,7 +26,7 @@ include("compact/componentarrays.jl")
 export GPUComponentArray64
 export Scheduler, get_opt
 export RADTraining
-#export gaussian, quadratic, laplacian, expsin
+export gaussian, quadratic, laplacian, expsin
 export RADTraining, CausalTraining
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF
 export PINNAttention, MultiscaleFourier, FourierAttention, Siren, SirenAttention
