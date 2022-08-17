@@ -64,11 +64,10 @@ save("result.png", fig); nothing # hide
 Next we see how `[CausalTraining](@ref)` can accelerate training.
 
 ```@example convection
-epsilon = 10
+epsilon = 1
 discretization = PhysicsInformedNN(chain, CausalTraining(100; epsilon = epsilon); init_params=ps)
-phi = discretization.phi
-
 prob = discretize(convection, discretization)
+phi = discretization.phi
 
 @time res = Optimization.solve(prob, Adam(); maxiters = 3000)
 
