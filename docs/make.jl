@@ -23,6 +23,7 @@ makedocs(; modules=[Sophon],
              "Tutorials" => [
                  "Fitting a nonlinear discontinuous function" => "tutorials/discontinuous.md",
                  "1D Poisson's Equation" => "tutorials/poisson.md",
+                 "1D Convection Equation" => "tutorials/convection.md",
                  #"1D Wave Equation" => "tutorials/wave.md",
              ],
          ])
