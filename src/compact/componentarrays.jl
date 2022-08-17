@@ -10,14 +10,14 @@ const AbstractGPUComponentMatrix{T, Ax} = ComponentArray{T, 2,
 const AbstractGPUComponentVecorMat{T, Ax} = Union{AbstractGPUComponentVector{T, Ax},
                                                   AbstractGPUComponentMatrix{T, Ax}}
 
-function Base.fill!(A::AbstractGPUComponentArray, x)
-    length(A) == 0 && return A
-    GPUArrays.gpu_call(A, convert(T, x)) do ctx, a, val
+function Base.fill!(AA::AbstractGPUComponentArray{T}, x)
+    length(AA) == 0 && return AA
+    GPUArrays.gpu_call(AA, convert(T, x)) do ctx, a, val
         idx = GPUArrays.@linearidx(a)
         @inbounds a[idx] = val
         return
     end
-    return A
+    return AA
 end
 
 function LinearAlgebra.dot(x::AbstractGPUComponentArray, y::AbstractGPUComponentArray)
