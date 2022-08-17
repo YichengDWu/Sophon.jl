@@ -1,5 +1,6 @@
 module Sophon
 
+using LinearAlgebra
 using Lux, Random, NNlib, NNlibCUDA
 import Lux: initialparameters, initialstates, AbstractExplicitLayer,
             AbstractExplicitContainerLayer
@@ -11,7 +12,7 @@ import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, Tria
 
 using SciMLBase, NeuralPDE, ComponentArrays
 using StatsBase, QuasiMonteCarlo
-using Adapt, ChainRulesCore
+using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
 
 include("layers/basic.jl")
 include("layers/nets.jl")
@@ -20,11 +21,14 @@ include("activations.jl")
 include("scheduler.jl")
 include("training/rad.jl")
 include("training/causal.jl")
+include("compact/componentarrays.jl")
 
+export GPUComponentArray64
 export Scheduler, get_opt
 export RADTraining
 #export gaussian, quadratic, laplacian, expsin
 export RADTraining, CausalTraining
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF
 export PINNAttention, MultiscaleFourier, FourierAttention, Siren, SirenAttention
+
 end

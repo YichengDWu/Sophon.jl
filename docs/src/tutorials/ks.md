@@ -1,3 +1,5 @@
+## This does not look right !
+
 ```julia
 using NeuralPDE, Lux, ModelingToolkit, Optimization, OptimizationOptimJL, Sophon, OptimizationOptimisers
 import ModelingToolkit: Interval, infimum, supremum
@@ -29,9 +31,9 @@ domains = [x ∈ Interval(-10.0,10.0),
            t ∈ Interval(0.0,1.0)]
 
 # Neural network
-chain = Lux.Chain(RBF(2,12,12),RBF(12,12,12),Dense(12,1))
-
-discretization = PhysicsInformedNN(chain, RADTraining(100))
+chain = FullyConnected(2,1, tanh; num_layers = 4, hidden_dims = 16)
+ps = Lux.setup(Random.default_rng(), chain)[1] |> Lux.ComponentArray |> gpu .|> Float64
+discretization = PhysicsInformedNN(chain, CausalTraining(200;epsilon=1); init_params = ps)
 @named pde_system = PDESystem(eq,bcs,domains,[x,t],[u(x, t)])
 prob = discretize(pde_system,discretization)
 
@@ -48,7 +50,7 @@ phi = discretization.phi
 ```julia
 using Plots
 
-xs,ts = [infimum(d.domain):dx:supremum(d.domain) for (d,dx) in zip(domains,[dx/10,dt])]
+xs,ts = [infimum(d.domain):0.1:supremum(d.domain) for d in domains]
 
 u_predict = [[first(phi([x,t],res.u)) for x in xs] for t in ts]
 u_real = [[u_analytic(x,t) for x in xs] for t in ts]

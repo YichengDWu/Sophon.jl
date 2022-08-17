@@ -1,5 +1,4 @@
 """
-
 ## References
 
 [1] Wu, Chenxi, et al. "A comprehensive study of non-adaptive and residual-based adaptive sampling for physics-informed neural networks." arXiv preprint arXiv:2207.10289 (2022).
@@ -68,8 +67,7 @@ function NeuralPDE.get_loss_function(loss_function, bound, eltypeθ, strategy::R
     return loss
 end
 
-ChainRulesCore.@ignore_derivatives function residual_based_sample(loss_function, set, θ, n,
-                                                                  k=2.0, c=k / 100)
+NeuralPDE.@nograd function residual_based_sample(loss_function, set, θ, n, k=2.0, c=k / 100)
     ϵᵏ = (loss_function(set, θ)) .^ k
     w = vec(ϵᵏ .+ c * mean(ϵᵏ))
     subset = wsample([p for p in eachcol(sets)], w, n)
