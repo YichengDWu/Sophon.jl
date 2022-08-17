@@ -10,25 +10,6 @@ const AbstractGPUComponentMatrix{T, Ax} = ComponentArray{T, 2,
 const AbstractGPUComponentVecorMat{T, Ax} = Union{AbstractGPUComponentVector{T, Ax},
                                                   AbstractGPUComponentMatrix{T, Ax}}
 
-function Base.fill!(AA::AbstractGPUComponentArray{T}, x) where {T}
-    length(AA) == 0 && return AA
-    GPUArrays.gpu_call(AA, convert(T, x)) do ctx, a, val
-        idx = GPUArrays.@linearidx(a)
-        @inbounds a[idx] = val
-        return
-    end
-    return AA
-end
-
-function LinearAlgebra.dot(x::AbstractGPUComponentArray, y::AbstractGPUComponentArray)
-    return dot(getdata(x), getdata(y))
-end
-LinearAlgebra.norm(ca::AbstractGPUComponentArray, p::Real) = norm(getdata(ca), p)
-
-function LinearAlgebra.rmul!(ca::AbstractGPUComponentArray, b::Number)
-    return GPUArrays.generic_rmul!(ca, b)
-end
-
 # This is a workaround and should be removed when I have a better understanding of how to do this.
 function Base.adjoint(A::ComponentArray{T, N, AA, Ax}) where {T, N,
                                                               AA <:
