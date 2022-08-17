@@ -3,7 +3,7 @@
 
 ## Keyword arguments
 
-- `epsilon`: How much you respect causality. If `epsilon` is 0, then it falls back to `QuasiRandomTraining`.
+- `epsilon`: How much you respect causality. If `epsilon` is 0, then it falls back to `QuasiRandomTraining`. You can also pass in a `AbstractSchedule`.
 
 ## References
 
@@ -12,11 +12,12 @@
 struct CausalTraining <: NeuralPDE.AbstractTrainingStrategy
     points::Int64
     bcs_points::Int64
-    epsilon::Float64
+    epsilon::AbstractSchedule
     sampling_alg::QuasiMonteCarlo.SamplingAlgorithm
 end
 
 function CausalTraining(points; epsilon, bcs_points=points, sampling_alg=LatinHypercubeSample())
+    epsilon = epsilon isa Real ? Constant(Float64(epsilon)) : epsilon
     return CausalTraining(points, bcs_points, epsilon, sampling_alg)
 end
 
@@ -38,10 +39,11 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
                                                      strategy::CausalTraining,
                                                      datafree_pde_loss_function,
                                                      datafree_bc_loss_function)
-    (;domains, eqs, bcs, dict_indvars, dict_depvars, flat_init_params, dict_indvars, bc_indvars) = pinnrep
+    (;domains, eqs, bcs, dict_indvars, dict_depvars, flat_init_params, dict_indvars, bc_indvars, iteration) = pinnrep
+
+    ϵ = strategy.epsilon(first(iteration)) # Currently not working, there is a bug
 
     tidx = dict_indvars[:t]
-
     init_conditions_idx = Int[]
     for (i,s) in enumerate(bc_indvars)
         :t ∉ s && push!(init_conditions_idx, i)
@@ -57,18 +59,16 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
                          for (_loss, bound) in zip(datafree_bc_loss_function, bcs_bounds)]
 
     init_loss_functions = bc_loss_functions[init_conditions_idx]
-    pde_loss_functions = [get_temporal_loss_function(init_loss_functions, _loss, bound, tidx, eltypeθ, strategy)
+    pde_loss_functions = [get_temporal_loss_function(init_loss_functions, _loss, bound, tidx, eltypeθ, strategy, ϵ)
                           for (_loss, bound) in zip(datafree_pde_loss_function, pde_bounds)]
 
 
     return pde_loss_functions, bc_loss_functions
 end
 
-function get_temporal_loss_function(init_loss_functions, loss_function, bound, tidx, eltypeθ, strategy::CausalTraining)
+function get_temporal_loss_function(init_loss_functions, loss_function, bound, tidx, eltypeθ, strategy::CausalTraining, ϵ)
     sampling_alg = strategy.sampling_alg
     points = strategy.points
-    ϵ = strategy.epsilon
-
     loss = θ -> begin
             set = NeuralPDE.generate_quasi_random_points(points, bound, eltypeθ, sampling_alg)
             W, set_ = get_causal_weights(init_loss_functions,loss_function, θ, SciMLBase.parameterless_type(ComponentArrays.getdata(θ)), set, tidx, ϵ)

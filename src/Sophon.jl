@@ -8,8 +8,8 @@ import Lux: initialparameters, initialstates, AbstractExplicitLayer,
 using Optimisers, Optimization, OptimizationOptimisers
 import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, TriangleExp,
                             Sin, SinDecay2, SinExp, CosAnneal, Sequence, Loop, Interpolator,
-                            Shifted, ComposedSchedule
-
+                            Shifted, ComposedSchedule, Constant
+using ParameterSchedulers: AbstractSchedule
 using SciMLBase, NeuralPDE, ComponentArrays
 using StatsBase, QuasiMonteCarlo
 using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
@@ -18,7 +18,7 @@ include("layers/basic.jl")
 include("layers/nets.jl")
 include("utils.jl")
 include("activations.jl")
-include("scheduler.jl")
+include("training/scheduler.jl")
 include("training/rad.jl")
 include("training/causal.jl")
 include("compact/componentarrays.jl")
