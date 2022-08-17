@@ -64,7 +64,8 @@ save("result.png", fig); nothing # hide
 Next we see how `[CausalTraining](@ref)` can accelerate training.
 
 ```@example convection
-discretization = PhysicsInformedNN(chain, CausalTraining(100; epsilon = 5); init_params=ps)
+epsilon = 10
+discretization = PhysicsInformedNN(chain, CausalTraining(100; epsilon = epsilon); init_params=ps)
 phi = discretization.phi
 
 prob = discretize(convection, discretization)
@@ -74,7 +75,7 @@ prob = discretize(convection, discretization)
 predict(x,t) = sum(phi(gpu([x,t]),res.u))
 u_pred = predict.(xs,ts')
 
-axis = (xlabel="t", ylabel="x", title="β = $β with causal training")
+axis = (xlabel="t", ylabel="x", title="β = $β, epsilon = $epsilon")
 fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
 save("result2.png", fig); nothing # hide
 ```
