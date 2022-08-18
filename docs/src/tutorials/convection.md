@@ -78,6 +78,6 @@ u_pred = predict.(xs,ts')
 
 axis = (xlabel="t", ylabel="x", title="β = $β, epsilon = $epsilon")
 fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
-save("result2.png", fig); nothing # hide
+save("convection2.png", fig); nothing # hide
 ```
-![](result2.png)
+![](convection2.png)
