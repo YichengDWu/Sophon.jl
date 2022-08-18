@@ -42,7 +42,7 @@ ps = Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
 discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps)
 prob = discretize(convection, discretization)
 
-@time res = Optimization.solve(prob, Adam(); maxiters = 3000)
+@time res = Optimization.solve(prob, Adam(); maxiters = 6000)
 ```
 
 Let's visualize the result.
@@ -61,12 +61,12 @@ save("convection.png", fig); nothing # hide
 ```
 ![](convection.png)
 
-## Gaussian activation
+## Causal Training
 
 Next we see how [`CausalTraining`](@ref) can accelerate training.
 
 ```@example convection
-epsilon = 5
+epsilon = 1
 discretization = PhysicsInformedNN(chain, CausalTraining(100; epsilon = epsilon); init_params=ps)
 prob = discretize(convection, discretization)
 phi = discretization.phi
