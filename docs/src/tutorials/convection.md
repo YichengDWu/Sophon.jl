@@ -61,7 +61,7 @@ save("convection.png", fig); nothing # hide
 ```
 ![](convection.png)
 
-## Gaussian activation
+## Causal Training
 
 Next we see how [`CausalTraining`](@ref) can accelerate training.
 

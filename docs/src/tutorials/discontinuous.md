@@ -88,7 +88,7 @@ savefig("result.svg"); nothing # hide
 We can also try using a fully connected net with the [`gaussian`](@ref) activation function.
 
 ```@example ds
-model = FullyConnected(1, (50,50,50,50,1), quadratic)
+model = FullyConnected(1, (50,50,50,50,1), gaussian)
 ```
 
 ```@example ds
