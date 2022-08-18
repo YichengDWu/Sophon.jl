@@ -58,6 +58,6 @@ display(fig)
 ## Related Libraries
 
 - [PaddleScience](https://github.com/PaddlePaddle/PaddleScience)
-- [MindElec](https://gitee.com/mindspore/mindscience/blob/master/MindElec/README.md)
+- [MindScience](https://gitee.com/mindspore/mindscience)
 - [Modulus](https://docs.nvidia.com/deeplearning/modulus/index.html#)
 - [DeepXDE](https://deepxde.readthedocs.io/en/latest/index.html#)
