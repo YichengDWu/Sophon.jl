@@ -26,6 +26,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 Adapt = "3"
+CUDA = "3"
 ChainRulesCore = "1"
 ComponentArrays = "0.13"
 Lux = "0.4"
