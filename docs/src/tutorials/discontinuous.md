@@ -46,7 +46,7 @@ savefig("u.svg"); nothing # hide
 ## Model
 We use four hidden layers with 50 neurons in each.
 ```@example ds
-model = Siren(1,(50,50,50,50,1))
+model = Siren(1,50,50,50,50,1)
 ```
 ## Train the model
 
@@ -64,7 +64,7 @@ function train(model)
     for i in 1:2000
         gs = gradient(p->loss(model,p,st,x,y), ps)[1]
         st_opt, ps = Optimisers.update(st_opt, ps, gs)
-        if i % 10 == 1 || i == 100
+        if i % 100 == 1 || i == 100
             println("Epoch $i ||  ", loss(model,ps,st,x,y))
         end
     end
@@ -88,7 +88,7 @@ savefig("result.svg"); nothing # hide
 We can also try using a fully connected net with the [`gaussian`](@ref) activation function.
 
 ```@example ds
-model = FullyConnected(1, (50,50,50,50,1), gaussian)
+model = FullyConnected((1,50,50,50,50,1), gaussian)
 ```
 
 ```@example ds

@@ -22,7 +22,7 @@ bcs = [u(0) ~ 0, u(1) ~ 0]
 
 @named poisson = PDESystem(eq, bcs, domain, [x], [u(x)])
 
-chain = Siren(1, (32, 32, 32, 32, 1))
+chain = Siren(1, 32, 32, 32, 32, 1)
 discretization = PhysicsInformedNN(chain,  GridTraining(0.01))
 prob = discretize(poisson, discretization)
 

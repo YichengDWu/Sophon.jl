@@ -24,16 +24,16 @@ rng = Random.default_rng()
         end
 
         @testset "FullyConnected" begin
-            fc = FullyConnected(2, (4,), sin)
+            fc = FullyConnected((2,4), sin)
             @test fc == Dense(2, 4, sin)
-            fc2 = FullyConnected(2, (4, 5, 6), sin)
+            fc2 = FullyConnected((2, 4, 5, 6), sin)
             @test values(map(x -> x.out_dims, fc2.layers)) == (4, 5, 6)
             @test fc2.layers[end].activation == identity
             fc3 = FullyConnected(2, 4, sin; hidden_dims=4, num_layers=2)
             @test values(map(x -> x.out_dims, fc3.layers)) == (4, 4, 4)
             @test fc3.layers[end].activation == identity
 
-            fc4 = FullyConnected(2, (4, 5, 6), sin; outermost=false)
+            fc4 = FullyConnected((2, 4, 5, 6), sin; outermost=false)
             @test fc4.layers[end].activation == sin
             fc5 = FullyConnected(2, 4, sin; hidden_dims=4, num_layers=4, outermost=false)
             @test fc5.layers[end].activation == sin
@@ -99,19 +99,19 @@ rng = Random.default_rng()
 
         @testset "Siren" begin
             x = rand(Float32, 2, 5)
-            siren = Siren(2, 4, 3)
+            siren = Siren(2, 4; hidden_dims = 4, num_layers = 3)
             @test siren.layers[1].init_omega() == 30.0f0
-            @test siren.layers[3].activation == identity
+            @test siren.layers[end].activation == identity
             ps, st = Lux.setup(rng, siren)
             y, st = siren(x, ps, st)
             @test size(y) == (4, 5)
             @test Lux.statelength(siren) == 1
 
-            siren2 = Siren(2, (3, 4, 5))
+            siren2 = Siren((2, 3, 4, 5))
             @test siren2.layers[1].init_omega() == 30.0f0
-            @test siren2.layers[3].activation == identity
+            @test siren2.layers[end].activation == identity
             ps2, st2 = Lux.setup(rng, siren2)
-            y2, st2 = siren(x, ps2, st2)
+            y2, st2 = siren2(x, ps2, st2)
             @test size(y2) == (5, 5)
             @test Lux.statelength(siren) == 1
         end

@@ -176,7 +176,7 @@ end
 Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 
 """
-    FullyConnected(in_dims, hidden_dims::NTuple{N, Int}, activation; outermost = true)
+    FullyConnected(layer_dims::NTuple{N, Int}, activation; outermost = true)
     FullyConnected(in_dims::Int, out_dims::Int, activation::Function;
                    hidden_dims::Int, num_layers::Int, outermost=true)
 
@@ -184,8 +184,8 @@ Create fully connected layers.
 
 ## Arguments
 
-  - `in_dims`: Input dimension.
-  - `hidden_dims`: Hidden dimensions.
+  - `layer_dims`: Number of dimensions of each layer.
+  - `hidden_dims`: Number of hidden dimensions.
   - `num_layers`: Number of layers.
   - `activation`: Activation function.
 
@@ -197,7 +197,7 @@ Create fully connected layers.
 ## Example
 
 ```julia
-julia> fc = FullyConnected(1, (12, 24, 32), relu)
+julia> fc = FullyConnected((1, 12, 24, 32), relu)
 Chain(
     layer_1 = Dense(1 => 12, relu),     # 24 parameters
     layer_2 = Dense(12 => 24, relu),    # 312 parameters
@@ -215,25 +215,25 @@ Chain(
           #        plus 0 states, summarysize 64 bytes.
 ```
 """
-function FullyConnected(in_dims::Int, hidden_dims::NTuple{N, T}, activation::Function;
+function FullyConnected(layer_dims::NTuple{N, T}, activation::Function;
                         outermost::Bool=true) where {N, T <: Int}
-    return FullyConnected(in_dims, hidden_dims, activation, Val(outermost))
+    return FullyConnected(layer_dims, activation, Val(outermost))
 end
 
 function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
                         num_layers::Int, outermost::Bool=true)
-    return FullyConnected(in_dims, (ntuple(_ -> hidden_dims, num_layers)..., out_dims),
+    return FullyConnected((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims),
                           activation, Val(outermost))
 end
 
-@generated function FullyConnected(in_dims::Int, hidden_dims::NTuple{N, T},
+@generated function FullyConnected(layer_dims::NTuple{N, T},
                                    activation::Function, ::Val{F}) where {N, T <: Int, F}
-    N == 1 && return :(Dense(in_dims, hidden_dims[1], activation))
-    get_layer(i) = :(Dense(hidden_dims[$i] => hidden_dims[$(i + 1)], activation))
-    layers = [:(Dense(in_dims => hidden_dims[1], activation))]
-    append!(layers, [get_layer(i) for i in 1:(N - 2)])
+    N == 2 && return :(Dense(layer_dims[1], layer_dims[2], activation))
+    get_layer(i) = :(Dense(layer_dims[$i] => layer_dims[$(i + 1)], activation))
+    layers = [:(Dense(layer_dims[1] => layer_dims[2], activation))]
+    append!(layers, [get_layer(i) for i in 2:(N - 2)])
     append!(layers,
-            F ? [:(Dense(hidden_dims[$(N - 1)] => hidden_dims[$N]))] : [get_layer(N - 1)])
+            F ? [:(Dense(layer_dims[$(N - 1)] => layer_dims[$N]))] : [get_layer(N - 1)])
     return :(Chain($(layers...)))
 end
 
