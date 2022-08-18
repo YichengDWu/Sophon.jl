@@ -84,46 +84,47 @@ function get_pde_and_bc_loss_function(init_loss_functions, datafree_bc_loss_func
     sampling_alg = stategy.sampling_alg
     points = stategy.points
 
-    function get_bc_loss_func(bc_loss_func, bc_bound)
+    function get_ordered_loss_function(loss_func, bound)
         return θ -> begin
-            set = NeuralPDE.generate_quasi_random_points(points, bc_bound, eltypeθ,
+            set = NeuralPDE.generate_quasi_random_points(points, bound, eltypeθ,
                                                          sampling_alg)
             set = sortslices(set; dims=2, alg=InsertionSort,
                              lt=(x, y) -> isless(x[tidx], y[tidx]))
             set_ = ChainRulesCore.@ignore_derivatives adapt(device, set)
-            abs2.(bc_loss_func(set_, θ))
+            abs2.(loss_func(set_, θ))
         end
     end
 
-    bc_loss_functions = [get_bc_loss_func(bc_loss_func, bc_bound)
+    bc_loss_functions = [get_ordered_loss_function(bc_loss_func, bc_bound)
                          for (bc_loss_func, bc_bound) in zip(datafree_bc_loss_functions,
                                                              bc_bounds)]
 
-    function get_pde_loss_function(datafree_pde_loss_func, pde_bound)
-        return θ -> begin
-            L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
-            L_bc = reduce((x, y) -> x .+ y,
-                          [loss_func(θ) for loss_func in bc_loss_functions])
+    pde_loss_functions = [get_ordered_loss_function(pde_loss_func, pde_bound)
+                          for (pde_loss_func, pde_bound) in zip(datafree_pde_functions,
+                                                                pde_bounds)]
 
-            set = NeuralPDE.generate_quasi_random_points(points, pde_bound, eltypeθ,
-                                                         sampling_alg)
-            set = sortslices(set; dims=2, alg=InsertionSort,
-                             lt=(x, y) -> isless(x[tidx], y[tidx]))
-            set_ = adapt(device, set)
-            L_pde = ChainRulesCore.@ignore_derivatives abs2.(datafree_pde_loss_func(set_,
-                                                                                    θ))
-            L = ChainRulesCore.@ignore_derivatives hcat(adapt(device, [L_init;;]),
-                                                        L_bc[:, 1:(end - 1)] .+
-                                                        L_pde[:, 1:(end - 1)])
-            W = ChainRulesCore.@ignore_derivatives exp.(-ϵ / points .* cumsum(L; dims=2))
-            mean(abs2, W .* datafree_pde_loss_func(set_, θ))
+    get_causal_weight = θ -> begin
+        L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
+        L_bc = reduce((x, y) -> x .+ y, [loss_func(θ) for loss_func in bc_loss_functions])
+        L_pde = reduce((x, y) -> x .+ y, [loss_func(θ) for loss_func in pde_loss_functions])
+
+        L = ChainRulesCore.@ignore_derivatives hcat(adapt(device, [L_init;;]),
+                                                    L_bc[:, 1:(end - 1)] .+
+                                                    L_pde[:, 1:(end - 1)])
+        W = ChainRulesCore.@ignore_derivatives exp.(-ϵ / points .* cumsum(L; dims=2))
+        Main.a[] = W
+        return W
+    end
+
+    get_reduced_loss_function = loss_func -> begin
+        θ -> begin
+            W = get_causal_weight(θ)
+            mean(abs2, W .* loss_func(θ))
         end
     end
 
-    pde_loss_functions = [get_pde_loss_function(pde_loss_func, pde_bound)
-                          for (pde_loss_func, pde_bound) in zip(datafree_pde_functions,
-                                                                pde_bounds)]
-    reduced_bc_loss_functions = [θ -> mean(loss_func(θ)) for loss_func in bc_loss_functions]
+    reduced_pde_loss_functions = [get_reduced_loss_function(func) for func in pde_loss_functions]
+    reduced_bc_loss_functions = [get_reduced_loss_function(func) for func in bc_loss_functions]
 
-    return pde_loss_functions, reduced_bc_loss_functions
+    return reduced_pde_loss_functions, reduced_bc_loss_functions
 end

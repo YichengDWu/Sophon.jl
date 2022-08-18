@@ -33,7 +33,7 @@ domains = [x ∈ 0..1, t ∈ 0..1]
 
 bcs = [u(0,t) ~ u_analytic(0,t),
        u(1,t) ~ u_analytic(1,t),
-       u(x,0) ~ sin(2π*x)]
+       u(x,0) ~ u_analytic(x,0)]
 
 @named convection = PDESystem(eq, bcs, domains, [x,t], [u(x,t)])
 
@@ -66,7 +66,7 @@ save("convection.png", fig); nothing # hide
 Next we see how [`CausalTraining`](@ref) can accelerate training.
 
 ```@example convection
-epsilon = 5
+epsilon = 1
 discretization = PhysicsInformedNN(chain, CausalTraining(100; epsilon = epsilon); init_params=ps)
 prob = discretize(convection, discretization)
 phi = discretization.phi
