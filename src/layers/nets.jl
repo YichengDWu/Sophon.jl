@@ -138,7 +138,7 @@ function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
 end
 
 """
-    MultiscaleFourier(in_dims::Int, out_dims::NTuple, activation=identity, modes::NTuple)
+    MultiscaleFourier(in_dims::Int, layer_dims::NTuple, activation=identity, modes::NTuple)
 
 Multi-scale Fourier Feature Net.
 
@@ -149,7 +149,7 @@ x → FourierFeature → FullyConnected → y
 # Arguments
 
   - `in_dims`: The number of input dimensions.
-  - `hidden_dims`: A tuple of hidden dimensions used to construct `FullyConnected`.
+  - `layer_dims`: A tuple of hidden dimensions used to construct `FullyConnected`.
   - `activation`: The activation function used to construct `FullyConnected`.
   - `modes`: A tuple of modes used to construct `FourierFeature`.
 
@@ -160,7 +160,14 @@ x → FourierFeature → FullyConnected → y
 # Examples
 
 ```julia
-m = MultiscaleFourier(2, (30, 30, 1), sin; modes=(1 => 10, 10 => 10, 50 => 10))
+julia> m = MultiscaleFourier(2, (30, 30, 1), sin; modes=(1 => 10, 10 => 10, 50 => 10))
+Chain(
+    layer_1 = FourierFeature(2 => 60),
+    layer_2 = Dense(60 => 30, sin),     # 1_830 parameters
+    layer_3 = Dense(30 => 30, sin),     # 930 parameters
+    layer_4 = Dense(30 => 1),           # 31 parameters
+)         # Total: 2_791 parameters,
+          #        plus 60 states, summarysize 112 bytes.
 ```
 
 # References
@@ -175,13 +182,13 @@ function MultiscaleFourier(in_dims::Int,
                                                                                          N2,
                                                                                          S}
     fourierfeature = FourierFeature(in_dims, modes)
-    fc = FullyConnected(fourierfeature.out_dims, out_dims, activation)
+    fc = FullyConnected((fourierfeature.out_dims, out_dims...), activation)
     return Chain(fourierfeature, fc)
 end
 
 """
     Siren(in_dims::Int, hidden_dim::Int, num_layers::Int; omega = 30f0)
-    Siren(in_dims::Int, hidden_dims::NTuple{N, T}; omega = 30f0) where {N, T <: Int}
+    Siren(layer_dims::NTuple{N, T}; omega = 30f0) where {N, T <: Int}
 
 Sinusoidal Representation Network.
 
@@ -189,20 +196,44 @@ Sinusoidal Representation Network.
 
   - `omega`: The `ω₀` used for the first layer.
 
+## Examples
+```julia
+julia> Siren(3; hidden_dims=20, num_layers=3)
+Chain(
+    layer_1 = Sine(3 => 20),            # 80 parameters, plus 1
+    layer_2 = Sine(20 => 20),           # 420 parameters
+    layer_3 = Sine(20 => 20),           # 420 parameters
+)         # Total: 920 parameters,
+          #        plus 1 states, summarysize 292 bytes.
+
+julia> Siren(3, 1; hidden_dims=20, num_layers=3)
+Chain(
+    layer_1 = Sine(3 => 20),            # 80 parameters, plus 1
+    layer_2 = Sine(20 => 20),           # 420 parameters
+    layer_3 = Sine(20 => 20),           # 420 parameters
+    layer_4 = Sine(20 => 1),            # 21 parameters
+)         # Total: 941 parameters,
+          #        plus 1 states, summarysize 388 bytes.
+```
+
 ## References
 
 [1] Sitzmann, Vincent, et al. "Implicit neural representations with periodic activation functions." Advances in Neural Information Processing Systems 33 (2020): 7462-7473.
 """
-function Siren(in_dims::Int, hidden_dim::Int, num_layers::Int; omega=30.0f0)
-    return Siren(in_dims, ntuple(i -> hidden_dim, num_layers); omega=omega)
+function Siren(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, omega=30.0f0)
+    return Siren((in_dims, ntuple(i -> hidden_dims, num_layers)..., out_dims); omega=omega)
 end
 
-@generated function Siren(in_dims::Int, hidden_dims::NTuple{N, T};
+function Siren(layer_dims::Int...; omega=30.0f0)
+    return Siren(layer_dims; omega=omega)
+end
+
+@generated function Siren(layer_dims::NTuple{N, T};
                           omega=30.0f0) where {N, T <: Int}
-    N == 1 && return :(Sine(in_dims, hidden_dims[1]; is_first=true, omega=omega))
-    get_layer(i) = :(Sine(hidden_dims[$i] => hidden_dims[$(i + 1)]))
-    layers = [:(Sine(in_dims => hidden_dims[1]; is_first=true, omega=omega))]
-    append!(layers, [get_layer(i) for i in 1:(N - 2)])
-    append!(layers, [:(Sine(hidden_dims[$(N - 1)] => hidden_dims[$N], identity))])
+    N == 2 && return :(Sine(layer_dims[1], layer_dims[2]; is_first=true, omega=omega))
+    get_layer(i) = :(Sine(layer_dims[$i] => layer_dims[$(i + 1)]))
+    layers = [:(Sine(layer_dims[1] => layer_dims[2]; is_first=true, omega=omega))]
+    append!(layers, [get_layer(i) for i in 2:(N - 2)])
+    append!(layers, [:(Sine(layer_dims[$(N - 1)] => layer_dims[$N], identity))])
     return :(Chain($(layers...)))
 end
