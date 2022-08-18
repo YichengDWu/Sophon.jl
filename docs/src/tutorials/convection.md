@@ -57,11 +57,11 @@ u_pred = predict.(xs,ts')
 using CairoMakie
 axis = (xlabel="t", ylabel="x", title="β = $β without causal training")
 fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
-save("result.png", fig); nothing # hide
+save("convection.png", fig); nothing # hide
 ```
-![](result.png)
+![](convection.png)
 
-Next we see how `[CausalTraining](@ref)` can accelerate training.
+Next we see how [`CausalTraining`](@ref) can accelerate training.
 
 ```@example convection
 epsilon = 5
