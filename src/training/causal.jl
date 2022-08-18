@@ -116,7 +116,6 @@ function get_pde_and_bc_loss_function(init_loss_functions, datafree_bc_loss_func
                                                         L_bc[:, 1:(end - 1)] .+
                                                         L_pde[:, 1:(end - 1)])
             W = ChainRulesCore.@ignore_derivatives exp.(-ϵ / points .* cumsum(L; dims=2))
-            Main.a[] = W
             mean(abs2, W .* datafree_pde_loss_func(set_, θ))
         end
     end

@@ -42,7 +42,7 @@ ps = Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
 discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps)
 prob = discretize(convection, discretization)
 
-@time res = Optimization.solve(prob, Adam(); maxiters = 6000)
+@time res = Optimization.solve(prob, Adam(); maxiters = 3000)
 ```
 
 Let's visualize the result.
@@ -78,6 +78,6 @@ u_pred = predict.(xs,ts')
 
 axis = (xlabel="t", ylabel="x", title="β = $β, epsilon = $epsilon")
 fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
-save("result2.png", fig); nothing # hide
+save("convection2.png", fig); nothing # hide
 ```
-![](result2.png)
+![](convection2.png)
