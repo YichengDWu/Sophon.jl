@@ -6,8 +6,8 @@ Consider the following 1D-convection equation
 \begin{aligned}
 &\frac{\partial u}{\partial t}+c \frac{\partial u}{\partial x}=0, x \in[0,1], t \in[0,1] \\
 &u(x, 0)=sin(2\pi x) \\
-&u(0,t) = -sin(2\pi *c *t)\\
-&u(1,t) = -sin(2\pi *c *t)
+&u(0,t) = -sin(2\pi ct)\\
+&u(1,t) = -sin(2\pi ct)
 \end{aligned}
 ```
 
