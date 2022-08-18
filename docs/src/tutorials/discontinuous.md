@@ -85,35 +85,10 @@ savefig("result.svg"); nothing # hide
 
 ## Gaussian activation
 
-We can also try using a fully connected net with the Gaussian activation function.
+We can also try using a fully connected net with the [`gaussian`](@ref) activation function.
 
 ```@example ds
-model = FullyConnected(1, (50,50,50,50,1), gaussian)
-```
-
-Note that we need to regularize the parameters of the model so that it is able to capture low frequence components.
-
-```@example ds
-function train(model)
-    ps, st = Lux.setup(Random.default_rng(), model)
-    ps = Lux.ComponentArray(ps)
-    opt = Adam()
-    st_opt = Optimisers.setup(opt,ps)
-    function loss(model, ps, st, x, y)
-        y_pred, _ = model(x, ps, st)
-        mes = mean(abs2, y_pred .- y) + 0.01f0 * sum(abs2, ps)
-        return mes
-    end
-
-    for i in 1:2000
-        gs = gradient(p->loss(model,p,st,x,y), ps)[1]
-        st_opt, ps = Optimisers.update(st_opt, ps, gs)
-        if i % 10 == 1 || i == 100
-            println("Epoch $i ||  ", loss(model,ps,st,x,y))
-        end
-    end
-    return ps, st
-end
+model = FullyConnected(1, (50,50,50,50,1), quadratic)
 ```
 
 ```@example ds
