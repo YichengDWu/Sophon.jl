@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Fitting a nonlinear discontinuous function · Sophon.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://MilkshakeForReal.github.io/Sophon.jl/tutorials/discontinuous/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Sophon.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li class="is-active"><a class="tocitem" href>Fitting a nonlinear discontinuous function</a><ul class="internal"><li><a class="tocitem" href="#Import-pacakges"><span>Import pacakges</span></a></li><li><a class="tocitem" href="#Dataset"><span>Dataset</span></a></li><li><a class="tocitem" href="#Model"><span>Model</span></a></li><li><a class="tocitem" href="#Train-the-model"><span>Train the model</span></a></li><li><a class="tocitem" href="#Results"><span>Results</span></a></li><li><a class="tocitem" href="#Gaussian-activation"><span>Gaussian activation</span></a></li></ul></li><li><a class="tocitem" href="../poisson/">1D Poisson&#39;s Equation</a></li><li><a class="tocitem" href="../convection/">1D Convection Equation</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Fitting a nonlinear discontinuous function</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Fitting a nonlinear discontinuous function</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/MilkshakeForReal/Sophon.jl/blob/main/docs/src/tutorials/discontinuous.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Fitting-a-nonlinear-discontinuous-function"><a class="docs-heading-anchor" href="#Fitting-a-nonlinear-discontinuous-function">Fitting a nonlinear discontinuous function</a><a id="Fitting-a-nonlinear-discontinuous-function-1"></a><a class="docs-heading-anchor-permalink" href="#Fitting-a-nonlinear-discontinuous-function" title="Permalink"></a></h1><p>This example is taken from <a href="https://royalsocietypublishing.org/doi/epdf/10.1098/rspa.2020.0334">here</a>.</p><p>The following  discontinuous  function  with  discontinuity  at <span>$x=0$</span>  location  is approximated by <a href="../../#Sophon.Siren-Tuple{Int64, Int64}"><code>Siren</code></a>.</p><p class="math-container">\[u(x)= \begin{cases}0.2 \sin (18 x) &amp; \text { if } x \leq 0 \\ 1+0.3 x \cos (54 x) &amp; \text { otherwise }\end{cases}\]</p><p>The domain is <span>$[-1,1]$</span>. The number of training points used is <code>300</code>.</p><h2 id="Import-pacakges"><a class="docs-heading-anchor" href="#Import-pacakges">Import pacakges</a><a id="Import-pacakges-1"></a><a class="docs-heading-anchor-permalink" href="#Import-pacakges" title="Permalink"></a></h2><pre><code class="language-julia hljs">using Lux, Sophon
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Fitting a nonlinear discontinuous function · Sophon.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://MilkshakeForReal.github.io/Sophon.jl/tutorials/discontinuous/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Sophon.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li class="is-active"><a class="tocitem" href>Fitting a nonlinear discontinuous function</a><ul class="internal"><li><a class="tocitem" href="#Import-pacakges"><span>Import pacakges</span></a></li><li><a class="tocitem" href="#Dataset"><span>Dataset</span></a></li><li><a class="tocitem" href="#Model"><span>Model</span></a></li><li><a class="tocitem" href="#Train-the-model"><span>Train the model</span></a></li><li><a class="tocitem" href="#Results"><span>Results</span></a></li><li><a class="tocitem" href="#Gaussian-activation-function"><span>Gaussian activation function</span></a></li><li><a class="tocitem" href="#Quadratic-activation-function"><span>Quadratic activation function</span></a></li></ul></li><li><a class="tocitem" href="../poisson/">1D Poisson&#39;s Equation</a></li><li><a class="tocitem" href="../convection/">1D Convection Equation</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Fitting a nonlinear discontinuous function</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Fitting a nonlinear discontinuous function</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/MilkshakeForReal/Sophon.jl/blob/main/docs/src/tutorials/discontinuous.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Fitting-a-nonlinear-discontinuous-function"><a class="docs-heading-anchor" href="#Fitting-a-nonlinear-discontinuous-function">Fitting a nonlinear discontinuous function</a><a id="Fitting-a-nonlinear-discontinuous-function-1"></a><a class="docs-heading-anchor-permalink" href="#Fitting-a-nonlinear-discontinuous-function" title="Permalink"></a></h1><p>This example is taken from <a href="https://royalsocietypublishing.org/doi/epdf/10.1098/rspa.2020.0334">here</a>.</p><p>The following  discontinuous  function  with  discontinuity  at <span>$x=0$</span>  location  is approximated by <a href="../../#Sophon.Siren-Tuple{Int64, Int64}"><code>Siren</code></a>.</p><p class="math-container">\[u(x)= \begin{cases}0.2 \sin (18 x) &amp; \text { if } x \leq 0 \\ 1+0.3 x \cos (54 x) &amp; \text { otherwise }\end{cases}\]</p><p>The domain is <span>$[-1,1]$</span>. The number of training points used is <code>300</code>.</p><h2 id="Import-pacakges"><a class="docs-heading-anchor" href="#Import-pacakges">Import pacakges</a><a id="Import-pacakges-1"></a><a class="docs-heading-anchor-permalink" href="#Import-pacakges" title="Permalink"></a></h2><pre><code class="language-julia hljs">using Lux, Sophon
 using NNlib, Optimisers, Plots, Random, Statistics, Zygote</code></pre><h2 id="Dataset"><a class="docs-heading-anchor" href="#Dataset">Dataset</a><a id="Dataset-1"></a><a class="docs-heading-anchor-permalink" href="#Dataset" title="Permalink"></a></h2><pre><code class="language-julia hljs">function u(x)
     if x &lt;= 0
         return 0.2 * sin(18 * x)
@@ -38,57 +38,90 @@ Plots.plot(vec(x), vec(y),label=false)</code></pre><p><img src="../u.svg" alt/><
         end
     end
     return ps, st
-end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">train (generic function with 1 method)</code></pre><h2 id="Results"><a class="docs-heading-anchor" href="#Results">Results</a><a id="Results-1"></a><a class="docs-heading-anchor-permalink" href="#Results" title="Permalink"></a></h2><pre><code class="language-julia hljs">ps, st = train(model)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">train (generic function with 1 method)</code></pre><h2 id="Results"><a class="docs-heading-anchor" href="#Results">Results</a><a id="Results-1"></a><a class="docs-heading-anchor-permalink" href="#Results" title="Permalink"></a></h2><pre><code class="language-julia hljs">@time ps, st = train(model)
 y_pred = model(x,ps,st)[1]
 Plots.plot(vec(x), vec(y_pred),label=&quot;Prediction&quot;,line = (:dot, 4))
-Plots.plot!(vec(x), vec(y),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.8917135640618253
-Epoch 100 ||  0.0032441225413253135
-Epoch 101 ||  0.00317178218523841
-Epoch 201 ||  0.000861425681648339
-Epoch 301 ||  0.0006279794902147404
-Epoch 401 ||  0.0005228044218241294
-Epoch 501 ||  0.00044673054539116105
-Epoch 601 ||  0.0003793436973003013
-Epoch 701 ||  0.0003150591700928125
-Epoch 801 ||  0.0002534952518144098
-Epoch 901 ||  0.00019613326498002645
-Epoch 1001 ||  0.00014575836785261486
-Epoch 1101 ||  0.0001056407161129785
-Epoch 1201 ||  7.689107082444358e-5
-Epoch 1301 ||  5.743049282496273e-5
-Epoch 1401 ||  4.4140051044363e-5
-Epoch 1501 ||  3.4682590526271475e-5
-Epoch 1601 ||  2.765638311337523e-5
-Epoch 1701 ||  2.2267330502960156e-5
-Epoch 1801 ||  1.8065907200388776e-5
-Epoch 1901 ||  1.4777193959159678e-5</code></pre><p><img src="../result.svg" alt/></p><h2 id="Gaussian-activation"><a class="docs-heading-anchor" href="#Gaussian-activation">Gaussian activation</a><a id="Gaussian-activation-1"></a><a class="docs-heading-anchor-permalink" href="#Gaussian-activation" title="Permalink"></a></h2><p>We can also try using a fully connected net with the <a href="../../#Sophon.gaussian"><code>gaussian</code></a> activation function.</p><pre><code class="language-julia hljs">model = FullyConnected((1,50,50,50,50,1), gaussian)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
+Plots.plot!(vec(x), vec(y),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  1.624106761352083
+Epoch 100 ||  0.004008953800840117
+Epoch 101 ||  0.003941920203925761
+Epoch 201 ||  0.0013276437069159495
+Epoch 301 ||  0.0008706899672991391
+Epoch 401 ||  0.0007063740095432075
+Epoch 501 ||  0.0006043616194975263
+Epoch 601 ||  0.0005244241572444828
+Epoch 701 ||  0.00045690456682439087
+Epoch 801 ||  0.0003982866862545179
+Epoch 901 ||  0.00034642791104220967
+Epoch 1001 ||  0.0002991917847424417
+Epoch 1101 ||  0.0002543537292692156
+Epoch 1201 ||  0.00021020757391385152
+Epoch 1301 ||  0.00016640500615113462
+Epoch 1401 ||  0.0001246589060919708
+Epoch 1501 ||  8.855627573312371e-5
+Epoch 1601 ||  6.143564599585014e-5
+Epoch 1701 ||  4.366521615892582e-5
+Epoch 1801 ||  3.278629453636258e-5
+Epoch 1901 ||  2.595153630506457e-5
+ 68.967137 seconds (63.11 M allocations: 7.894 GiB, 3.09% gc time, 92.11% compilation time)</code></pre><p><img src="../result.svg" alt/></p><h2 id="Gaussian-activation-function"><a class="docs-heading-anchor" href="#Gaussian-activation-function">Gaussian activation function</a><a id="Gaussian-activation-function-1"></a><a class="docs-heading-anchor-permalink" href="#Gaussian-activation-function" title="Permalink"></a></h2><p>We can also try using a fully connected net with the <a href="../../#Sophon.gaussian"><code>gaussian</code></a> activation function.</p><pre><code class="language-julia hljs">model = FullyConnected((1,50,50,50,50,1), gaussian)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
     layer_1 = Dense(1 =&gt; 50, gaussian),  # 100 parameters
     layer_2 = Dense(50 =&gt; 50, gaussian),  # 2_550 parameters
     layer_3 = Dense(50 =&gt; 50, gaussian),  # 2_550 parameters
     layer_4 = Dense(50 =&gt; 50, gaussian),  # 2_550 parameters
     layer_5 = Dense(50 =&gt; 1),           # 51 parameters
 )         # Total: 7_801 parameters,
-          #        plus 0 states, summarysize 80 bytes.</code></pre><pre><code class="language-julia hljs">ps, st = train(model)
+          #        plus 0 states, summarysize 80 bytes.</code></pre><pre><code class="language-julia hljs">@time ps, st = train(model)
 y_pred = model(x,ps,st)[1]
 Plots.plot(vec(x), vec(y_pred),label=&quot;Prediction&quot;,line = (:dot, 4))
-Plots.plot!(vec(x), vec(y),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.4101616756284605
-Epoch 100 ||  0.012489327118187864
-Epoch 101 ||  0.012406789014113002
-Epoch 201 ||  0.006779767514215584
-Epoch 301 ||  0.004115998360214997
-Epoch 401 ||  0.0031988102164670997
-Epoch 501 ||  0.002461772132435951
-Epoch 601 ||  0.0020290606216048575
-Epoch 701 ||  0.0016763893997729115
-Epoch 801 ||  0.0014272248067334092
-Epoch 901 ||  0.0014738901245734198
-Epoch 1001 ||  0.0011297196930868877
-Epoch 1101 ||  0.0009636989132838725
-Epoch 1201 ||  0.001061444991960942
-Epoch 1301 ||  0.0013951610053800489
-Epoch 1401 ||  0.0008750106867642291
-Epoch 1501 ||  0.0006695349962982731
-Epoch 1601 ||  0.0006588346790956044
-Epoch 1701 ||  0.0005976229573983089
-Epoch 1801 ||  0.0005463516635719487
-Epoch 1901 ||  0.0006293807881866013</code></pre><p><img src="../result2.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../poisson/">1D Poisson&#39;s Equation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.22 on <span class="colophon-date" title="Friday 19 August 2022 18:55">Friday 19 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Plots.plot!(vec(x), vec(y),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.5758981542734897
+Epoch 100 ||  0.011959683022181268
+Epoch 101 ||  0.01187569919274403
+Epoch 201 ||  0.006273641706435442
+Epoch 301 ||  0.004696961232120991
+Epoch 401 ||  0.003942219216207927
+Epoch 501 ||  0.003297123787039723
+Epoch 601 ||  0.00258545086678118
+Epoch 701 ||  0.0028644238749408937
+Epoch 801 ||  0.0016797547556816627
+Epoch 901 ||  0.0013685955236439472
+Epoch 1001 ||  0.0012010541006715562
+Epoch 1101 ||  0.000923860198561763
+Epoch 1201 ||  0.0007680921913521491
+Epoch 1301 ||  0.0007149498483215455
+Epoch 1401 ||  0.0006291908848224853
+Epoch 1501 ||  0.0006260695764021121
+Epoch 1601 ||  0.0005532251910374659
+Epoch 1701 ||  0.0005103933752191986
+Epoch 1801 ||  0.0005180710942447134
+Epoch 1901 ||  0.0006034476206861645
+ 18.268884 seconds (14.25 M allocations: 4.475 GiB, 4.47% gc time, 69.64% compilation time)</code></pre><p><img src="../result2.svg" alt/></p><h2 id="Quadratic-activation-function"><a class="docs-heading-anchor" href="#Quadratic-activation-function">Quadratic activation function</a><a id="Quadratic-activation-function-1"></a><a class="docs-heading-anchor-permalink" href="#Quadratic-activation-function" title="Permalink"></a></h2><p><a href="tutorials/@ref"><code>quadratic</code></a> is much cheaper to compute compared to the Gaussain activation function.</p><pre><code class="language-julia hljs">model = FullyConnected((1,50,50,50,50,1), quadratic)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
+    layer_1 = Dense(1 =&gt; 50, quadratic),  # 100 parameters
+    layer_2 = Dense(50 =&gt; 50, quadratic),  # 2_550 parameters
+    layer_3 = Dense(50 =&gt; 50, quadratic),  # 2_550 parameters
+    layer_4 = Dense(50 =&gt; 50, quadratic),  # 2_550 parameters
+    layer_5 = Dense(50 =&gt; 1),           # 51 parameters
+)         # Total: 7_801 parameters,
+          #        plus 0 states, summarysize 80 bytes.</code></pre><pre><code class="language-julia hljs">@time ps, st = train(model)
+y_pred = model(x,ps,st)[1]
+Plots.plot(vec(x), vec(y_pred),label=&quot;Prediction&quot;,line = (:dot, 4))
+Plots.plot!(vec(x), vec(y),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.3460114734368781
+Epoch 100 ||  0.010947825187802154
+Epoch 101 ||  0.010912972259925987
+Epoch 201 ||  0.008783072829125894
+Epoch 301 ||  0.0074063724490492965
+Epoch 401 ||  0.006528441364880616
+Epoch 501 ||  0.005417144339530833
+Epoch 601 ||  0.003328582597384821
+Epoch 701 ||  0.002034480771268627
+Epoch 801 ||  0.0014095810604877247
+Epoch 901 ||  0.0010890760824119306
+Epoch 1001 ||  0.0011374068548654275
+Epoch 1101 ||  0.0008629074125366082
+Epoch 1201 ||  0.0006119879108666001
+Epoch 1301 ||  0.0006002160630000394
+Epoch 1401 ||  0.0005145989652548353
+Epoch 1501 ||  0.0007300516813415223
+Epoch 1601 ||  0.0010096528891360042
+Epoch 1701 ||  0.0003249748146613797
+Epoch 1801 ||  0.00029916724241240295
+Epoch 1901 ||  0.0002251460228420811
+ 10.200144 seconds (7.97 M allocations: 3.977 GiB, 4.93% gc time, 68.75% compilation time)</code></pre><p><img src="../result3.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../poisson/">1D Poisson&#39;s Equation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.22 on <span class="colophon-date" title="Friday 19 August 2022 20:37">Friday 19 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
