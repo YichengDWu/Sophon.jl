@@ -70,7 +70,7 @@ end
 NeuralPDE.@nograd function residual_based_sample(loss_function, set, θ, n, k=2.0, c=k / 100)
     ϵᵏ = (loss_function(set, θ)) .^ k
     w = vec(ϵᵏ .+ c * mean(ϵᵏ))
-    subset = wsample([p for p in eachcol(sets)], w, n)
+    subset = wsample([p for p in eachcol(set)], w, n)
     subset = reduce(hcat, subset)
     subset = adapt(SciMLBase.parameterless_type(ComponentArrays.getdata(θ)), subset)
     return subset
