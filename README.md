@@ -13,7 +13,7 @@
 julia>] add "https://github.com/MilkshakeForReal/Sophon.jl"
 ```
 
-## Getting Started
+## Example: 1D Multi-scale Poisson Equation 
 Simply replace primitive fully connected neural nets with those defined in this pacakge!
 
 ```julia
