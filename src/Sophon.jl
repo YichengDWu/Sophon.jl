@@ -21,6 +21,7 @@ include("activations.jl")
 include("training/scheduler.jl")
 include("training/rad.jl")
 include("training/causal.jl")
+include("training/evo.jl")
 include("compact/componentarrays.jl")
 
 export GPUComponentArray64
