@@ -74,7 +74,7 @@ end
 ```
 ## Results
 ```@example ds
-ps, st = train(model)
+@time ps, st = train(model)
 y_pred = model(x,ps,st)[1]
 Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
 Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
@@ -83,7 +83,7 @@ savefig("result.svg"); nothing # hide
 
 ![](result.svg)
 
-## Gaussian activation
+## Gaussian activation function
 
 We can also try using a fully connected net with the [`gaussian`](@ref) activation function.
 
@@ -92,10 +92,29 @@ model = FullyConnected((1,50,50,50,50,1), gaussian)
 ```
 
 ```@example ds
-ps, st = train(model)
+@time ps, st = train(model)
 y_pred = model(x,ps,st)[1]
 Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
 Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
 savefig("result2.svg"); nothing # hide
 ```
 ![](result2.svg)
+
+
+## Quadratic activation function
+
+[`quadratic`](@ref) is much cheaper to compute compared to the Gaussain activation function.
+
+
+```@example ds
+model = FullyConnected((1,50,50,50,50,1), quadratic)
+```
+
+```@example ds
+@time ps, st = train(model)
+y_pred = model(x,ps,st)[1]
+Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
+Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
+savefig("result3.svg"); nothing # hide
+```
+![](result3.svg)
