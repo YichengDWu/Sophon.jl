@@ -67,7 +67,7 @@ save("convection.png", fig); nothing # hide
 
 ```@example convection
 using MethodOfLines
-dx = 0.01
+dx = 0.001
 order = 4
 mol_discretization = MOLFiniteDifference([x => dx], t, approx_order = order)
 
@@ -76,7 +76,7 @@ prob = discretize(convection,mol_discretization)
 
 # Solve ODE problem
 using OrdinaryDiffEq
-sol = solve(prob, Tsit5(), saveat=0.01)
+sol = solve(prob, Tsit5(), saveat=0.001)
 
 grid = get_discrete(convection, mol_discretization)
 discrete_x = grid[x]
@@ -86,7 +86,7 @@ solu = [map(d -> sol[d][i], grid[u(x, t)]) for i in 1:length(sol[t])]
 u_pred = hcat(solu...)
 
 fig_, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
-ax2, hm2 = heatmap(fig_[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="error"))
+ax2, hm2 = heatmap(fig_[1,end+1], ts,xs, abs.(u_pred' .- u_analytic.(discrete_x, discrete_t')'), axis = (xlabel="t", ylabel="x", title="error"))
 Colorbar(fig_[:, end+1], hm2)
 save("convection2.png", fig); nothing # hide
 ```
