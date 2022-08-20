@@ -14,7 +14,7 @@ Consider the following 1D-convection equation
 where ``c = 50/2\pi``. First we solve it with `QuasiRandomTraining`.
 
 ```@example convection
-using NeuralPDE, Lux, Random, Sophon, IntervalSets
+using NeuralPDE, Lux, Random, Sophon, IntervalSets, CairoMakie
 using Optimization, OptimizationOptimJL, OptimizationOptimisers
 using CUDA
 CUDA.allowscalar(false)
@@ -37,9 +37,9 @@ bcs = [u(0,t) ~ u_analytic(0,t),
 
 @named convection = PDESystem(eq, bcs, domains, [x,t], [u(x,t)])
 
-chain = FullyConnected(2, 1, tanh; num_layers = 5, hidden_dims = 50)
+chain = Siren(2, 1; num_layers = 5, hidden_dims = 50, omega = 1.0f0)
 ps = Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
-discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps)
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps, adaptive_loss = NonAdaptiveLoss(pde_loss_weights = 1, bc_loss_weights = 100))
 prob = discretize(convection, discretization)
 
 @time res = Optimization.solve(prob, Adam(); maxiters = 3000)
@@ -51,33 +51,14 @@ Let's visualize the result.
 phi = discretization.phi
 
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
-predict(x,t) = sum(phi(gpu([x,t]),res.u))
-u_pred = predict.(xs,ts')
+u_pred = [sum(phi(gpu([x,t]),res.u)) for x in xs, t in ts]
+u_real = u_analytic.(xs,ts')
 
-using CairoMakie
-axis = (xlabel="t", ylabel="x", title="β = $β without causal training")
+axis = (xlabel="t", ylabel="x", title="β = $β")
 fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
+ax2, hm2 = heatmap(fig[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="error"))
+Colorbar(fig[:, end+1], hm2)
+
 save("convection.png", fig); nothing # hide
 ```
 ![](convection.png)
-
-## Causal Training
-
-Next we see how [`CausalTraining`](@ref) can accelerate training.
-
-```@example convection
-epsilon = 5
-discretization = PhysicsInformedNN(chain, CausalTraining(100; epsilon = epsilon); init_params=ps)
-prob = discretize(convection, discretization)
-phi = discretization.phi
-
-@time res = Optimization.solve(prob, Adam(); maxiters = 3000)
-
-predict(x,t) = sum(phi(gpu([x,t]),res.u))
-u_pred = predict.(xs,ts')
-
-axis = (xlabel="t", ylabel="x", title="β = $β, epsilon = $epsilon")
-fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
-save("convection2.png", fig); nothing # hide
-```
-![](convection2.png)
