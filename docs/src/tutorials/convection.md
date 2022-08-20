@@ -39,7 +39,7 @@ bcs = [u(0,t) ~ u_analytic(0,t),
 
 chain = Siren(2, 1; num_layers = 5, hidden_dims = 50, omega = 1.0f0)
 ps = Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
-discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps, adaptive_loss = NonAdaptiveLoss(pde_loss_weights = 1, bc_loss_weights = 100))
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps, adaptive_loss = NonAdaptiveLoss(pde_loss_weights = 1, bc_loss_weights = 100), order = 2)
 prob = discretize(convection, discretization)
 
 @time res = Optimization.solve(prob, Adam(); maxiters = 3000)
@@ -62,3 +62,31 @@ Colorbar(fig[:, end+1], hm2)
 save("convection.png", fig); nothing # hide
 ```
 ![](convection.png)
+
+## Compared to Method of Lines
+
+```@example convection
+using MethodOfLines
+dx = 0.01
+order = 4
+mol_discretization = MOLFiniteDifference([x => dx], t, approx_order = order)
+
+# Convert the PDE problem into an ODE problem
+prob = discretize(convection,mol_discretization)
+
+# Solve ODE problem
+using OrdinaryDiffEq
+sol = solve(prob, Tsit5(), saveat=0.01)
+
+grid = get_discrete(convection, mol_discretization)
+discrete_x = grid[x]
+discrete_t = sol[t]
+
+solu = [map(d -> sol[d][i], grid[u(x, t)]) for i in 1:length(sol[t])]
+u_pred = hcat(solu...)
+
+fig_, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
+ax2, hm2 = heatmap(fig_[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="error"))
+Colorbar(fig_[:, end+1], hm2)
+save("convection2.png", fig); nothing # hide
+```
