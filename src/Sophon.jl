@@ -21,13 +21,12 @@ include("activations.jl")
 include("training/scheduler.jl")
 include("training/rad.jl")
 include("training/causal.jl")
+include("training/evo.jl")
 include("compact/componentarrays.jl")
 
 export GPUComponentArray64
 export Scheduler, get_opt
-#export RADTraining
 export gaussian, quadratic, laplacian, expsin, multiquadratic
-export CausalTraining
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF
 export PINNAttention, MultiscaleFourier, FourierAttention, Siren, SirenAttention
 
