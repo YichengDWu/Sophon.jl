@@ -88,5 +88,5 @@ u_pred = hcat(solu...)
 fig_, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
 ax2, hm2 = heatmap(fig_[1,end+1], ts,xs, abs.(u_pred' .- u_analytic.(discrete_x, discrete_t')'), axis = (xlabel="t", ylabel="x", title="error"))
 Colorbar(fig_[:, end+1], hm2)
-save("convection2.png", fig); nothing # hide
+save("convection2.png", fig_); nothing # hide
 ```
