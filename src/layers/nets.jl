@@ -220,18 +220,22 @@ Chain(
 
 [1] Sitzmann, Vincent, et al. "Implicit neural representations with periodic activation functions." Advances in Neural Information Processing Systems 33 (2020): 7462-7473.
 """
-function Siren(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, omega=30.0f0)
-    return Siren((in_dims, ntuple(i -> hidden_dims, num_layers)..., out_dims); omega=omega)
+function Siren(in_dims::Int, out_dims::Int, activation::Function=sin; hidden_dims::Int, num_layers::Int, omega=30.0f0)
+    return Siren((in_dims, ntuple(i -> hidden_dims, num_layers)..., out_dims), activation; omega=omega)
 end
 
 function Siren(layer_dims::Int...; omega=30.0f0)
     return Siren(layer_dims; omega=omega)
 end
 
+function Siren(layer_dims::NTuple{N, T}, activation::Function; omega=30.0f0) where {N, T <: Int}
+    return Siren(layer_dims, activation; omega=omega)
+end
+
 @generated function Siren(layer_dims::NTuple{N, T};
-                          omega=30.0f0) where {N, T <: Int}
-    N == 2 && return :(Sine(layer_dims[1], layer_dims[2]; is_first=true, omega=omega))
-    get_layer(i) = :(Sine(layer_dims[$i] => layer_dims[$(i + 1)]))
+                          omega=30.0f0, activation::Function) where {N, T <: Int}
+    N == 2 && return :(Sine(layer_dims[1], layer_dims[2], activation; is_first=true, omega=omega))
+    get_layer(i) = :(Sine(layer_dims[$i] => layer_dims[$(i + 1)], activation))
     layers = [:(Sine(layer_dims[1] => layer_dims[2]; is_first=true, omega=omega))]
     append!(layers, [get_layer(i) for i in 2:(N - 2)])
     append!(layers, [:(Sine(layer_dims[$(N - 1)] => layer_dims[$N], identity))])

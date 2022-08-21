@@ -226,8 +226,8 @@ function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidde
                           activation, Val(outermost))
 end
 
-@generated function FullyConnected(layer_dims::NTuple{N, T},
-                                   activation::Function, ::Val{F}) where {N, T <: Int, F}
+@generated function FullyConnected(layer_dims::NTuple{N, T}, activation::Function,
+                                   ::Val{F}) where {N, T <: Int, F}
     N == 2 && return :(Dense(layer_dims[1], layer_dims[2], activation))
     get_layer(i) = :(Dense(layer_dims[$i] => layer_dims[$(i + 1)], activation))
     layers = [:(Dense(layer_dims[1] => layer_dims[2], activation))]
@@ -251,7 +251,7 @@ s = Sine(2, 2, identity) # last layer
 ```
 """
 struct Sine{is_first, F} <: AbstractExplicitLayer
-    activation::Union{typeof(sin), typeof(identity)}
+    activation::F
     in_dims::Int
     out_dims::Int
     init_omega::Union{Function, Nothing}
@@ -356,9 +356,9 @@ function (rbf::RBF)(x::AbstractVecOrMat, ps, st::NamedTuple)
     center_norm = sum(abs2, ps.center; dims=2)
     d = -2 * ps.center * x .+ x_norm .+ center_norm
     z = -1 / rbf.sigma .* d
-    z_shit = z .- maximum(z, dims = 1)
+    z_shit = z .- maximum(z; dims=1)
     r = exp.(z_shit)
-    r = r ./ reshape(sum(r, dims = 1), 1, :)
+    r = r ./ reshape(sum(r; dims=1), 1, :)
     y = ps.weight * r
     return y, st
 end

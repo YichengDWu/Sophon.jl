@@ -114,6 +114,9 @@ rng = Random.default_rng()
             y2, st2 = siren2(x, ps2, st2)
             @test size(y2) == (5, 5)
             @test Lux.statelength(siren) == 1
+
+            siren3 = Siren((2, 3, 4, 5), tanh)
+            @test siren3.layers[1].activation == tanh
         end
 
         @testset "SirenAttention" begin @test_nowarn SirenAttention(2, 1, sin;
