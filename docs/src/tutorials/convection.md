@@ -90,3 +90,4 @@ ax2, hm2 = heatmap(fig_[1,end+1], ts,xs, abs.(u_pred' .- u_analytic.(discrete_x,
 Colorbar(fig_[:, end+1], hm2)
 save("convection2.png", fig_); nothing # hide
 ```
+![](convection2.png)
