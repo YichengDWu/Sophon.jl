@@ -13,7 +13,7 @@
 
 ## References
 
-[1] Wu, Chenxi, et al. "A comprehensive study of non-adaptive and residual-based adaptive sampling for physics-informed neural networks." arXiv preprint arXiv:2207.10289 (2022).
+[1] Daw A, Bu J, Wang S, et al. Rethinking the Importance of Sampling in Physics-informed Neural Networks[J]. arXiv preprint arXiv:2207.02338, 2022.
 """
 struct EvoTraining <: NeuralPDE.AbstractTrainingStrategy
     points::Int64
