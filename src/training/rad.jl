@@ -32,24 +32,22 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
     bounds = get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars, strategy)
     pde_bounds, bcs_bounds = bounds
 
-   # if first(iteration) <= strategy.resample_at # This is not working, there is a bug
-   #     return NeuralPDE.merge_strategy_with_loss_function(pinnrep,
-  #                                                         strategy.training_strategy,
- #                                                          datafree_pde_loss_function,
- #                                                          datafree_bc_loss_function)
+    # if first(iteration) <= strategy.resample_at # This is not working, there is a bug
+    #     return NeuralPDE.merge_strategy_with_loss_function(pinnrep,
+    #                                                         strategy.training_strategy,
+    #                                                          datafree_pde_loss_function,
+    #                                                          datafree_bc_loss_function)
 
- #   else
-        pde_loss_functions = [NeuralPDE.get_loss_function(_loss, bound, eltypeθ, strategy)
-                              for (_loss, bound) in zip(datafree_pde_loss_function,
-                                                        pde_bounds)]
+    #   else
+    pde_loss_functions = [NeuralPDE.get_loss_function(_loss, bound, eltypeθ, strategy)
+                          for (_loss, bound) in zip(datafree_pde_loss_function, pde_bounds)]
 
-        bc_loss_functions = [NeuralPDE.get_loss_function(_loss, bound, eltypeθ, strategy)
-                             for (_loss, bound) in zip(datafree_bc_loss_function,
-                                                       bcs_bounds)]
+    bc_loss_functions = [NeuralPDE.get_loss_function(_loss, bound, eltypeθ, strategy)
+                         for (_loss, bound) in zip(datafree_bc_loss_function, bcs_bounds)]
 
-        pde_loss_functions, bc_loss_functions
-        return pde_loss_functions, bc_loss_functions
-   # end
+    pde_loss_functions, bc_loss_functions
+    return pde_loss_functions, bc_loss_functions
+    # end
 end
 
 function NeuralPDE.get_loss_function(loss_function, bound, eltypeθ, strategy::RADTraining)

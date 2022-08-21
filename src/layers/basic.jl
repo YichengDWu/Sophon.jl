@@ -258,7 +258,7 @@ struct Sine{is_first, F} <: AbstractExplicitLayer
 end
 
 function Base.show(io::IO, s::Sine)
-    return print(io, "Sine($(s.in_dims) => $(s.out_dims))")
+    return print(io, "Sine($(s.in_dims) => $(s.out_dims), $(s.activation))")
 end
 
 function Sine(in_dims::Int, out_dims::Int, activation=sin; is_first::Bool=false,
