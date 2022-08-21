@@ -25,8 +25,8 @@ struct EvoTraining <: NeuralPDE.AbstractTrainingStrategy
     λ::Float64
 end
 
-function EvoTraining(points; sampling_alg=LatinHypercubeSample(), bcs_points=points, ϵ = 1.0, η = 1e-3,
-    Δ = 0.1, λ = 1.0)
+function EvoTraining(points; sampling_alg=LatinHypercubeSample(), bcs_points=points, ϵ=1.0,
+                     η=1e-3, Δ=0.1, λ=1.0)
     sampling_strategy = QuasiRandomTraining(points; bcs_points=bcs_points,
                                             sampling_alg=sampling_alg)
     return EvoTraining(points, bcs_points, sampling_strategy, ϵ, η, Δ, λ)
@@ -77,7 +77,7 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
 
     eltypeθ = eltype(ComponentArrays.getdata(pinnrep.flat_init_params))
     device = SciMLBase.parameterless_type(ComponentArrays.getdata(flat_init_params))
-    (;  ϵ, η, Δ, λ, sampling_strategy) = strategy
+    (; ϵ, η, Δ, λ, sampling_strategy) = strategy
     sampling_alg = sampling_strategy.sampling_alg
 
     bounds = get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars, strategy)

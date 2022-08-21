@@ -24,7 +24,7 @@ rng = Random.default_rng()
         end
 
         @testset "FullyConnected" begin
-            fc = FullyConnected((2,4), sin)
+            fc = FullyConnected((2, 4), sin)
             @test fc == Dense(2, 4, sin)
             fc2 = FullyConnected((2, 4, 5, 6), sin)
             @test values(map(x -> x.out_dims, fc2.layers)) == (4, 5, 6)
@@ -99,7 +99,7 @@ rng = Random.default_rng()
 
         @testset "Siren" begin
             x = rand(Float32, 2, 5)
-            siren = Siren(2, 4; hidden_dims = 4, num_layers = 3)
+            siren = Siren(2, 4; hidden_dims=4, num_layers=3)
             @test siren.layers[1].init_omega() == 30.0f0
             @test siren.layers[end].activation == identity
             ps, st = Lux.setup(rng, siren)
@@ -107,13 +107,16 @@ rng = Random.default_rng()
             @test size(y) == (4, 5)
             @test Lux.statelength(siren) == 1
 
-            siren2 = Siren((2, 3, 4, 5))
+            siren2 = Siren(2, 3, 4, 5)
             @test siren2.layers[1].init_omega() == 30.0f0
             @test siren2.layers[end].activation == identity
             ps2, st2 = Lux.setup(rng, siren2)
             y2, st2 = siren2(x, ps2, st2)
             @test size(y2) == (5, 5)
             @test Lux.statelength(siren) == 1
+
+            siren3 = Siren((2, 3, 4, 5), tanh)
+            @test siren3.layers[1].activation == tanh
         end
 
         @testset "SirenAttention" begin @test_nowarn SirenAttention(2, 1, sin;
