@@ -15,3 +15,7 @@ quadratic(x, a=5) = 1 / (1 + (NNlib.oftf(x, a) * x)^2)
 multiquadratic(x, a=10) = 1 / sqrt((1 + (NNlib.oftf(x, a) * x)^2))
 laplacian(x, a=0.01) = exp(-abs(x) / NNlib.oftf(x, a))
 expsin(x, a=1) = exp(-sin(a * x))
+function wu(x,a=1) =
+    x = NNlib.oftf(x, a)*x
+    return x*(5*x^2-1)/(1+x^2)^4
+end
