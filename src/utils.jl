@@ -28,6 +28,8 @@ function kaiming_uniform(; nonlinearity::Union{Type{<:Function}, Function})
                                                                    gain=calculate_gain(nonlinearity))
 end
 
+ChainRulesCore.@non_differentiable kaiming_uniform(::Any...)
+
 """
     kaiming_normal(rng::AbstractRNG, size...; gain = √2f0)
 
@@ -54,7 +56,6 @@ function kaiming_normal(; nonlinearity::Union{Type{<:Function}, Function})
 end
 
 ChainRulesCore.@non_differentiable kaiming_normal(::Any...)
-ChainRulesCore.@non_differentiable kaiming_uniform(::Any...)
 
 @inline calculate_gain(::typeof(relu)) = √2.0f0
 @inline calculate_gain(::typeof(tanh)) = Float32(5 / 3)

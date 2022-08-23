@@ -209,8 +209,8 @@ function Sine(in_dims::Int, out_dims::Int, activation=sin; is_first::Bool=false,
 end
 
 function Sine(chs::Pair{T, T}, activation=sin; is_first::Bool=false,
-              omega::AbstractFloat=30.0f0) where {T <: Int}
-    return Sine(first(chs), last(chs), activation; is_first=is_first, omega=omega)
+              omega::AbstractFloat=30.0f0, init_weight::Function=kaiming_uniform) where {T <: Int}
+    return Sine(first(chs), last(chs), activation; is_first=is_first, omega=omega, init_weight=init_weight)
 end
 
 function initialparameters(rng::AbstractRNG, s::Sine{false})
