@@ -176,7 +176,7 @@ end
 Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 
 """
-    Sine(in_dims::Int, out_dims::Int; omega::AbstractFloat)
+    Sine(in_dims::Int, out_dims::Int; omega::Real)
 
 Sinusoidal layer.
 
