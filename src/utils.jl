@@ -20,10 +20,7 @@ function kaiming_uniform(rng::AbstractRNG, dims::Integer...; gain::Real=√2.0f0
     return (rand(rng, Float32, dims...) .- 0.5f0) .* 2bound
 end
 
-function kaiming_uniform(; gain::Real)
-    return (rng::AbstractRNG, dims::Integer...) -> kaiming_uniform(rng, dims...; gain=gain)
-end
-function kaiming_uniform(; nonlinearity::Union{Type{<:Function}, Function})
+function kaiming_uniform(nonlinearity::Union{Type{<:Function}, Function})
     return (rng::AbstractRNG, dims::Integer...) -> kaiming_uniform(rng, dims...;
                                                                    gain=calculate_gain(nonlinearity))
 end
@@ -47,10 +44,7 @@ function kaiming_normal(rng::AbstractRNG, dims::Integer...; gain::Real=√2.0f0)
     return randn(rng, Float32, dims...) .* std
 end
 
-function kaiming_normal(; gain::Real)
-    return (rng::AbstractRNG, dims::Integer...) -> kaiming_normal(rng, dims...; gain=gain)
-end
-function kaiming_normal(; nonlinearity::Union{Type{<:Function}, Function})
+function kaiming_normal(nonlinearity::Union{Type{<:Function}, Function})
     return (rng::AbstractRNG, dims::Integer...) -> kaiming_normal(rng, dims...;
                                                                   gain=calculate_gain(nonlinearity))
 end
