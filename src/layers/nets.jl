@@ -188,7 +188,7 @@ end
 
 """
     Siren(in_dims::Int, hidden_dim::Int, num_layers::Int; omega = 30f0)
-    Siren(layer_dims::NTuple{N, T}; omega = 30f0) where {N, T <: Int}
+    Siren(layer_dims::NTuple{N, T}, activation = sin; omega = 30f0) where {N, T <: Int}
 
 Sinusoidal Representation Network.
 
@@ -199,13 +199,13 @@ Sinusoidal Representation Network.
 ## Examples
 
 ```julia
-julia> Siren(3; hidden_dims=20, num_layers=3)
+julia> Siren((2,32,32,1); omega = 5f0) # default activation=sin
 Chain(
-    layer_1 = Sine(3 => 20),            # 80 parameters, plus 1
-    layer_2 = Sine(20 => 20),           # 420 parameters
-    layer_3 = Sine(20 => 20),           # 420 parameters
-)         # Total: 920 parameters,
-          #        plus 1 states, summarysize 292 bytes.
+    layer_1 = Sine(2 => 32, sin),       # 96 parameters, plus 1
+    layer_2 = Sine(32 => 32, sin),      # 1_056 parameters
+    layer_3 = Sine(32 => 1, identity),  # 33 parameters
+)         # Total: 1_185 parameters,
+          #        plus 1 states, summarysize 220 bytes.
 
 julia> Siren(3, 1; hidden_dims=20, num_layers=3)
 Chain(
@@ -231,7 +231,7 @@ function Siren(layer_dims::Int...; omega=30.0f0, init_weight::Function = kaiming
     return Siren(layer_dims, sin; omega=omega, init_weight = init_weight)
 end
 
-@generated function Siren(layer_dims::NTuple{N, T}, activation::Function;
+@generated function Siren(layer_dims::NTuple{N, T}, activation::Function=sin;
                           omega=30.0f0, init_weight::Function = kaiming_uniform(; nonlinearity = activation)) where {N, T <: Int}
     N == 2 &&
         return :(Sine(layer_dims[1], layer_dims[2], activation; is_first=true, omega=omega, init_weight = init_weight))
