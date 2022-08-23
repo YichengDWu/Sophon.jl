@@ -37,7 +37,7 @@ bcs = [u(0,t) ~ u_analytic(0,t),
 
 @named convection = PDESystem(eq, bcs, domains, [x,t], [u(x,t)])
 
-chain = Siren(2, 1; num_layers = 5, hidden_dims = 50)
+chain = Siren(2, 1; num_layers = 5, hidden_dims = 50， omega = 1f0)
 ps = Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
 discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps, adaptive_loss = NonAdaptiveLoss(pde_loss_weights = 1, bc_loss_weights = 100), order = 2)
 prob = discretize(convection, discretization)
