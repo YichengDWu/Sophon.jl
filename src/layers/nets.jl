@@ -123,7 +123,7 @@ end
 
 """
     SirenAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
-    hidden_dims::Int=512, num_layers::Int=6)
+    hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0))
 
 ```
 x -> Sine -> PINNAttention
