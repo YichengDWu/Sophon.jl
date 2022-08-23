@@ -222,24 +222,87 @@ Chain(
 [1] Sitzmann, Vincent, et al. "Implicit neural representations with periodic activation functions." Advances in Neural Information Processing Systems 33 (2020): 7462-7473.
 """
 function Siren(in_dims::Int, out_dims::Int, activation::Function=sin; hidden_dims::Int,
-               num_layers::Int, omega=30.0f0)
+               num_layers::Int, omega=30.0f0, init_weight::Function = kaiming_uniform(; nonlinearity = activation))
     return Siren((in_dims, ntuple(i -> hidden_dims, num_layers)..., out_dims), activation;
-                 omega=omega)
+                 omega=omega, init_weight = init_weight)
 end
 
-function Siren(layer_dims::Int...; omega=30.0f0)
-    return Siren(layer_dims, sin; omega=omega)
+function Siren(layer_dims::Int...; omega=30.0f0, init_weight::Function = kaiming_uniform(; nonlinearity = sin))
+    return Siren(layer_dims, sin; omega=omega, init_weight = init_weight)
 end
 
 @generated function Siren(layer_dims::NTuple{N, T}, activation::Function;
-                          omega=30.0f0) where {N, T <: Int}
+                          omega=30.0f0, init_weight::Function = kaiming_uniform(; nonlinearity = activation)) where {N, T <: Int}
     N == 2 &&
-        return :(Sine(layer_dims[1], layer_dims[2], activation; is_first=true, omega=omega))
-    get_layer(i) = :(Sine(layer_dims[$i] => layer_dims[$(i + 1)], activation))
+        return :(Sine(layer_dims[1], layer_dims[2], activation; is_first=true, omega=omega, init_weight = init_weight))
+    get_layer(i) = :(Sine(layer_dims[$i] => layer_dims[$(i + 1)], activation; init_weight = init_weight))
     layers = [
         :(Sine(layer_dims[1] => layer_dims[2], activation; is_first=true, omega=omega)),
     ]
     append!(layers, [get_layer(i) for i in 2:(N - 2)])
-    append!(layers, [:(Sine(layer_dims[$(N - 1)] => layer_dims[$N], identity))])
+    append!(layers, [:(Sine(layer_dims[$(N - 1)] => layer_dims[$N], identity; init_weight = init_weight))])
+    return :(Chain($(layers...)))
+end
+
+"""
+    FullyConnected(layer_dims::NTuple{N, Int}, activation; outermost = true, init_weight = kaiming_uniform)
+    FullyConnected(in_dims::Int, out_dims::Int, activation::Function;
+                   hidden_dims::Int, num_layers::Int, outermost=true, init_weight = kaiming_uniform)
+
+Create fully connected layers.
+
+## Arguments
+
+  - `layer_dims`: Number of dimensions of each layer.
+  - `hidden_dims`: Number of hidden dimensions.
+  - `num_layers`: Number of layers.
+  - `activation`: Activation function.
+
+## Keyword Arguments
+
+  - `outermost`: Whether to use activation function for the last layer. If `false`, the activation function is applied
+    to the output of the last layer.
+  - `init_weight`: Initialization method for the weights.
+
+## Example
+
+```julia
+julia> fc = FullyConnected((1, 12, 24, 32), relu)
+Chain(
+    layer_1 = Dense(1 => 12, relu),     # 24 parameters
+    layer_2 = Dense(12 => 24, relu),    # 312 parameters
+    layer_3 = Dense(24 => 32),          # 800 parameters
+)         # Total: 1_136 parameters,
+          #        plus 0 states, summarysize 48 bytes.
+
+julia> fc = FullyConnected(1, 10, relu; hidden_dims=20, num_layers=3)
+Chain(
+    layer_1 = Dense(1 => 20, relu),     # 40 parameters
+    layer_2 = Dense(20 => 20, relu),    # 420 parameters
+    layer_3 = Dense(20 => 20, relu),    # 420 parameters
+    layer_4 = Dense(20 => 10),          # 210 parameters
+)         # Total: 1_090 parameters,
+          #        plus 0 states, summarysize 64 bytes.
+```
+"""
+function FullyConnected(layer_dims::NTuple{N, T}, activation::Function;
+                        outermost::Bool=true, init_weight::Function = kaiming_uniform(;nonlinearity = activation)) where {N, T <: Int}
+    return FullyConnected(layer_dims, activation, Val(outermost); init_weight=init_weight)
+end
+
+function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
+                        num_layers::Int, outermost::Bool=true, init_weight::Function = kaiming_uniform(;nonlinearity = activation))
+    return FullyConnected((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims),
+                          activation, Val(outermost); init_weight = init_weight)
+end
+
+@generated function FullyConnected(layer_dims::NTuple{N, T}, activation::Function,
+                                   ::Val{F}; init_weight) where {N, T <: Int, F}
+    N == 2 && return :(Dense(layer_dims[1], layer_dims[2], activation; init_weight = init_weight))
+    get_layer(i) = :(Dense(layer_dims[$i] => layer_dims[$(i + 1)], activation; init_weight = init_weight))
+    layers = [:(Dense(layer_dims[1] => layer_dims[2], activation; init_weight = init_weight))]
+    append!(layers, [get_layer(i) for i in 2:(N - 2)])
+    append!(layers,
+            F ? [:(Dense(layer_dims[$(N - 1)] => layer_dims[$N]; init_weight = init_weight))] : [get_layer(N - 1)])
     return :(Chain($(layers...)))
 end
