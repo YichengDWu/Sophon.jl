@@ -11,4 +11,5 @@ Documentation for [Sophon](https://github.com/MilkshakeForReal/Sophon.jl).
 
 ```@autodocs
 Modules = [Sophon]
+Private = false
 ```
