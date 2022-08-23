@@ -188,10 +188,11 @@ s = Sine(2, 2) # hidden layer
 s = Sine(2, 2, identity) # last layer
 ```
 """
-struct Sine{is_first, F} <: AbstractExplicitLayer
+struct Sine{is_first, F, I} <: AbstractExplicitLayer
     activation::F
     in_dims::Int
     out_dims::Int
+    init_weight::I
     init_omega::Union{Function, Nothing}
 end
 
@@ -200,9 +201,11 @@ function Base.show(io::IO, s::Sine)
 end
 
 function Sine(in_dims::Int, out_dims::Int, activation=sin; is_first::Bool=false,
-              omega=30.0f0)
+              omega=30.0f0, init_weight::Function=kaiming_uniform)
     init_omega = is_first ? () -> omega : nothing
-    return Sine{is_first, typeof(activation)}(activation, in_dims, out_dims, init_omega)
+    return Sine{is_first, typeof(activation), typeof(init_weight)}(activation, in_dims,
+                                                                   out_dims, init_weight,
+                                                                   init_omega)
 end
 
 function Sine(chs::Pair{T, T}, activation=sin; is_first::Bool=false,
@@ -211,7 +214,7 @@ function Sine(chs::Pair{T, T}, activation=sin; is_first::Bool=false,
 end
 
 function initialparameters(rng::AbstractRNG, s::Sine{false})
-    weight = kaiming_uniform(rng, s.out_dims, s.in_dims; gain = calculate_gain(s.activation))
+    weight = s.init_weight(rng, s.out_dims, s.in_dims)
     bias = Lux.zeros32(rng, s.out_dims, 1)
     return (weight=weight, bias=bias)
 end

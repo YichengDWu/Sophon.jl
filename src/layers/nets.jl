@@ -222,25 +222,25 @@ Chain(
 [1] Sitzmann, Vincent, et al. "Implicit neural representations with periodic activation functions." Advances in Neural Information Processing Systems 33 (2020): 7462-7473.
 """
 function Siren(in_dims::Int, out_dims::Int, activation::Function=sin; hidden_dims::Int,
-               num_layers::Int, omega=30.0f0)
+               num_layers::Int, omega=30.0f0, init_weight::Function = kaiming_uniform(; nonlinearity = activation))
     return Siren((in_dims, ntuple(i -> hidden_dims, num_layers)..., out_dims), activation;
-                 omega=omega)
+                 omega=omega, init_weight = init_weight)
 end
 
-function Siren(layer_dims::Int...; omega=30.0f0)
-    return Siren(layer_dims, sin; omega=omega)
+function Siren(layer_dims::Int...; omega=30.0f0, init_weight::Function = kaiming_uniform(; nonlinearity = sin))
+    return Siren(layer_dims, sin; omega=omega, init_weight = init_weight)
 end
 
 @generated function Siren(layer_dims::NTuple{N, T}, activation::Function;
-                          omega=30.0f0) where {N, T <: Int}
+                          omega=30.0f0, init_weight::Function = kaiming_uniform(; nonlinearity = activation)) where {N, T <: Int}
     N == 2 &&
-        return :(Sine(layer_dims[1], layer_dims[2], activation; is_first=true, omega=omega))
-    get_layer(i) = :(Sine(layer_dims[$i] => layer_dims[$(i + 1)], activation))
+        return :(Sine(layer_dims[1], layer_dims[2], activation; is_first=true, omega=omega, init_weight = init_weight))
+    get_layer(i) = :(Sine(layer_dims[$i] => layer_dims[$(i + 1)], activation; init_weight = init_weight))
     layers = [
         :(Sine(layer_dims[1] => layer_dims[2], activation; is_first=true, omega=omega)),
     ]
     append!(layers, [get_layer(i) for i in 2:(N - 2)])
-    append!(layers, [:(Sine(layer_dims[$(N - 1)] => layer_dims[$N], identity))])
+    append!(layers, [:(Sine(layer_dims[$(N - 1)] => layer_dims[$N], identity; init_weight = init_weight))])
     return :(Chain($(layers...)))
 end
 
@@ -286,14 +286,14 @@ Chain(
 ```
 """
 function FullyConnected(layer_dims::NTuple{N, T}, activation::Function;
-                        outermost::Bool=true, init_weight::Function = kaiming_uniform) where {N, T <: Int}
-    return FullyConnected(layer_dims, activation, Val(outermost); init_weight=init_weight(;nonlinearity = activation))
+                        outermost::Bool=true, init_weight::Function = kaiming_uniform(;nonlinearity = activation)) where {N, T <: Int}
+    return FullyConnected(layer_dims, activation, Val(outermost); init_weight=init_weight)
 end
 
 function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
-                        num_layers::Int, outermost::Bool=true, init_weight::Function = kaiming_uniform)
+                        num_layers::Int, outermost::Bool=true, init_weight::Function = kaiming_uniform(;nonlinearity = activation))
     return FullyConnected((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims),
-                          activation, Val(outermost); init_weight = init_weight(;nonlinearity = activation))
+                          activation, Val(outermost); init_weight = init_weight)
 end
 
 @generated function FullyConnected(layer_dims::NTuple{N, T}, activation::Function,
