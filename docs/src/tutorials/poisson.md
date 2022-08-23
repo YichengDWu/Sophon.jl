@@ -23,7 +23,8 @@ bcs = [u(0) ~ 0, u(1) ~ 0]
 @named poisson = PDESystem(eq, bcs, domain, [x], [u(x)])
 
 chain = Siren(1, 32, 32, 32, 32, 1)
-discretization = PhysicsInformedNN(chain,  GridTraining(0.01))
+adaptive_loss = NonAdaptiveLoss(;bc_loss_weights=[100,100])
+discretization = PhysicsInformedNN(chain,  GridTraining(0.01); adaptive_loss = adaptive_loss)
 prob = discretize(poisson, discretization)
 
 res = Optimization.solve(prob, Adam(5.0f-3); maxiters=2000)
