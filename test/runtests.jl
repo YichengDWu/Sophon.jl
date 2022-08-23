@@ -25,7 +25,7 @@ rng = Random.default_rng()
 
         @testset "FullyConnected" begin
             fc = FullyConnected((2, 4), sin)
-            @test fc == Dense(2, 4, sin)
+            @test fc == Dense(2, 4, sin; init_weight = Sophon.kaiming_uniform(nonlinearity = sin))
             fc2 = FullyConnected((2, 4, 5, 6), sin)
             @test values(map(x -> x.out_dims, fc2.layers)) == (4, 5, 6)
             @test fc2.layers[end].activation == identity

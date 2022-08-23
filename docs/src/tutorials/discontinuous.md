@@ -118,18 +118,3 @@ Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
 savefig("result3.svg"); nothing # hide
 ```
 ![](result3.svg)
-
-## An activation function I designed 
-
-```@example ds
-model = FullyConnected((1,50,50,50,50,1), wu)
-```
-
-```@example ds
-@time ps, st = train(model)
-y_pred = model(x,ps,st)[1]
-Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
-Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
-savefig("result4.svg"); nothing # hide
-```
-![](result4.svg)

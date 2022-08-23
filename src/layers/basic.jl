@@ -176,68 +176,6 @@ end
 Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
 
 """
-    FullyConnected(layer_dims::NTuple{N, Int}, activation; outermost = true)
-    FullyConnected(in_dims::Int, out_dims::Int, activation::Function;
-                   hidden_dims::Int, num_layers::Int, outermost=true)
-
-Create fully connected layers.
-
-## Arguments
-
-  - `layer_dims`: Number of dimensions of each layer.
-  - `hidden_dims`: Number of hidden dimensions.
-  - `num_layers`: Number of layers.
-  - `activation`: Activation function.
-
-## Keyword Arguments
-
-  - `outermost`: Whether to use activation function for the last layer. If `false`, the activation function is applied
-    to the output of the last layer.
-
-## Example
-
-```julia
-julia> fc = FullyConnected((1, 12, 24, 32), relu)
-Chain(
-    layer_1 = Dense(1 => 12, relu),     # 24 parameters
-    layer_2 = Dense(12 => 24, relu),    # 312 parameters
-    layer_3 = Dense(24 => 32),          # 800 parameters
-)         # Total: 1_136 parameters,
-          #        plus 0 states, summarysize 48 bytes.
-
-julia> fc = FullyConnected(1, 10, relu; hidden_dims=20, num_layers=3)
-Chain(
-    layer_1 = Dense(1 => 20, relu),     # 40 parameters
-    layer_2 = Dense(20 => 20, relu),    # 420 parameters
-    layer_3 = Dense(20 => 20, relu),    # 420 parameters
-    layer_4 = Dense(20 => 10),          # 210 parameters
-)         # Total: 1_090 parameters,
-          #        plus 0 states, summarysize 64 bytes.
-```
-"""
-function FullyConnected(layer_dims::NTuple{N, T}, activation::Function;
-                        outermost::Bool=true) where {N, T <: Int}
-    return FullyConnected(layer_dims, activation, Val(outermost))
-end
-
-function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
-                        num_layers::Int, outermost::Bool=true)
-    return FullyConnected((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims),
-                          activation, Val(outermost))
-end
-
-@generated function FullyConnected(layer_dims::NTuple{N, T}, activation::Function,
-                                   ::Val{F}) where {N, T <: Int, F}
-    N == 2 && return :(Dense(layer_dims[1], layer_dims[2], activation))
-    get_layer(i) = :(Dense(layer_dims[$i] => layer_dims[$(i + 1)], activation))
-    layers = [:(Dense(layer_dims[1] => layer_dims[2], activation))]
-    append!(layers, [get_layer(i) for i in 2:(N - 2)])
-    append!(layers,
-            F ? [:(Dense(layer_dims[$(N - 1)] => layer_dims[$N]))] : [get_layer(N - 1)])
-    return :(Chain($(layers...)))
-end
-
-"""
     Sine(in_dims::Int, out_dims::Int, activation=sin; is_first::Bool = false, omega::AbstractFloat = 30f0)
 
 Sinusoidal layer.
@@ -272,9 +210,15 @@ function Sine(chs::Pair{T, T}, activation=sin; is_first::Bool=false,
     return Sine(first(chs), last(chs), activation; is_first=is_first, omega=omega)
 end
 
-function initialparameters(rng::AbstractRNG, s::Sine{is_first}) where {is_first}
+function initialparameters(rng::AbstractRNG, s::Sine{false})
+    weight = kaiming_uniform(rng, s.out_dims, s.in_dims; gain = calculate_gain(s.activation))
+    bias = Lux.zeros32(rng, s.out_dims, 1)
+    return (weight=weight, bias=bias)
+end
+
+function initialparameters(rng::AbstractRNG, s::Sine{true})
     weight = (rand(rng, Float32, s.out_dims, s.in_dims) .- 0.5f0) .* 2.0f0
-    scale = is_first ? Float32(s.init_omega()) / s.in_dims : sqrt(6.0f0 / s.in_dims)
+    scale = Float32(s.init_omega()) / s.in_dims
     bias = Lux.zeros32(rng, s.out_dims, 1)
     return (weight=weight .* scale, bias=bias)
 end
