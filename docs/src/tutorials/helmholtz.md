@@ -30,7 +30,7 @@ a2 = 4
 k = 1
 
 q(x,y) = -(a1*π)^2 * sin(a1*π*x) * sin(a2*π*y) - (a2*π)^2 * sin(a1*π*x) * sin(a2*π*y) + k^2 * sin(a1*π*x) * sin(a2*π*y)
-eq = Dxx(u(x,y)) + Dyy(u(x,y)) + u(x,y) ~ q(x,y)
+eq = Dxx(u(x,y)) + Dyy(u(x,y)) + k^2 * u(x,y) ~ q(x,y)
 domains = [x ∈ Interval(-1,1), y ∈ Interval(-1,1)]
 bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 
