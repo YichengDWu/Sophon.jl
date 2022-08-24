@@ -64,7 +64,7 @@ function train(model)
     for i in 1:2000
         gs = gradient(p->loss(model,p,st,x,y), ps)[1]
         st_opt, ps = Optimisers.update(st_opt, ps, gs)
-        if i % 100 == 1 || i == 100
+        if i % 100 == 1 || i == 2000
             println("Epoch $i ||  ", loss(model,ps,st,x,y))
         end
     end
