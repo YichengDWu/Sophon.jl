@@ -199,7 +199,9 @@ Sinusoidal Representation Network.
   - `init_weight`: The initialization algorithm for the weights of the input layer. Note
     that all hidden layers use `kaiming_uniform` as the initialization algorithm. If not specified,
     the default is
-    `math W\sim \mathcal{U}\left(-\frac{omega}{fan_{in}}, \frac{omega}{fan_{in}}\right) `
+    ```math
+        W\sim \mathcal{U}\left(-\frac{omega}{fan_{in}}, \frac{omega}{fan_{in}}\right)
+    ```
 
 ## Examples
 
