@@ -138,8 +138,8 @@ Combined model of [`Siren`](@ref) and [`PINNAttention`](@ref).
 function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=relu;
                         hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0)
 
-    U_net = Dense(in_dims, out_dims, activation)
-    V_net = Dense(in_dims, out_dims, activation)
+    U_net = Dense(in_dims, hidden_dims, activation)
+    V_net = Dense(in_dims, hidden_dims, activation)
     siren = Siren(in_dims, out_dims; hidden_dims=hidden_dims,
                   num_layers=num_layers, omega=omega)
     H_net = siren[1]
