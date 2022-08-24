@@ -1,5 +1,7 @@
 # Helmholtz equation
 
+# Helmholtz equation
+
 Let us consider the Helmholtz equation in two space dimensions
 
 ```math
@@ -14,29 +16,32 @@ q(x, y)=-\left(a_{1} \pi\right)^{2} \sin \left(a_{1} \pi x\right) \sin \left(a_{
 ```
 The excat solution is ``u(x,y)=\sin{a_1\pi x}\sin{a_2\pi y}``. We chose ``k=1, a_1 = 1`` and ``a_2 = 4``.
 
-```julia
+```@example helmholtz
 using NeuralPDE, IntervalSets, Sophon, Lux, Random, NNlib, ComponentArrays
 using Optimization, OptimizationOptimisers, OptimizationOptimJL
-using Statistics: mean
 
 @parameters x,y
 @variables u(..)
 Dxx = Differential(x)^2
 Dyy = Differential(y)^2
 
-q(x,y) = -π^2 * sin(π*x) * sin(4*π*y) - 16*π^2 * sin(π*x) * sin(4*π*y) +  sin(π*x) * sin(4*π*y)
+a1 = 1
+a2 = 4
+k = 1
 
+q(x,y) = -(a1*π)^2 * sin(a1*π*x) * sin(a2*π*y) - (a2*π)^2 * sin(a1*π*x) * sin(a2*π*y) + k^2 * sin(a1*π*x) * sin(a2*π*y)
 eq = Dxx(u(x,y)) + Dyy(u(x,y)) + u(x,y) ~ q(x,y)
 domains = [x ∈ Interval(-1,1), y ∈ Interval(-1,1)]
 bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 
-@named pde = PDESystem(eq, bcs, domains, [x,y], [u(x,y)])
+@named helmholtz = PDESystem(eq, bcs, domains, [x,y], [u(x,y)])
 
-chain = SirenAttention(2, 1)
-ps= Lux.setup(Random.default_rng(), chain)[1]
-ps = ps |> ComponentArray .|> Float64#|> gpu .|> Float64
-discretization = PhysicsInformedNN(chain, QuasiRandomTraining(400; bcs_points = 800); init_params = ps, derivative=(phi,u,x,ϵs, order,θ)->NeuralPDE.numeric_derivative(phi, u, x, ϵs, 2, θ))
-prob = discretize(pde, discretization)
+chain = Siren(2, 1; num_layers = 4, hidden_dims = 50, omega = 10f0)
+ps= Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
+
+adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [1000,1000,1000,1000])
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(200); init_params = ps, adaptive_loss = adaptive_loss)
+prob = discretize(helmholtz, discretization)
 phi = discretization.phi
 
 callback = function (p, l)
@@ -44,22 +49,15 @@ callback = function (p, l)
     return false
 end
 
-opt = Scheduler(Adam(), Sophon.Step(;λ = 1f-3, γ = 0.95f0, step_sizes = 200))
-res = Optimization.solve(prob, opt; maxiters=18000, callback=callback)
+@time res = Optimization.solve(prob, Adam(); maxiters=2000, callback=callback)
+```
 
-prob = remake(prob; u0=res.u)
-println("Training with BFGS")
-res = Optimization.solve(prob, LBFGS(); maxiters=2000, callback=callback)
-
-xs, ys= [infimum(d.domain):0.01:supremum(d.domain) for d in domain]
-x_mesh = NNlib.unsqueeze(xs .* ones(length(ys))')
-y_mesh = NNlib.unsqueeze(ones(length(xs)) .* ys')
-
-analytic(x,y) = sin(pi*x)*sin(4*pi*y)
-u_real = analytic.(x_mesh, y_mesh)
-u_real = reshape(u_real, length(xs), length(ys))
-u_pred = phi(vcat(x_mesh,y_mesh), res.u)
-u_pred = reshape(u_pred, length(xs), length(ys))
+Let's plot the result.
+```@example helmholtz
+xs, ys= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
+u_analytic(x,y) = sin(a1*pi*x)*sin(a2*pi*y)
+u_real = [u_analytic(x,y) for x in xs, y in ys]
+u_pred = [sum(phi([x,y], res.u)) for x in xs, y in ys]
 
 using CairoMakie
 axis = (xlabel="x", ylabel="y", title="Analytical Solution")
@@ -70,9 +68,6 @@ Colorbar(fig[:, end+1], hm2)
 ax3, hm3 = heatmap(fig[1, end+1], xs, ys, abs.(u_pred-u_real), axis= merge(axis, (;title = "Absolute Error")))
 Colorbar(fig[:, end+1], hm3)
 
-display(fig)
+save("helmholtz.png", fig); nothing # hide
 ```
-
-```julia
-print("MSE error", mean(abs, (u_pred-u_real)))
-```
+![](helmholtz.png)

@@ -24,6 +24,7 @@ makedocs(; modules=[Sophon],
                  "Fitting a nonlinear discontinuous function" => "tutorials/discontinuous.md",
                  "1D Poisson's Equation" => "tutorials/poisson.md",
                  "1D Convection Equation" => "tutorials/convection.md",
+                 "2D Helmholtz Equation" => "tutorials/helmholtz.md",
                  #"1D Wave Equation" => "tutorials/wave.md",
              ],
          ])
