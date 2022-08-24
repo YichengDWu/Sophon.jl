@@ -1,4 +1,6 @@
 Base.getindex(c::Chain, i::Int) = c.layers[i]
+Base.getindex(c::Chain{<:NamedTuple}, i::AbstractArray) =
+  Chain(NamedTuple{keys(c)[i]}(Tuple(c.layers)[i]))
 Base.length(c::Chain) = length(c.layers)
 
 @inline GPUComponentArray64(nt::NamedTuple) = nt |> ComponentArray |> gpu .|> Float64
