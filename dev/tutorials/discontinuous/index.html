@@ -41,28 +41,28 @@ Plots.plot(vec(x), vec(y),label=false)</code></pre><p><img src="../u.svg" alt/><
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">train (generic function with 1 method)</code></pre><h2 id="Results"><a class="docs-heading-anchor" href="#Results">Results</a><a id="Results-1"></a><a class="docs-heading-anchor-permalink" href="#Results" title="Permalink"></a></h2><pre><code class="language-julia hljs">@time ps, st = train(model)
 y_pred = model(x,ps,st)[1]
 Plots.plot(vec(x), vec(y_pred),label=&quot;Prediction&quot;,line = (:dot, 4))
-Plots.plot!(vec(x), vec(y),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.7058430843796629
-Epoch 100 ||  0.0018565490177688989
-Epoch 101 ||  0.0018179243542017832
-Epoch 201 ||  0.0006981409008291544
-Epoch 301 ||  0.0005472654226036242
-Epoch 401 ||  0.00045898541206886544
-Epoch 501 ||  0.0003917502105416534
-Epoch 601 ||  0.00033729743340941173
-Epoch 701 ||  0.00028877469386075135
-Epoch 801 ||  0.0002403763587686734
-Epoch 901 ||  0.00018997644146940304
-Epoch 1001 ||  0.00014050338506427985
-Epoch 1101 ||  9.852022808388191e-5
-Epoch 1201 ||  6.842795351755982e-5
-Epoch 1301 ||  4.878042184003491e-5
-Epoch 1401 ||  3.572864248837751e-5
-Epoch 1501 ||  2.6610411309575504e-5
-Epoch 1601 ||  2.0175145720948447e-5
-Epoch 1701 ||  1.5739860417797123e-5
-Epoch 1801 ||  1.275865359953265e-5
-Epoch 1901 ||  1.076531026206736e-5
- 41.479327 seconds (35.48 M allocations: 5.828 GiB, 3.70% gc time, 90.63% compilation time)</code></pre><p><img src="../result.svg" alt/></p><h2 id="Gaussian-activation-function"><a class="docs-heading-anchor" href="#Gaussian-activation-function">Gaussian activation function</a><a id="Gaussian-activation-function-1"></a><a class="docs-heading-anchor-permalink" href="#Gaussian-activation-function" title="Permalink"></a></h2><p>We can also try using a fully connected net with the <a href="../../#Sophon.gaussian"><code>gaussian</code></a> activation function.</p><pre><code class="language-julia hljs">model = FullyConnected((1,50,50,50,50,1), gaussian)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
+Plots.plot!(vec(x), vec(y),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.6942578409473483
+Epoch 100 ||  0.0023028360564090354
+Epoch 101 ||  0.002261559204914512
+Epoch 201 ||  0.000910873454254438
+Epoch 301 ||  0.000694622002594163
+Epoch 401 ||  0.0005906029155529417
+Epoch 501 ||  0.000502887649497492
+Epoch 601 ||  0.0004210635464809423
+Epoch 701 ||  0.00034897414335293607
+Epoch 801 ||  0.00028805606258734267
+Epoch 901 ||  0.000233623558548567
+Epoch 1001 ||  0.00018130852189539906
+Epoch 1101 ||  0.00013209360727746324
+Epoch 1201 ||  9.072033457841447e-5
+Epoch 1301 ||  6.0541879753902535e-5
+Epoch 1401 ||  4.067783832694205e-5
+Epoch 1501 ||  2.7956734877156128e-5
+Epoch 1601 ||  1.9696113497085068e-5
+Epoch 1701 ||  1.4285589700014258e-5
+Epoch 1801 ||  1.0728009587618856e-5
+Epoch 1901 ||  8.352653578728709e-6
+ 44.842544 seconds (35.86 M allocations: 5.864 GiB, 2.89% gc time, 88.88% compilation time)</code></pre><p><img src="../result.svg" alt/></p><h2 id="Gaussian-activation-function"><a class="docs-heading-anchor" href="#Gaussian-activation-function">Gaussian activation function</a><a id="Gaussian-activation-function-1"></a><a class="docs-heading-anchor-permalink" href="#Gaussian-activation-function" title="Permalink"></a></h2><p>We can also try using a fully connected net with the <a href="../../#Sophon.gaussian"><code>gaussian</code></a> activation function.</p><pre><code class="language-julia hljs">model = FullyConnected((1,50,50,50,50,1), gaussian)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
     layer_1 = Dense(1 =&gt; 50, gaussian),  # 100 parameters
     layer_2 = Dense(50 =&gt; 50, gaussian),  # 2_550 parameters
     layer_3 = Dense(50 =&gt; 50, gaussian),  # 2_550 parameters
@@ -72,28 +72,28 @@ Epoch 1901 ||  1.076531026206736e-5
           #        plus 0 states, summarysize 80 bytes.</code></pre><pre><code class="language-julia hljs">@time ps, st = train(model)
 y_pred = model(x,ps,st)[1]
 Plots.plot(vec(x), vec(y_pred),label=&quot;Prediction&quot;,line = (:dot, 4))
-Plots.plot!(vec(x), vec(y),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.31525786014137724
-Epoch 100 ||  0.006373481752662482
-Epoch 101 ||  0.006351071466702818
-Epoch 201 ||  0.003934713972913069
-Epoch 301 ||  0.0008457978541338052
-Epoch 401 ||  0.0005436040016064931
-Epoch 501 ||  0.0003964269082313123
-Epoch 601 ||  0.00021917561540728668
-Epoch 701 ||  0.00013617646907236958
-Epoch 801 ||  4.033068764387065e-5
-Epoch 901 ||  1.768269500372565e-5
-Epoch 1001 ||  1.0017191010508452e-5
-Epoch 1101 ||  7.2076303626656595e-6
-Epoch 1201 ||  6.620402466325383e-6
-Epoch 1301 ||  2.278796226285006e-5
-Epoch 1401 ||  4.475419175698467e-6
-Epoch 1501 ||  0.00034142296472557994
-Epoch 1601 ||  7.941056679836338e-5
-Epoch 1701 ||  2.6720915871638053e-5
-Epoch 1801 ||  1.1195749143238022e-5
-Epoch 1901 ||  6.029292513539447e-6
- 13.489418 seconds (14.06 M allocations: 4.465 GiB, 6.19% gc time, 72.56% compilation time)</code></pre><p><img src="../result2.svg" alt/></p><h2 id="Quadratic-activation-function"><a class="docs-heading-anchor" href="#Quadratic-activation-function">Quadratic activation function</a><a id="Quadratic-activation-function-1"></a><a class="docs-heading-anchor-permalink" href="#Quadratic-activation-function" title="Permalink"></a></h2><p><a href="tutorials/@ref"><code>quadratic</code></a> is much cheaper to compute compared to the Gaussain activation function.</p><pre><code class="language-julia hljs">model = FullyConnected((1,50,50,50,50,1), quadratic)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
+Plots.plot!(vec(x), vec(y),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.5469178762529588
+Epoch 100 ||  0.006989978748649108
+Epoch 101 ||  0.006972833416998777
+Epoch 201 ||  0.005868796166704944
+Epoch 301 ||  0.005120542473696627
+Epoch 401 ||  0.004422908977853034
+Epoch 501 ||  0.0032363480829455116
+Epoch 601 ||  0.0010444406813212388
+Epoch 701 ||  0.00034251422072343306
+Epoch 801 ||  0.00016654623400516808
+Epoch 901 ||  9.123841704791647e-5
+Epoch 1001 ||  5.6754552662015936e-5
+Epoch 1101 ||  5.272357849120779e-5
+Epoch 1201 ||  9.802639355453984e-5
+Epoch 1301 ||  2.9899214579853045e-5
+Epoch 1401 ||  2.5337549195517142e-5
+Epoch 1501 ||  2.318409773817329e-5
+Epoch 1601 ||  2.2257748553761823e-5
+Epoch 1701 ||  0.0001707270997796476
+Epoch 1801 ||  1.827525699336678e-5
+Epoch 1901 ||  0.0004925272841006941
+ 16.517313 seconds (14.31 M allocations: 4.486 GiB, 4.34% gc time, 68.22% compilation time)</code></pre><p><img src="../result2.svg" alt/></p><h2 id="Quadratic-activation-function"><a class="docs-heading-anchor" href="#Quadratic-activation-function">Quadratic activation function</a><a id="Quadratic-activation-function-1"></a><a class="docs-heading-anchor-permalink" href="#Quadratic-activation-function" title="Permalink"></a></h2><p><a href="tutorials/@ref"><code>quadratic</code></a> is much cheaper to compute compared to the Gaussain activation function.</p><pre><code class="language-julia hljs">model = FullyConnected((1,50,50,50,50,1), quadratic)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
     layer_1 = Dense(1 =&gt; 50, quadratic),  # 100 parameters
     layer_2 = Dense(50 =&gt; 50, quadratic),  # 2_550 parameters
     layer_3 = Dense(50 =&gt; 50, quadratic),  # 2_550 parameters
@@ -103,25 +103,25 @@ Epoch 1901 ||  6.029292513539447e-6
           #        plus 0 states, summarysize 80 bytes.</code></pre><pre><code class="language-julia hljs">@time ps, st = train(model)
 y_pred = model(x,ps,st)[1]
 Plots.plot(vec(x), vec(y_pred),label=&quot;Prediction&quot;,line = (:dot, 4))
-Plots.plot!(vec(x), vec(y),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.6478329739692597
-Epoch 100 ||  0.007265663751200426
-Epoch 101 ||  0.007251429428297342
-Epoch 201 ||  0.0063394874081475604
-Epoch 301 ||  0.005732565842738026
-Epoch 401 ||  0.005108117878694729
-Epoch 501 ||  0.0044318423741315635
-Epoch 601 ||  0.0037099451867420846
-Epoch 701 ||  0.0032318843209720926
-Epoch 801 ||  0.001864215616279797
-Epoch 901 ||  0.0007574192904250136
-Epoch 1001 ||  0.0002886410923705193
-Epoch 1101 ||  0.00015780226546389356
-Epoch 1201 ||  0.00011190078741874885
-Epoch 1301 ||  0.00010291888906834819
-Epoch 1401 ||  7.549862348757755e-5
-Epoch 1501 ||  6.50146805164257e-5
-Epoch 1601 ||  5.6349683866583064e-5
-Epoch 1701 ||  4.922508960116655e-5
-Epoch 1801 ||  4.216372708647661e-5
-Epoch 1901 ||  8.406441080507461e-5
- 10.477735 seconds (12.29 M allocations: 4.342 GiB, 6.38% gc time, 79.69% compilation time)</code></pre><p><img src="../result3.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../poisson/">1D Poisson&#39;s Equation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.22 on <span class="colophon-date" title="Wednesday 24 August 2022 20:25">Wednesday 24 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Plots.plot!(vec(x), vec(y),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.42261287956927235
+Epoch 100 ||  0.007657985444187587
+Epoch 101 ||  0.007645406487946079
+Epoch 201 ||  0.006783853265054591
+Epoch 301 ||  0.0060561433831571735
+Epoch 401 ||  0.00542078976050699
+Epoch 501 ||  0.004873990941400117
+Epoch 601 ||  0.004424130937843912
+Epoch 701 ||  0.004000901494219816
+Epoch 801 ||  0.003289782398686439
+Epoch 901 ||  0.0015957560522313547
+Epoch 1001 ||  0.0004526855647549469
+Epoch 1101 ||  0.00015074594481867247
+Epoch 1201 ||  0.00010163799094991172
+Epoch 1301 ||  5.524250316305793e-5
+Epoch 1401 ||  0.0002180791631827982
+Epoch 1501 ||  2.460405165456502e-5
+Epoch 1601 ||  2.5972948964014446e-5
+Epoch 1701 ||  5.563219686905359e-5
+Epoch 1801 ||  1.2696151836570601e-5
+Epoch 1901 ||  0.00010987191208662266
+ 12.504537 seconds (12.53 M allocations: 4.364 GiB, 4.65% gc time, 76.39% compilation time)</code></pre><p><img src="../result3.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../poisson/">1D Poisson&#39;s Equation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.22 on <span class="colophon-date" title="Wednesday 24 August 2022 23:28">Wednesday 24 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
