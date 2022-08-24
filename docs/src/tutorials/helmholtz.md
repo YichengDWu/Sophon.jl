@@ -17,8 +17,8 @@ q(x, y)=-\left(a_{1} \pi\right)^{2} \sin \left(a_{1} \pi x\right) \sin \left(a_{
 The excat solution is ``u(x,y)=\sin{a_1\pi x}\sin{a_2\pi y}``. We chose ``k=1, a_1 = 1`` and ``a_2 = 4``.
 
 ```@example helmholtz
-using NeuralPDE, IntervalSets, Sophon, Lux, Random, NNlib, ComponentArrays
-using Optimization, OptimizationOptimisers, OptimizationOptimJL
+using NeuralPDE, IntervalSets, Sophon, Lux, Random
+using Optimization, OptimizationOptimisers
 
 @parameters x,y
 @variables u(..)
