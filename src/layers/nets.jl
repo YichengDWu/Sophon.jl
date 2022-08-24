@@ -17,10 +17,10 @@ x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connect
 
 ## Arguments
 
-    - `H_net`: `AbstractExplicitLayer`.
-    - `U_net`: `AbstractExplicitLayer`.
-    - `V_net`: `AbstractExplicitLayer`.
-    - `fusion_layers`: `Chain`.
+  - `H_net`: `AbstractExplicitLayer`.
+  - `U_net`: `AbstractExplicitLayer`.
+  - `V_net`: `AbstractExplicitLayer`.
+  - `fusion_layers`: `Chain`.
 
 ## Keyword Arguments
 
