@@ -125,16 +125,28 @@ end
     SirenAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
     hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0))
 
+```julia
+x → Dense(..., activation) → u                           u
+                              ↘                           ↘
+x → Siren[1] →  s1 → Siren[2] → connection → fusionlayer2 → connection
+                              ↗                           ↗
+x → Dense(..., activation) → v                           v
 ```
-x -> Sine -> PINNAttention
-```
+
+Combined model of [`Siren`](@ref) and [`PINNAttention`](@ref).
 """
-function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
+function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=relu;
                         hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0)
-    sine = Sine(in_dims, hidden_dims[1]; omega=omega)
-    attention_layers = PINNAttention(hidden_dims[1], out_dims, activation;
-                                     hidden_dims=hidden_dims, num_layers=num_layers - 1)
-    return Chain(sine, attention_layers)
+
+    U_net = Dense(in_dims, out_dims, activation)
+    V_net = Dense(in_dims, out_dims, activation)
+    siren = Siren(in_dims, out_dims; hidden_dims=hidden_dims,
+                  num_layers=num_layers, omega=omega)
+    H_net = siren[1]
+    fusion_layers = Chain(Tuple(siren.layers)[2:end])
+
+    attention_layers = PINNAttention(H_net, U_net, V_net, fusion_layers)
+    return attention_layers
 end
 
 """
