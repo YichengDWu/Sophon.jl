@@ -143,7 +143,7 @@ function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=relu;
     V_net = Dense(in_dims, hidden_dims, activation)
     fusion_layers = FullyConnected(hidden_dims, hidden_dims, sin; num_layers = num_layers-1, hidden_dims = hidden_dims)
     layers = PINNAttention(H_net, U_net, V_net, fusion_layers)
-    return Chain(layers, Dense(in_dims, out_dims))
+    return Chain(layers, Dense(hidden_dims, out_dims))
 end
 
 """
