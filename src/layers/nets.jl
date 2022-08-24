@@ -200,7 +200,7 @@ Sinusoidal Representation Network.
     that all hidden layers use `kaiming_uniform` as the initialization algorithm. If not specified,
     the default is
     ```math
-        W\sim \mathcal{U}\left(-\frac{omega}{fan_{in}}, \frac{omega}{fan_{in}}\right)
+        W\sim \mathcal{U}\left(-\frac{\omega}{fan_{in}}, \frac{\omega}{fan_{in}}\right)
     ```
 
 ## Examples
