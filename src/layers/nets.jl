@@ -196,9 +196,9 @@ Sinusoidal Representation Network.
 ## Keyword Arguments
 
   - `omega`: The `ω₀` used for the first layer.
-  - `init_weight`: The initialization algorithm for the weights of the input layer. Note
-    that all hidden layers use `kaiming_uniform` as the initialization algorithm. If not specified,
-    the default is
+  - `init_weight`: The initialization algorithm for the weights of the **input** layer. Note
+    that all hidden layers use `kaiming_uniform` as the initialization algorithm. If not
+    specified, the default is
     ```math
         W\sim \mathcal{U}\left(-\frac{omega}{fan_{in}}, \frac{omega}{fan_{in}}\right)
     ```
@@ -222,6 +222,10 @@ Chain(
     layer_4 = Dense(20 => 1),           # 21 parameters
 )         # Total: 941 parameters,
           #        plus 0 states, summarysize 64 bytes.
+
+# Use your own initialization algorithm for the input layer.
+julia> init_weight(rng::AbstractRNG, out_dims::Int, in_dims::Int) = randn(rng, Float32, out_dims, in_dims) .* 2.5f0
+julia> chain = Siren(2, 1; num_layers = 4, hidden_dims = 50, init_weight = init_weight)
 ```
 
 ## References

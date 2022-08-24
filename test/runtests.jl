@@ -25,7 +25,7 @@ rng = Random.default_rng()
 
         @testset "FullyConnected" begin
             fc = FullyConnected((2, 4), sin)
-            @test fc == Dense(2, 4, sin; init_weight = Sophon.kaiming_uniform( sin))
+            @test fc == Dense(2, 4, sin; init_weight=Sophon.kaiming_uniform(sin))
             fc2 = FullyConnected((2, 4, 5, 6), sin)
             @test values(map(x -> x.out_dims, fc2.layers)) == (4, 5, 6)
             @test fc2.layers[end].activation == identity
@@ -40,7 +40,7 @@ rng = Random.default_rng()
         end
         @testset "Sine" begin
             # first layer
-            s = Sine(2, 3; omega = 30f0)
+            s = Sine(2, 3; omega=30.0f0)
             x = rand(Float32, 2, 5)
             ps, st = Lux.setup(rng, s)
             y, st = s(x, ps, st)

@@ -183,15 +183,15 @@ Sinusoidal layer.
 ## Example
 
 ```julia
-s = Sine(2, 2; omega=30f0) # first layer
+s = Sine(2, 2; omega=30.0f0) # first layer
 s = Sine(2, 2) # hidden layer
 ```
 """
-function Sine(ch::Pair{T, T}; omega::Union{Real, Nothing} = nothing) where {T <: Int}
-    return Sine(first(ch), last(ch); omega = omega)
+function Sine(ch::Pair{T, T}; omega::Union{Real, Nothing}=nothing) where {T <: Int}
+    return Sine(first(ch), last(ch); omega=omega)
 end
 
-function Sine(in_dims::Int, out_dims::Int; omega::Union{Real, Nothing} = nothing)
+function Sine(in_dims::Int, out_dims::Int; omega::Union{Real, Nothing}=nothing)
     init_weight = get_sine_init_weight(omega)
     return Dense(in_dims, out_dims, sin; init_weight=init_weight)
 end
