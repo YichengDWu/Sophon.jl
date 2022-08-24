@@ -137,16 +137,13 @@ Combined model of [`Siren`](@ref) and [`PINNAttention`](@ref).
 """
 function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=relu;
                         hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0)
-
+    
+    H_net = Sine(in_dims, hidden_dims; omega = omega)
     U_net = Dense(in_dims, hidden_dims, activation)
     V_net = Dense(in_dims, hidden_dims, activation)
-    siren = Siren(in_dims, out_dims; hidden_dims=hidden_dims,
-                  num_layers=num_layers, omega=omega)
-    H_net = siren[1]
-    fusion_layers = Chain(Tuple(siren.layers)[2:end])
-
-    attention_layers = PINNAttention(H_net, U_net, V_net, fusion_layers)
-    return attention_layers
+    fusion_layers = FullyConnected(hidden_dims, hidden_dims, sin; num_layers = num_layers-1, hidden_dims = hidden_dims)
+    layers = PINNAttention(H_net, U_net, V_net, fusion_layers)
+    return Chain(attention_layers, Dense(in_dims, out_dims))
 end
 
 """
