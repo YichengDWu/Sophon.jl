@@ -1,6 +1,6 @@
 # Fitting a nonlinear discontinuous function
 
-This example is taken from [here](https://royalsocietypublishing.org/doi/epdf/10.1098/rspa.2020.0334).
+This example is taken from [here](https://royalsocietypublishing.org/doi/epdf/10.1098/rspa.2020.0334). However, we do not use adaptive activation functions. Instead, we show that using suitable non-parametric activation functions immediately performs better.
 
 
 The following  discontinuous  function  with  discontinuity  at ``x=0``  location  is approximated by [`Siren`](@ref).
