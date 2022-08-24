@@ -7,7 +7,7 @@ The output dimesion of `H_net` and the input dimension of `fusion_layers` must b
 For the second and the third constructor, `Dense` layers is used for `H_net`, `U_net`, and `V_net`.
 Note that the first constructer does not contain the output layer.
 
-```
+```julia
                  x → U_net → u                           u
                                ↘                           ↘
 x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connection
