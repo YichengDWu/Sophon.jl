@@ -137,7 +137,7 @@ Combined model of [`Siren`](@ref) and [`PINNAttention`](@ref).
 """
 function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=relu;
                         hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0)
-    
+
     H_net = Sine(in_dims, hidden_dims; omega = omega)
     U_net = Dense(in_dims, hidden_dims, activation)
     V_net = Dense(in_dims, hidden_dims, activation)
@@ -147,7 +147,7 @@ function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=relu;
 end
 
 """
-    MultiscaleFourier(in_dims::Int, layer_dims::NTuple, activation=identity, modes::NTuple)
+    MultiscaleFourier(in_dims::Int, layer_dims::NTuple, activation=sin, modes::NTuple)
 
 Multi-scale Fourier Feature Net.
 
@@ -184,14 +184,12 @@ Chain(
 [1] Wang, Sifan, Hanwen Wang, and Paris Perdikaris. “On the eigenvector bias of fourier feature networks: From regression to solving multi-scale pdes with physics-informed neural networks.” Computer Methods in Applied Mechanics and Engineering 384 (2021): 113938.
 """
 function MultiscaleFourier(in_dims::Int,
-                           out_dims::NTuple{N1, Int}=(ntuple(i -> 512, 6)..., 1),
+                           layer_dims::NTuple{N1, Int}=(ntuple(i -> 512, 6)..., 1),
                            activation::Function=sin;
-                           modes::NTuple{N2, Pair{S, Int}}=(1 => 64, 10 => 64, 20 => 64,
-                                                            50 => 32, 100 => 32)) where {N1,
-                                                                                         N2,
-                                                                                         S}
+                           modes::NTuple=(1 => 64, 10 => 64, 20 => 64,
+                                                            50 => 32, 100 => 32)) where {N1 <: Int}                                                                                         }
     fourierfeature = FourierFeature(in_dims, modes)
-    fc = FullyConnected((fourierfeature.out_dims, out_dims...), activation)
+    fc = FullyConnected((fourierfeature.out_dims, layer_dims...), activation)
     return Chain(fourierfeature, fc)
 end
 

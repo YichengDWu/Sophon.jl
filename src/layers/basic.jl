@@ -49,12 +49,22 @@ struct FourierFeature{M} <: AbstractExplicitLayer
     modes::M
 end
 
+function Base.show(io::IO, f::FourierFeature)
+    return print(io, "FourierFeature($(f.in_dims) => $(f.out_dims))")
+end
+
 function FourierFeature(in_dims::Int, modes::NTuple{N, Pair{S, T}}) where {N, S, T <: Int}
     out_dims = map(x -> 2 * last(x), modes)
     return FourierFeature{typeof(modes)}(in_dims, sum(out_dims), modes)
 end
 
-function initialstates(rng::AbstractRNG, f::FourierFeature)
+function FourierFeature(in_dims::Int, modes::NTuple{N, T}) where {N, T <: Real}
+    out_dims = length(modes) * 2 * in_dims
+    return FourierFeature{typeof(modes)}(in_dims, out_dims, modes)
+end
+
+function initialstates(rng::AbstractRNG,
+                       f::FourierFeature{NTuple{NN, Pair{S, T}}}) where {NN, S, T <: Int}
     N = length(f.modes)
     names = ntuple(i -> Symbol("mode_$i"), N)
     frequencies = ntuple(N) do i
@@ -62,6 +72,13 @@ function initialstates(rng::AbstractRNG, f::FourierFeature)
         return randn(rng, Float32, last(m), f.in_dims) .* first(m)
     end
     return NamedTuple{names}(frequencies)
+end
+
+function initialstates(rng::AbstractRNG,
+                       f::FourierFeature{NTuple{NN, T}}) where {NN, T <: Real}
+    N = length(f.modes)
+    names = ntuple(i -> Symbol("mode_$i"), N)
+    return NamedTuple{names}(f.modes)
 end
 
 function (f::FourierFeature)(x::AbstractVecOrMat, ps, st::NamedTuple)
@@ -78,10 +95,6 @@ function (f::FourierFeature)(x::AbstractArray, ps, st::NamedTuple)
         return [sin.(batched_mul(f, x)); cos.(batched_mul(f, x))]
     end
     return y, st
-end
-
-function Base.show(io::IO, f::FourierFeature)
-    return print(io, "FourierFeature($(f.in_dims) => $(f.out_dims))")
 end
 
 """
