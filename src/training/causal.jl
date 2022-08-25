@@ -22,20 +22,6 @@ function CausalTraining(points; epsilon, init_points=points,
     return CausalTraining(points, init_points, epsilon, sampling_alg)
 end
 
-ChainRulesCore.@ignore_derivatives function generate_quasi_random_points(points, bound,
-                                                                         eltypeθ,
-                                                                         sampling_alg)
-    function f(b)
-        if b isa Number
-            fill(eltypeθ(b), (1, points))
-        else
-            lb, ub = eltypeθ[b[1]], [b[2]]
-            QuasiMonteCarlo.sample(points, lb, ub, sampling_alg)
-        end
-    end
-    return vcat(f.(bound)...)
-end
-
 function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepresentation,
                                                      strategy::CausalTraining,
                                                      datafree_pde_loss_function,
