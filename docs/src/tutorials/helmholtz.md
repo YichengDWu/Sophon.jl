@@ -1,7 +1,5 @@
 # Helmholtz equation
 
-# Helmholtz equation
-
 Let us consider the Helmholtz equation in two space dimensions
 
 ```math
