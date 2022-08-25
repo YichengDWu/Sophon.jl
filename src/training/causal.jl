@@ -56,7 +56,7 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
     if isempty(real_datafree_bc_loss_function)
         pde_loss_functions = get_pde_loss_function(init_loss_functions,
                                                    datafree_pde_loss_function, pde_bounds,
-                                                   tidx, eltypeθ, device, ϵ, stategy)
+                                                   tidx, eltypeθ, device, ϵ, strategy)
         return pde_loss_functions, init_loss_functions
     else
         pde_loss_functions, bcs_loss_functions = get_pde_and_bc_loss_function(init_loss_functions,
