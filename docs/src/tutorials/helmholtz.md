@@ -44,12 +44,7 @@ discretization = PhysicsInformedNN(chain, QuasiRandomTraining(200); init_params 
 prob = discretize(helmholtz, discretization)
 phi = discretization.phi
 
-callback = function (p, l)
-    println("Current loss is: $l")
-    return false
-end
-
-@time res = Optimization.solve(prob, Adam(); maxiters=2000, callback=callback)
+@time res = Optimization.solve(prob, Adam(); maxiters=2000)
 ```
 
 Let's plot the result.
