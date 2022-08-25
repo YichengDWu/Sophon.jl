@@ -38,6 +38,7 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
     end
 
     eltypeθ = eltype(flat_init_params)
+    device = SciMLBase.parameterless_type(ComponentArrays.getdata(flat_init_params))
 
     bounds = get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars, strategy)
     pde_bounds, bcs_bounds = bounds
@@ -52,16 +53,23 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
                            for (_loss, bound) in zip(datafree_init_loss_function,
                                                      init_bounds)]
 
-    pde_loss_functions, bcs_loss_functions = get_pde_and_bc_loss_function(init_loss_functions,
-                                                                          real_datafree_bc_loss_function,
-                                                                          datafree_pde_loss_function,
-                                                                          real_bcs_bounds,
-                                                                          pde_bounds, tidx,
-                                                                          eltypeθ,
-                                                                          SciMLBase.parameterless_type(ComponentArrays.getdata(flat_init_params)),
-                                                                          ϵ, strategy)
+    if isempty(real_datafree_bc_loss_function)
+        pde_loss_functions = get_pde_loss_function(init_loss_functions,
+                                                   datafree_pde_loss_function, pde_bounds,
+                                                   tidx, eltypeθ, device, ϵ, stategy)
+        return pde_loss_functions, init_loss_functions
+    else
+        pde_loss_functions, bcs_loss_functions = get_pde_and_bc_loss_function(init_loss_functions,
+                                                                              real_datafree_bc_loss_function,
+                                                                              datafree_pde_loss_function,
+                                                                              real_bcs_bounds,
+                                                                              pde_bounds,
+                                                                              tidx, eltypeθ,
+                                                                              device, ϵ,
+                                                                              strategy)
 
-    return pde_loss_functions, vcat(bcs_loss_functions, init_loss_functions)
+        return pde_loss_functions, vcat(bcs_loss_functions, init_loss_functions)
+    end
 end
 
 function get_pde_and_bc_loss_function(init_loss_functions, datafree_bc_loss_functions,
@@ -112,4 +120,34 @@ function get_pde_and_bc_loss_function(init_loss_functions, datafree_bc_loss_func
     reduced_bc_loss_functions = [θ -> mean(loss_func(θ)) for loss_func in bc_loss_functions]
 
     return pde_loss_functions, reduced_bc_loss_functions
+end
+
+function get_pde_and_bc_loss_function(init_loss_functions, datafree_pde_functions,
+                                      pde_bounds, tidx, eltypeθ, device, ϵ, stategy)
+    sampling_alg = stategy.sampling_alg
+    points = stategy.points
+
+    function get_pde_loss_function(datafree_pde_loss_func, pde_bound)
+        return θ -> begin
+            L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
+
+            set = NeuralPDE.generate_quasi_random_points(points, pde_bound, eltypeθ,
+                                                         sampling_alg)
+            set = sortslices(set; dims=2, alg=InsertionSort,
+                             lt=(x, y) -> isless(x[tidx], y[tidx]))
+            set_ = adapt(device, set)
+            L_pde = ChainRulesCore.@ignore_derivatives abs2.(datafree_pde_loss_func(set_,
+                                                                                    θ))
+            L = ChainRulesCore.@ignore_derivatives hcat(adapt(device, [L_init;;]),
+                                                        L_pde[:, 1:(end - 1)])
+            W = ChainRulesCore.@ignore_derivatives exp.(-ϵ / points .* cumsum(L; dims=2))
+            mean(abs2, W .* datafree_pde_loss_func(set_, θ))
+        end
+    end
+
+    pde_loss_functions = [get_pde_loss_function(pde_loss_func, pde_bound)
+                          for (pde_loss_func, pde_bound) in zip(datafree_pde_functions,
+                                                                pde_bounds)]
+
+    return pde_loss_functions
 end
