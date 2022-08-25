@@ -15,6 +15,13 @@ rng = Random.default_rng()
             @test size(y) == (18, 2)
             @test f2.out_dims == 18
             @test eltype(y) == Float32
+
+            f3 = FourierFeature(2, (1, 2, 3))
+            @test f3.out_dims == 6 * 2
+            ps, st = Lux.setup(rng, f3)
+            @test length(st) == (3)
+            y, st = f3(rand(Float32, 2, 2), ps, st)
+            @test size(y) == (6*2, 2)
         end
         @testset "RBF" begin
             rbf = RBF(2, 4, 3)
