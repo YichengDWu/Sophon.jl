@@ -127,7 +127,7 @@ function get_pde_loss_function(init_loss_functions, datafree_pde_functions,
     sampling_alg = stategy.sampling_alg
     points = stategy.points
 
-    function get_pde_loss_function(datafree_pde_loss_func, pde_bound)
+    function get_loss_function(datafree_pde_loss_func, pde_bound)
         return θ -> begin
             L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
 
@@ -145,7 +145,7 @@ function get_pde_loss_function(init_loss_functions, datafree_pde_functions,
         end
     end
 
-    pde_loss_functions = [get_pde_loss_function(pde_loss_func, pde_bound)
+    pde_loss_functions = [get_loss_function(pde_loss_func, pde_bound)
                           for (pde_loss_func, pde_bound) in zip(datafree_pde_functions,
                                                                 pde_bounds)]
 
