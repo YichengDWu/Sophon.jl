@@ -38,6 +38,7 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
     end
 
     eltypeθ = eltype(flat_init_params)
+    device = SciMLBase.parameterless_type(ComponentArrays.getdata(flat_init_params))
 
     bounds = get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars, strategy)
     pde_bounds, bcs_bounds = bounds
@@ -64,7 +65,7 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
                                                                               real_bcs_bounds,
                                                                               pde_bounds,
                                                                               tidx, eltypeθ,
-                                                                              SciMLBase.parameterless_type(ComponentArrays.getdata(flat_init_params)),
+                                                                              device,
                                                                               ϵ, strategy)
 
         return pde_loss_functions, vcat(bcs_loss_functions, init_loss_functions)
