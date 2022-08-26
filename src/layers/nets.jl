@@ -128,7 +128,7 @@ end
 ```julia
 x → Dense(..., activation) → u                           u
                               ↘                           ↘
-x → Siren[1] →  s1 → Siren[2] → connection → fusionlayer2 → connection
+x → Siren[1] →  s1 → Siren[2] → connection → Siren[2] → connection
                               ↗                           ↗
 x → Dense(..., activation) → v                           v
 ```
