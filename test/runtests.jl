@@ -1,4 +1,4 @@
-using Sophon, Random, Lux, NNlib
+using Sophon, Random, Lux, NNlib, Zygote
 using Test
 
 rng = Random.default_rng()
@@ -111,5 +111,28 @@ rng = Random.default_rng()
         @testset "SirenAttention" begin @test_nowarn SirenAttention(2, 1, sin;
                                                                     hidden_dims=50,
                                                                     num_layers=4) end
+    end
+
+    @testset "Operators" begin
+        @testset "Constructors" begin
+            model = DeepONet((3,5,4), relu,(2,6,4,4), tanh)
+            @test model.branch_net.layers[end].activation == identity
+            @test model.trunk_net.layers[end].activation == tanh_fast
+
+            branch = Chain(Dense(2,3),Dense(3,4))
+            trunk = Chain(Dense(3,4),Dense(4,5))
+            @test_nowarn model2 = DeepONet(branch, trunk)
+
+            @test_throws AssertionError DeepONet((3, 6, 7),  relu, (4, 8, 2), tanh)
+        end
+
+        x = rand(Float32, 8)
+        ξ = rand(Float32, 1, 10)
+        model3 = DeepONet((8, 5, 4), relu, (1, 6, 4, 4), tanh)
+        ps, st = Lux.setup(rng, model3)
+        y, st = model3((x,ξ), ps, st)
+        @test size(y) == (1, 10)
+
+        @test_nowarn gradient(p -> sum(first(model3((x,ξ), p, st))), ps)
     end
 end end
