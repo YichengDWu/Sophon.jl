@@ -29,6 +29,7 @@ makedocs(bib; modules=[Sophon],
                  "1D Convection Equation" => "tutorials/convection.md",
                  "2D Helmholtz Equation" => "tutorials/helmholtz.md",
                  #"1D Wave Equation" => "tutorials/wave.md",
+              "References" => "references.md"
              ],
          ])
 
