@@ -4,7 +4,37 @@
              linear_layer=NoOpLayer(),
              bias=Scalar())
 
-Deep operator network.
+Deep operator network. Note that the branch net supports multi-dimensional inputs. The `flatten_layer`
+flatten the output of the branch net to a matrix, and the `linear_layer` is applied to the flattened.
+You would at least need to specify the `linear_layer` to transform the flattened matrix to the correct shape.
+
+```
+v → branch_net → flatten_layer → linear_layer → b
+                                                  ↘
+                                                    b' * t + bias -> u
+                                                  ↗
+                                ξ → trunk_net → t
+```
+
+## Arguments
+
+  - `branch_net`: The branch net.
+  - `trunk_net`: The trunk net.
+
+## Keyword Arguments
+
+  - `flatten_layer`: The layer to flatten a multi-dimensional array to a matrix.
+  - `linear_layer`: The layer to apply a linear transformation to the output of the `flatten_layer`.
+
+## Inputs
+
+  - `(v, ξ)`: `v` is an array of shape ``(b_1,b_2,...b_d, m)``, where `d` is the dimension
+    of the input function, and `m` is the number of input functions. `ξ` is a matrix of shape ``(d', n)``,
+    where `d'` is the dimension of the output function, and `m` is the number of "sensors".
+
+## Returns
+
+  - A matrix of shape ``(m, n)``.
 
 ## Reference
 
@@ -29,12 +59,12 @@ function DeepONet(branch_net::AbstractExplicitLayer, trunk_net::AbstractExplicit
                                                         flatten_layer, linear_layer, bias)
 end
 
-function DeepONet(layer_dims_branch::NTuple{N1, T}, activation_branch::Function,
-                  layer_dims_trunk::NTuple{N2, T},
+function DeepONet(layer_sizes_branch::NTuple{N1, T}, activation_branch::Function,
+                  layer_sizes_trunk::NTuple{N2, T},
                   activation_trunk::Function) where {T <: Int, N1, N2}
-    @assert last(layer_dims_branch)==last(layer_dims_trunk) "Output sizes of branch net and trunk net must match"
-    branch_net = FullyConnected(layer_dims_branch, activation_branch)
-    trunk_net = FullyConnected(layer_dims_trunk, activation_trunk; outermost=false)
+    @assert last(layer_sizes_branch)==last(layer_sizes_trunk) "Output sizes of branch net and trunk net must match"
+    branch_net = FullyConnected(layer_sizes_branch, activation_branch)
+    trunk_net = FullyConnected(layer_sizes_trunk, activation_trunk; outermost=false)
 
     return DeepONet(branch_net, trunk_net)
 end
