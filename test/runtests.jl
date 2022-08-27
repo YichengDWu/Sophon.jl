@@ -126,13 +126,25 @@ rng = Random.default_rng()
             @test_throws AssertionError DeepONet((3, 6, 7), relu, (4, 8, 2), tanh)
         end
 
-        x = rand(Float32, 8)
-        ξ = rand(Float32, 1, 10)
-        model3 = DeepONet((8, 5, 4), relu, (1, 6, 4, 4), tanh)
-        ps, st = Lux.setup(rng, model3)
-        y, st = model3((x, ξ), ps, st)
-        @test size(y) == (1, 10)
+        @testset "Single dimenstion" begin
+            x = rand(Float32, 8)
+            ξ = rand(Float32, 1, 10)
+            model3 = DeepONet((8, 5, 4), relu, (1, 6, 4, 4), tanh)
+            ps, st = Lux.setup(rng, model3)
+            y, st = model3((x, ξ), ps, st)
+            @test size(y) == (1, 10)
 
-        @test_nowarn gradient(p -> sum(first(model3((x, ξ), p, st))), ps)
+            @test_nowarn gradient(p -> sum(first(model3((x, ξ), p, st))), ps)
+        end
+
+        @testset "Multi dimenstion" begin
+            x2 = rand(Float32, 2, 3, 5)
+            ξ2 = rand(Float32, 1, 10)
+            model4 = DeepONet((2, 5, 4), relu, (1, 6, 4, 4), tanh, (prod(size(x2)[1:end-1]), 4))
+            ps2, st2 = Lux.setup(rng, model4)
+            y2, st2 = model4((x2, ξ2), ps2, st2)
+            @test size(y) == (5, 10)
+            @test_nowarn gradient(p -> sum(first(model4((x2, ξ2), p, st2))), ps2)
+        end
     end
 end end

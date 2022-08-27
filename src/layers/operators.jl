@@ -9,7 +9,7 @@
 
 Deep operator network. Note that the branch net supports multi-dimensional inputs. The `flatten_layer`
 flatten the output of the branch net to a matrix, and the `linear_layer` is applied to the flattened.
-You would at least need to specify the `linear_layer` to transform the flattened matrix to the correct shape.
+In this case, `linear_layer` must be given to transform the flattened matrix to the correct shape.
 
 ```
 v → branch_net → flatten_layer → linear_layer → b
@@ -93,6 +93,16 @@ function DeepONet(layer_sizes_branch::NTuple{N1, T}, activation_branch::Function
     return DeepONet(branch_net, trunk_net)
 end
 
+function DeepONet(layer_sizes_branch::NTuple{N1, T}, activation_branch::Function,
+                  layer_sizes_trunk::NTuple{N2, T}, activation_trunk::Function,
+                  layer_sizes_linear::NTuple{2, T}) where {T <: Int, N1, N2}
+    @assert last(layer_sizes_trunk)==last(layer_sizes_linear) "Output sizes of branch net and trunk net must match"
+    branch_net = FullyConnected(layer_sizes_branch, activation_branch)
+    trunk_net = FullyConnected(layer_sizes_trunk, activation_trunk; outermost=false)
+    linear_layer = Dense(first(layer_sizes_linear), last(layer_sizes_linear))
+    return DeepONet(branch_net, trunk_net; linear_layer=linear_layer)
+end
+
 function (m::DeepONet)(x::Tuple{AbstractArray, AbstractVecOrMat}, ps, st::NamedTuple)
     b, st_branch_net = m.branch_net(first(x), ps.branch_net, st.branch_net)
     t, st_trunk_net = m.trunk_net(last(x), ps.trunk_net, st.trunk_net)
@@ -105,7 +115,7 @@ function (m::DeepONet)(x::Tuple{AbstractArray, AbstractVecOrMat}, ps, st::NamedT
     return transpose(b) * t .+ ps.bias.scalar, st
 end
 
-function (m::DeepONet{B, T, F, NoOpLayer})(x::Tuple{AbstractArray, AbstractVecOrMat}, ps,
+function (m::DeepONet{B, T, F, NoOpLayer})(x::Tuple{AbstractVecOrMat, AbstractVecOrMat}, ps,
                                            st::NamedTuple) where {B, T, F}
     b, st_branch_net = m.branch_net(first(x), ps.branch_net, st.branch_net)
     t, st_trunk_net = m.trunk_net(last(x), ps.trunk_net, st.trunk_net)
