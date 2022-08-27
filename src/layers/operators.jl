@@ -1,20 +1,32 @@
-struct DeepONet{B, T, L, S, F} <:
-       AbstractExplicitContainerLayer{(:branch_net, :trunk_net, :linear_layer, :bias,
-                                       :flatten_layer)}
+"""
+    DeepONet(branch_net, trunk_net;
+             flatten_layer=FlattenLayer(),
+             linear_layer=NoOpLayer(),
+             bias=Scalar())
+
+Deep operator network.
+
+## Reference
+
+[lu2019deeponet](@cite)
+"""
+struct DeepONet{B, T, F, L, S} <:
+       AbstractExplicitContainerLayer{(:branch_net, :trunk_net, :flatten_layer,
+                                       :linear_layer, :bias)}
     branch_net::B
     trunk_net::T
+    flatten_layer::F
     linear_layer::L
     bias::S
-    flatten_layer::F
 end
 
-function DeepONet(branch_net::AbstractExplicitLayer, trunk_net::AbstractExplicitLayer,
+function DeepONet(branch_net::AbstractExplicitLayer, trunk_net::AbstractExplicitLayer;
+                  flatten_layer::AbstractExplicitLayer=FlattenLayer(),
                   linear_layer::AbstractExplicitLayer=NoOpLayer(),
-                  bias::AbstractExplicitLayer=Scalar(),
-                  flatten_layer::AbstractExplicitLayer=FlattenLayer())
-    return DeepONet{typeof(branch_net), typeof(trunk_net), typeof(linear_layer),
-                    typeof(bias), typeof(flatten_layer)}(branch_net, trunk_net,
-                                                         linear_layer, bias, flatten_layer)
+                  bias::AbstractExplicitLayer=Scalar())
+    return DeepONet{typeof(branch_net), typeof(trunk_net), typeof(flatten_layer),
+                    typeof(linear_layer), typeof(bias)}(branch_net, trunk_net,
+                                                        flatten_layer, linear_layer, bias)
 end
 
 function DeepONet(layer_dims_branch::NTuple{N1, T}, activation_branch::Function,
@@ -39,8 +51,8 @@ function (m::DeepONet)(x::Tuple{AbstractArray, AbstractVecOrMat}, ps, st::NamedT
     return transpose(b) * t .+ ps.bias.scalar, st
 end
 
-function (m::DeepONet{B, T, NoOpLayer})(x::Tuple{AbstractArray, AbstractVecOrMat}, ps,
-                                        st::NamedTuple) where {B, T}
+function (m::DeepONet{B, T, F, NoOpLayer})(x::Tuple{AbstractArray, AbstractVecOrMat}, ps,
+                                           st::NamedTuple) where {B, T, F}
     b, st_branch_net = m.branch_net(first(x), ps.branch_net, st.branch_net)
     t, st_trunk_net = m.trunk_net(last(x), ps.trunk_net, st.trunk_net)
 
