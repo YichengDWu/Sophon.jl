@@ -36,7 +36,7 @@ function (m::DeepONet)(x::Tuple{AbstractArray, AbstractVecOrMat}, ps, st::NamedT
     st = merge(st,
                (branch_net=st_branch_net, trunk_net=st_trunk_net,
                 linear_layer=st_linear_layer, flatten_layer=st_flatten_layer))
-    return b' * t .+ ps.bias.scalar, st
+    return transpose(b) * t .+ ps.bias.scalar, st
 end
 
 function (m::DeepONet{B, T, NoOpLayer})(x::Tuple{AbstractArray, AbstractVecOrMat}, ps,
@@ -45,5 +45,5 @@ function (m::DeepONet{B, T, NoOpLayer})(x::Tuple{AbstractArray, AbstractVecOrMat
     t, st_trunk_net = m.trunk_net(last(x), ps.trunk_net, st.trunk_net)
 
     st = merge(st, (branch_net=st_branch_net, trunk_net=st_trunk_net))
-    return b' * t .+ ps.bias.scalar, st
+    return transpose(b) * t .+ ps.bias.scalar, st
 end
