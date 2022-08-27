@@ -138,13 +138,15 @@ rng = Random.default_rng()
         end
 
         @testset "Multi dimenstion" begin
-            x2 = rand(Float32, 2, 3, 5)
-            ξ2 = rand(Float32, 1, 10)
-            model4 = DeepONet((2, 5, 4), relu, (1, 6, 4, 4), tanh, (prod(size(x2)[1:end-1]), 4))
-            ps2, st2 = Lux.setup(rng, model4)
-            y2, st2 = model4((x2, ξ2), ps2, st2)
+            x = rand(Float32, 2, 3, 5)
+            ξ = rand(Float32, 1, 10)
+            branch_sizes = (2, 5, 6)
+            trunk_sizes = (1, 6, 4, 4)
+            model = DeepONet(branch_sizes, relu, trunk_sizes, tanh, (last(branch_sizes) * size(x,2), last(trunk_sizes)))
+            ps, st = Lux.setup(rng, model)
+            y, st = model((x, ξ), ps, st)
             @test size(y) == (5, 10)
-            @test_nowarn gradient(p -> sum(first(model4((x2, ξ2), p, st2))), ps2)
+            @test_nowarn gradient(p -> sum(first(model((x, ξ), p, st))), ps)
         end
     end
 end end

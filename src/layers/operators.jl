@@ -5,7 +5,8 @@
              bias=Scalar())
     DeepONet(layer_sizes_branch, activation_branch,
              layer_sizes_trunk,
-             activation_trunk)
+             activation_trunk,
+             layer_sizes_linear=nothing)
 
 Deep operator network. Note that the branch net supports multi-dimensional inputs. The `flatten_layer`
 flatten the output of the branch net to a matrix, and the `linear_layer` is applied to the flattened.
