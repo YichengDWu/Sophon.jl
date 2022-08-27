@@ -5,7 +5,7 @@
 [![Build Status](https://github.com/MilkshakeForReal/Sophon.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/MilkshakeForReal/Sophon.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/MilkshakeForReal/Sophon.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/MilkshakeForReal/Sophon.jl)
 
-`Sophon.jl` provides specialized neural networks and operators for Physics-informed machine learning.
+`Sophon.jl` provides specialized neural networks and neural operators for Physics-informed machine learning.
 
 ## Installation
 
