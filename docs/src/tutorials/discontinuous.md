@@ -43,12 +43,13 @@ savefig("u.svg"); nothing # hide
 ```
 ![](u.svg)
 
-## Model
-We use four hidden layers with 50 neurons in each.
+## Naive Neural Nets
+
+First we demonstrate show naive fully connected neural nets could be really bad at fitting this function.
 ```@example ds
-model = Siren(1,50,50,50,50,1)
+model = FullyConnected((1,50,50,50,50,1), relu)
 ```
-## Train the model
+### Train the model
 
 ```@example ds
 function train(model)
@@ -72,7 +73,21 @@ function train(model)
 end
 
 ```
-## Results
+### Plot The Result
+```@example ds
+@time ps, st = train(model)
+y_pred = model(x,ps,st)[1]
+Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
+Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
+savefig("result1.svg"); nothing # hide
+```
+![](result1.svg)
+
+## Siren
+We use four hidden layers with 50 neurons in each.
+```@example ds
+model = Siren(1,50,50,50,50,1)
+```
 ```@example ds
 @time ps, st = train(model)
 y_pred = model(x,ps,st)[1]
@@ -118,3 +133,16 @@ Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
 savefig("result3.svg"); nothing # hide
 ```
 ![](result3.svg)
+
+## Conclusion
+
+The so-called "Spectral bias" can be a misleading term. It is based onthe NTK theory, which attributes the phenomenon that neural networks suppress high frequencies to gradient descent. This is not the whole picture. Siren solves this problem by initializing larger weights in the first layer, while activation functions such as gassian have large enough gradients themselves. Please refer to [1], [2] and [3] if you want to dive deeper into this.
+
+
+## References
+
+[1] [sitzmann2020implicit](@cite)
+
+[2] [ramasinghe2021beyond](@cite)
+
+[3] [ramasinghe2022regularizing](@cite)

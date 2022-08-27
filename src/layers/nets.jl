@@ -27,9 +27,10 @@ x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connect
   - `num_layers`: The number of hidden layers.
   - `hidden_dims`: The number of hidden dimensions of each hidden layer.
 
-## References
+## Reference
 
-[1] Wang, Sifan, Yujun Teng, and Paris Perdikaris. "Understanding and mitigating gradient flow pathologies in physics-informed neural networks." SIAM Journal on Scientific Computing 43.5 (2021): A3055-A3081
+[wang2021understanding](@cite)
+
 """
 struct PINNAttention{H, U, V, F <: TriplewiseFusion} <:
        AbstractExplicitContainerLayer{(:H_net, :U_net, :V_net, :fusion)}
@@ -179,9 +180,9 @@ Chain(
           #        plus 60 states, summarysize 112 bytes.
 ```
 
-# References
+# Reference
 
-[1] Wang, Sifan, Hanwen Wang, and Paris Perdikaris. “On the eigenvector bias of fourier feature networks: From regression to solving multi-scale pdes with physics-informed neural networks.” Computer Methods in Applied Mechanics and Engineering 384 (2021): 113938.
+[wang2021eigenvector](@cite)
 """
 function MultiscaleFourier(in_dims::Int,
                            layer_dims::NTuple,
@@ -234,9 +235,10 @@ julia> init_weight(rng::AbstractRNG, out_dims::Int, in_dims::Int) = randn(rng, F
 julia> chain = Siren(2, 1; num_layers = 4, hidden_dims = 50, init_weight = init_weight)
 ```
 
-## References
+## Reference
 
-[1] Sitzmann, Vincent, et al. "Implicit neural representations with periodic activation functions." Advances in Neural Information Processing Systems 33 (2020): 7462-7473.
+[sitzmann2020implicit](@cite)
+
 """
 function Siren(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, omega=30.0f0,
                init_weight::Union{Nothing, Function}=nothing)

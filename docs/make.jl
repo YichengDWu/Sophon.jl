@@ -1,5 +1,8 @@
 using Sophon
 using Documenter
+using DocumenterCitations
+
+bib = CitationBibliography(joinpath(@__DIR__, "bibliography.bib"), sorting = :nyt)
 
 DocMeta.setdocmeta!(Sophon, :DocTestSetup, :(using Sophon); recursive=true)
 

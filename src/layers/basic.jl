@@ -39,9 +39,10 @@ julia> st
 (mode_1 = Float32[0.7510394 0.0678698; -1.6466209 -0.08511321; -0.4704813 2.0663197], mode_2 = Float32[-98.90031 -42.593884; 110.35572 15.565719; 81.60114 51.257904; -0.53021294 15.216658])
 ```
 
-# References
+# Reference
 
-[1] Tancik, Matthew, et al. “Fourier features let networks learn high frequency functions in low dimensional domains.” Advances in Neural Information Processing Systems 33 (2020): 7537-7547.
+[tancik2020fourier](@cite)
+
 """
 struct FourierFeature{M} <: AbstractExplicitLayer
     in_dims::Int
