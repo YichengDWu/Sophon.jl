@@ -29,8 +29,9 @@ makedocs(bib; modules=[Sophon],
                  "1D Convection Equation" => "tutorials/convection.md",
                  "2D Helmholtz Equation" => "tutorials/helmholtz.md",
                  #"1D Wave Equation" => "tutorials/wave.md",
-              "References" => "references.md"
+                 "References" => "references.md",
              ],
          ])
 
-deploydocs(; repo="github.com/MilkshakeForReal/Sophon.jl", devbranch="main")
+deploydocs(; repo="github.com/MilkshakeForReal/Sophon.jl", devbranch="main",
+           push_preview=true)
