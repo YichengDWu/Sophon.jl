@@ -6,7 +6,7 @@ bib = CitationBibliography(joinpath(@__DIR__, "bibliography.bib"); sorting=:nyt)
 
 DocMeta.setdocmeta!(Sophon, :DocTestSetup, :(using Sophon); recursive=true)
 
-makedocs(; modules=[Sophon],
+makedocs(bib; modules=[Sophon],
          authors="MilkshakeForReal <yicheng.wu@ucalgary.ca> and contributors",
          repo="https://github.com/MilkshakeForReal/Sophon.jl/blob/{commit}{path}#{line}",
          sitename="Sophon.jl",
