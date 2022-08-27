@@ -136,4 +136,4 @@ savefig("result3.svg"); nothing # hide
 
 ## Conclusion
 
-The so-called "Spectral bias" can be a misleading term. It attributes the phenomenon that neural networks suppress high frequencies to gradient descent. This is not the whole picture. Siren solves this problem by initializing larger weights in the first layer, while activation functions such as gassian have large enough gradients themselves. Please refer to [sitzmann2020implicit](@cite), [ramasinghe2021beyond](@cite) and [ramasinghe2022regularizing](@cite) if you want to dive deeper into this.
+There are many misconceptions about the so-called "Spectral bias". Mainstream attributes the phenomenon that neural networks suppress high frequencies to gradient descent. This is not the whole picture. Siren solves this problem by initializing larger weights in the first layer, while activation functions such as gassian have large enough gradients themselves. Please refer to [sitzmann2020implicit](@cite), [ramasinghe2021beyond](@cite) and [ramasinghe2022regularizing](@cite) if you want to dive deeper into this.
