@@ -42,14 +42,14 @@ mutable struct EvoDataset
     Δ::Float64
 end
 
-NeuralPDE.@nograd function generate_and_adapt_set(points, bound, eltypeθ, device,
+ChainRulesCore.@non_differentiable function generate_and_adapt_set(points, bound, eltypeθ, device,
                                                   sampling_alg)
     set = NeuralPDE.generate_quasi_random_points(points, bound, eltypeθ, sampling_alg)
     set = adapt(device, set)
     return set
 end
 
-NeuralPDE.@nograd function updateset!(loss_func, evo::EvoDataset, θ, points, bound, eltypeθ,
+ChainRulesCore.@non_differentiable function updateset!(loss_func, evo::EvoDataset, θ, points, bound, eltypeθ,
                                       device, sampling_alg)
     losses = abs.(loss_func(evo.set, θ))
     t = @view evo.set[[evo.tidx], :]
