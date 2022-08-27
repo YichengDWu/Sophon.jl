@@ -15,7 +15,7 @@ In this case, `linear_layer` must be given to transform the flattened matrix to 
 ```
 v → branch_net → flatten_layer → linear_layer → b
                                                   ↘
-                                                    b' * t + bias -> u
+                                                    b' * t + bias → u
                                                   ↗
                                 ξ → trunk_net → t
 ```
