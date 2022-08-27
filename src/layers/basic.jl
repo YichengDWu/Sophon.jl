@@ -266,3 +266,8 @@ end
 function Base.show(io::IO, rbf::RBF)
     return print(io, "RBF($(rbf.in_dims) => $(rbf.out_dims))")
 end
+
+struct Scalar <: AbstractExplicitLayer end
+
+initialparameters(rng::AbstractRNG, s::Scalar) = (; scalar=0.0f0)
+parameterlength(s::Scalar) = 1
