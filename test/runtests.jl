@@ -21,7 +21,7 @@ rng = Random.default_rng()
             ps, st = Lux.setup(rng, f3)
             @test length(st) == (3)
             y, st = f3(rand(Float32, 2, 2), ps, st)
-            @test size(y) == (6*2, 2)
+            @test size(y) == (6 * 2, 2)
         end
         @testset "RBF" begin
             rbf = RBF(2, 4, 3)
@@ -115,24 +115,24 @@ rng = Random.default_rng()
 
     @testset "Operators" begin
         @testset "Constructors" begin
-            model = DeepONet((3,5,4), relu,(2,6,4,4), tanh)
+            model = DeepONet((3, 5, 4), relu, (2, 6, 4, 4), tanh)
             @test model.branch_net.layers[end].activation == identity
             @test model.trunk_net.layers[end].activation == tanh_fast
 
-            branch = Chain(Dense(2,3),Dense(3,4))
-            trunk = Chain(Dense(3,4),Dense(4,5))
+            branch = Chain(Dense(2, 3), Dense(3, 4))
+            trunk = Chain(Dense(3, 4), Dense(4, 5))
             @test_nowarn model2 = DeepONet(branch, trunk)
 
-            @test_throws AssertionError DeepONet((3, 6, 7),  relu, (4, 8, 2), tanh)
+            @test_throws AssertionError DeepONet((3, 6, 7), relu, (4, 8, 2), tanh)
         end
 
         x = rand(Float32, 8)
         ξ = rand(Float32, 1, 10)
         model3 = DeepONet((8, 5, 4), relu, (1, 6, 4, 4), tanh)
         ps, st = Lux.setup(rng, model3)
-        y, st = model3((x,ξ), ps, st)
+        y, st = model3((x, ξ), ps, st)
         @test size(y) == (1, 10)
 
-        @test_nowarn gradient(p -> sum(first(model3((x,ξ), p, st))), ps)
+        @test_nowarn gradient(p -> sum(first(model3((x, ξ), p, st))), ps)
     end
 end end

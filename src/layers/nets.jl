@@ -7,7 +7,7 @@ The output dimesion of `H_net` and the input dimension of `fusion_layers` must b
 For the second and the third constructor, `Dense` layers is used for `H_net`, `U_net`, and `V_net`.
 Note that the first constructer does not contain the output layer.
 
-```julia
+```
                  x → U_net → u                           u
                                ↘                           ↘
 x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connection
@@ -30,7 +30,6 @@ x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connect
 ## Reference
 
 [wang2021understanding](@cite)
-
 """
 struct PINNAttention{H, U, V, F <: TriplewiseFusion} <:
        AbstractExplicitContainerLayer{(:H_net, :U_net, :V_net, :fusion)}
@@ -126,7 +125,7 @@ end
     SirenAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
     hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0))
 
-```julia
+```
 x → Dense(..., activation) → u                           u
                               ↘                           ↘
 x → Siren[1] →  s1 → Siren[2] → connection → Siren[2] → connection
@@ -138,11 +137,11 @@ Combined model of [`Siren`](@ref) and [`PINNAttention`](@ref).
 """
 function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=relu;
                         hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0)
-
-    H_net = Sine(in_dims, hidden_dims; omega = omega)
+    H_net = Sine(in_dims, hidden_dims; omega=omega)
     U_net = Dense(in_dims, hidden_dims, activation)
     V_net = Dense(in_dims, hidden_dims, activation)
-    fusion_layers = FullyConnected(hidden_dims, hidden_dims, sin; num_layers = num_layers-1, hidden_dims = hidden_dims)
+    fusion_layers = FullyConnected(hidden_dims, hidden_dims, sin; num_layers=num_layers - 1,
+                                   hidden_dims=hidden_dims)
     layers = PINNAttention(H_net, U_net, V_net, fusion_layers)
     return Chain(layers, Dense(hidden_dims, out_dims))
 end
@@ -184,9 +183,7 @@ Chain(
 
 [wang2021eigenvector](@cite)
 """
-function MultiscaleFourier(in_dims::Int,
-                           layer_dims::NTuple,
-                           activation::Function;
+function MultiscaleFourier(in_dims::Int, layer_dims::NTuple, activation::Function;
                            modes::NTuple)
     fourierfeature = FourierFeature(in_dims, modes)
     fc = FullyConnected((fourierfeature.out_dims, layer_dims...), activation)

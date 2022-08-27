@@ -60,7 +60,8 @@ function NeuralPDE.get_loss_function(loss_function, bound, eltypeθ, strategy::R
         set = NeuralPDE.generate_quasi_random_points(points, bound, eltypeθ, sampling_alg)
         set = adapt(SciMLBase.parameterless_type(ComponentArrays.getdata(θ)), set)
         subset = residual_based_sample(loss_function, set, θ, points, k, c)
-        dataset = ChainRulesCore.@ignore_derivatives strategy.refinement ? hcat(subset, set) : subset
+        dataset = ChainRulesCore.@ignore_derivatives strategy.refinement ?
+                                                     hcat(subset, set) : subset
         mean(abs2, loss_function(dataset, θ))
     end
     return loss
