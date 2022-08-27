@@ -28,7 +28,7 @@ include("layers/operators.jl")
 export GPUComponentArray64
 export Scheduler, get_opt
 export gaussian, quadratic, laplacian, expsin, multiquadratic
-export FourierFeature, TriplewiseFusion, FullyConnected, RBF
+export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF
 export PINNAttention, MultiscaleFourier, FourierAttention, Siren, SirenAttention
 export DeepONet
 
