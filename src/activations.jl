@@ -5,10 +5,9 @@ The Gaussian activation function.
 ```math
 e^{\frac{-0.5 x^{2}}{a^{2}}}
 ```
-## References
+## Reference
 
-[1] Ramasinghe, Sameera, and Simon Lucey. "Beyond periodicity: Towards a unifying framework for activations in coordinate-mlps." arXiv preprint arXiv:2111.15135 (2021).
-
+[ramasinghe2021beyond](@cite)
 """
 gaussian(x, a=0.2) = exp(-(x / NNlib.oftf(x, a))^2 / 2)
 quadratic(x, a=5) = 1 / (1 + (NNlib.oftf(x, a) * x)^2)
