@@ -7,7 +7,7 @@ The output dimesion of `H_net` and the input dimension of `fusion_layers` must b
 For the second and the third constructor, `Dense` layers is used for `H_net`, `U_net`, and `V_net`.
 Note that the first constructer does not contain the output layer.
 
-```julia
+```
                  x → U_net → u                           u
                                ↘                           ↘
 x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connection
@@ -27,9 +27,9 @@ x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connect
   - `num_layers`: The number of hidden layers.
   - `hidden_dims`: The number of hidden dimensions of each hidden layer.
 
-## References
+## Reference
 
-[1] Wang, Sifan, Yujun Teng, and Paris Perdikaris. "Understanding and mitigating gradient flow pathologies in physics-informed neural networks." SIAM Journal on Scientific Computing 43.5 (2021): A3055-A3081
+[wang2021understanding](@cite)
 """
 struct PINNAttention{H, U, V, F <: TriplewiseFusion} <:
        AbstractExplicitContainerLayer{(:H_net, :U_net, :V_net, :fusion)}
@@ -125,7 +125,7 @@ end
     SirenAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
     hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0))
 
-```julia
+```
 x → Dense(..., activation) → u                           u
                               ↘                           ↘
 x → Siren[1] →  s1 → Siren[2] → connection → Siren[2] → connection
@@ -137,17 +137,17 @@ Combined model of [`Siren`](@ref) and [`PINNAttention`](@ref).
 """
 function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=relu;
                         hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0)
-
-    H_net = Sine(in_dims, hidden_dims; omega = omega)
+    H_net = Sine(in_dims, hidden_dims; omega=omega)
     U_net = Dense(in_dims, hidden_dims, activation)
     V_net = Dense(in_dims, hidden_dims, activation)
-    fusion_layers = FullyConnected(hidden_dims, hidden_dims, sin; num_layers = num_layers-1, hidden_dims = hidden_dims)
+    fusion_layers = FullyConnected(hidden_dims, hidden_dims, sin; num_layers=num_layers - 1,
+                                   hidden_dims=hidden_dims)
     layers = PINNAttention(H_net, U_net, V_net, fusion_layers)
     return Chain(layers, Dense(hidden_dims, out_dims))
 end
 
 """
-    MultiscaleFourier(in_dims::Int, layer_dims::NTuple, activation, modes::NTuple)
+    MultiscaleFourier(in_dims::Int, layer_sizes::NTuple, activation, modes::NTuple)
 
 Multi-scale Fourier Feature Net.
 
@@ -158,7 +158,7 @@ x → FourierFeature → FullyConnected → y
 # Arguments
 
   - `in_dims`: The number of input dimensions.
-  - `layer_dims`: A tuple of hidden dimensions used to construct `FullyConnected`.
+  - `layer_sizes`: A tuple of hidden dimensions used to construct `FullyConnected`.
   - `activation`: The activation function used to construct `FullyConnected`.
   - `modes`: A tuple of modes used to construct `FourierFeature`.
 
@@ -179,23 +179,21 @@ Chain(
           #        plus 60 states, summarysize 112 bytes.
 ```
 
-# References
+# Reference
 
-[1] Wang, Sifan, Hanwen Wang, and Paris Perdikaris. “On the eigenvector bias of fourier feature networks: From regression to solving multi-scale pdes with physics-informed neural networks.” Computer Methods in Applied Mechanics and Engineering 384 (2021): 113938.
+[wang2021eigenvector](@cite)
 """
-function MultiscaleFourier(in_dims::Int,
-                           layer_dims::NTuple,
-                           activation::Function;
+function MultiscaleFourier(in_dims::Int, layer_sizes::NTuple, activation::Function;
                            modes::NTuple)
     fourierfeature = FourierFeature(in_dims, modes)
-    fc = FullyConnected((fourierfeature.out_dims, layer_dims...), activation)
+    fc = FullyConnected((fourierfeature.out_dims, layer_sizes...), activation)
     return Chain(fourierfeature, fc)
 end
 
 @doc raw"""
     Siren(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, omega=30.0f0,
           init_weight=nothing))
-    Siren(layer_dims::Int...; omega=30.0f0, init_weight=nothing)
+    Siren(layer_sizes::Int...; omega=30.0f0, init_weight=nothing)
 
 Sinusoidal Representation Network.
 
@@ -234,9 +232,10 @@ julia> init_weight(rng::AbstractRNG, out_dims::Int, in_dims::Int) = randn(rng, F
 julia> chain = Siren(2, 1; num_layers = 4, hidden_dims = 50, init_weight = init_weight)
 ```
 
-## References
+## Reference
 
-[1] Sitzmann, Vincent, et al. "Implicit neural representations with periodic activation functions." Advances in Neural Information Processing Systems 33 (2020): 7462-7473.
+[sitzmann2020implicit](@cite)
+
 """
 function Siren(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, omega=30.0f0,
                init_weight::Union{Nothing, Function}=nothing)
@@ -244,30 +243,30 @@ function Siren(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, o
                   init_weight)
 end
 
-function Siren(layer_dims::Int...; omega=30.0f0,
+function Siren(layer_sizes::Int...; omega=30.0f0,
                init_weight::Union{Nothing, Function}=nothing)
-    return _Siren(layer_dims, omega, init_weight)
+    return _Siren(layer_sizes, omega, init_weight)
 end
 
-@generated function _Siren(layer_dims::NTuple{N, T}, omega::O,
+@generated function _Siren(layer_sizes::NTuple{N, T}, omega::O,
                            init_weight::W) where {N, T, O, W}
-    layers = W === Nothing ? [:(Sine(layer_dims[1] => layer_dims[2]; omega=omega))] :
-             [:(Dense(layer_dims[1], layer_dims[2]; init_weight=init_weight))]
+    layers = W === Nothing ? [:(Sine(layer_sizes[1] => layer_sizes[2]; omega=omega))] :
+             [:(Dense(layer_sizes[1], layer_sizes[2]; init_weight=init_weight))]
     N == 2 && return layers[1]
     function get_layer(i)
-        return :(Sine(layer_dims[$i] => layer_dims[$(i + 1)]))
+        return :(Sine(layer_sizes[$i] => layer_sizes[$(i + 1)]))
     end
     append!(layers, [get_layer(i) for i in 2:(N - 2)])
     append!(layers,
             [
-                :(Dense(layer_dims[$(N - 1)] => layer_dims[$N];
+                :(Dense(layer_sizes[$(N - 1)] => layer_sizes[$N];
                         init_weight=kaiming_uniform(sin))),
             ])
     return :(Chain($(layers...)))
 end
 
 """
-    FullyConnected(layer_dims::NTuple{N, Int}, activation; outermost = true, init_weight = kaiming_uniform(activation))
+    FullyConnected(layer_sizes::NTuple{N, Int}, activation; outermost = true, init_weight = kaiming_uniform(activation))
     FullyConnected(in_dims::Int, out_dims::Int, activation::Function;
                    hidden_dims::Int, num_layers::Int, outermost=true, init_weight = kaiming_uniform(activation))
 
@@ -275,7 +274,7 @@ Create fully connected layers.
 
 ## Arguments
 
-  - `layer_dims`: Number of dimensions of each layer.
+  - `layer_sizes`: Number of dimensions of each layer.
   - `hidden_dims`: Number of hidden dimensions.
   - `num_layers`: Number of layers.
   - `activation`: Activation function.
@@ -307,11 +306,11 @@ Chain(
           #        plus 0 states, summarysize 64 bytes.
 ```
 """
-function FullyConnected(layer_dims::NTuple{N, T}, activation::Function;
+function FullyConnected(layer_sizes::NTuple{N, T}, activation::Function;
                         outermost::Bool=true,
                         init_weight::Function=kaiming_uniform(activation)) where {N,
                                                                                   T <: Int}
-    return FullyConnected(layer_dims, activation, Val(outermost); init_weight=init_weight)
+    return FullyConnected(layer_sizes, activation, Val(outermost); init_weight=init_weight)
 end
 
 function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
@@ -321,19 +320,21 @@ function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidde
                           activation, Val(outermost); init_weight=init_weight)
 end
 
-@generated function FullyConnected(layer_dims::NTuple{N, T}, activation::Function, ::Val{F};
-                                   init_weight) where {N, T <: Int, F}
+@generated function FullyConnected(layer_sizes::NTuple{N, T}, activation::Function,
+                                   ::Val{F}; init_weight) where {N, T <: Int, F}
     N == 2 &&
-        return :(Dense(layer_dims[1], layer_dims[2], activation; init_weight=init_weight))
+        return :(Dense(layer_sizes[1], layer_sizes[2], activation; init_weight=init_weight))
     function get_layer(i)
-        return :(Dense(layer_dims[$i] => layer_dims[$(i + 1)], activation;
+        return :(Dense(layer_sizes[$i] => layer_sizes[$(i + 1)], activation;
                        init_weight=init_weight))
     end
-    layers = [:(Dense(layer_dims[1] => layer_dims[2], activation; init_weight=init_weight))]
+    layers = [
+        :(Dense(layer_sizes[1] => layer_sizes[2], activation; init_weight=init_weight)),
+    ]
     append!(layers, [get_layer(i) for i in 2:(N - 2)])
     append!(layers,
             F ?
-            [:(Dense(layer_dims[$(N - 1)] => layer_dims[$N]; init_weight=init_weight))] :
+            [:(Dense(layer_sizes[$(N - 1)] => layer_sizes[$N]; init_weight=init_weight))] :
             [get_layer(N - 1)])
     return :(Chain($(layers...)))
 end

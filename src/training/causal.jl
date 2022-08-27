@@ -122,8 +122,8 @@ function get_pde_and_bc_loss_function(init_loss_functions, datafree_bc_loss_func
     return pde_loss_functions, reduced_bc_loss_functions
 end
 
-function get_pde_loss_function(init_loss_functions, datafree_pde_functions,
-                                      pde_bounds, tidx, eltypeθ, device, ϵ, stategy)
+function get_pde_loss_function(init_loss_functions, datafree_pde_functions, pde_bounds,
+                               tidx, eltypeθ, device, ϵ, stategy)
     sampling_alg = stategy.sampling_alg
     points = stategy.points
 

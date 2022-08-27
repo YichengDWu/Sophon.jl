@@ -2,7 +2,7 @@
 
 julia_version = "1.8.0"
 manifest_format = "2.0"
-project_hash = "d09ca8cc07273b78cab8990ba56f14d3c62e7d60"
+project_hash = "6111dca38e0e77166b566095e0e20adf429a582a"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -140,6 +140,23 @@ uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 git-tree-sha1 = "aebf55e6d7795e02ca500a689d326ac979aaf89e"
 uuid = "9718e550-a3fa-408a-8086-8db961cd8217"
 version = "0.1.1"
+
+[[deps.BibInternal]]
+git-tree-sha1 = "3a760b38ba8da19e64d29244f06104823ff26f25"
+uuid = "2027ae74-3657-4b95-ae00-e2f7d55c3e64"
+version = "0.3.4"
+
+[[deps.BibParser]]
+deps = ["BibInternal", "DataStructures", "Dates", "JSONSchema", "YAML"]
+git-tree-sha1 = "f24884311dceb5f8eafe11809b6f1d867b489a46"
+uuid = "13533e5b-e1c2-4e57-8cef-cac5e52f6474"
+version = "0.2.1"
+
+[[deps.Bibliography]]
+deps = ["BibInternal", "BibParser", "DataStructures", "Dates", "YAML"]
+git-tree-sha1 = "21279e7b7e87964d3c28d4db883a474fead60c9f"
+uuid = "f1be7e48-bf82-45af-a471-ae754a193061"
+version = "0.2.18"
 
 [[deps.Bijections]]
 git-tree-sha1 = "fe4f8c5ee7f76f2198d5c2a06d3961c249cce7bd"
@@ -452,6 +469,12 @@ deps = ["ANSIColoredPrinters", "Base64", "Dates", "DocStringExtensions", "IOCapt
 git-tree-sha1 = "ee945ed10767de73cf8b610951b98228cb65af80"
 uuid = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 version = "0.27.22"
+
+[[deps.DocumenterCitations]]
+deps = ["Bibliography", "DataStructures", "Documenter", "Markdown", "Unicode"]
+git-tree-sha1 = "256f098ebde08780f058a9c84b4d08601b4ed2b4"
+uuid = "daee34ce-89f3-4625-b898-19384cb65244"
+version = "0.2.12"
 
 [[deps.DomainSets]]
 deps = ["CompositeTypes", "IntervalSets", "LinearAlgebra", "StaticArrays", "Statistics"]
@@ -939,6 +962,12 @@ deps = ["Dates", "Mmap", "Parsers", "Unicode"]
 git-tree-sha1 = "3c837543ddb02250ef42f4738347454f95079d4e"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.3"
+
+[[deps.JSONSchema]]
+deps = ["HTTP", "JSON", "URIs"]
+git-tree-sha1 = "8d928db71efdc942f10e751564e6bbea1e600dfe"
+uuid = "7d188eb4-7ad8-530c-ae41-71a32a6d4692"
+version = "1.0.1"
 
 [[deps.JpegTurbo]]
 deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
@@ -1906,7 +1935,7 @@ uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 deps = ["Adapt", "CUDA", "ChainRulesCore", "ComponentArrays", "GPUArrays", "GPUArraysCore", "LinearAlgebra", "Lux", "NNlib", "NNlibCUDA", "NeuralPDE", "Optimisers", "Optimization", "OptimizationOptimisers", "ParameterSchedulers", "QuasiMonteCarlo", "Random", "SciMLBase", "StatsBase"]
 path = ".."
 uuid = "077df616-1c15-4d29-b519-7542a62df138"
-version = "0.1.0"
+version = "0.1.1"
 
 [[deps.SortingAlgorithms]]
 deps = ["DataStructures"]
@@ -1998,6 +2027,12 @@ deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "Man
 git-tree-sha1 = "ac730bd978bf35f9fe45daa0bd1f51e493e97eb4"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
 version = "0.3.15"
+
+[[deps.StringEncodings]]
+deps = ["Libiconv_jll"]
+git-tree-sha1 = "50ccd5ddb00d19392577902f0079267a72c5ab04"
+uuid = "69024149-9ee7-55f6-a4c4-859efe599b68"
+version = "0.3.5"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
@@ -2323,6 +2358,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "79c31e7844f6ecf779705fbc12146eb190b7d845"
 uuid = "c5fb5394-a638-5e4d-96e5-b29de1b5cf10"
 version = "1.4.0+3"
+
+[[deps.YAML]]
+deps = ["Base64", "Dates", "Printf", "StringEncodings"]
+git-tree-sha1 = "3c6e8b9f5cdaaa21340f841653942e1a6b6561e5"
+uuid = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
+version = "0.4.7"
 
 [[deps.Zlib_jll]]
 deps = ["Libdl"]

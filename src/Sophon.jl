@@ -2,8 +2,8 @@ module Sophon
 
 using LinearAlgebra
 using Lux, Random, NNlib, NNlibCUDA
-import Lux: initialparameters, initialstates, parameterlength, statelength, AbstractExplicitLayer,
-            AbstractExplicitContainerLayer
+import Lux: initialparameters, initialstates, parameterlength, statelength,
+            AbstractExplicitLayer, AbstractExplicitContainerLayer
 
 using Optimisers, Optimization, OptimizationOptimisers
 import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, TriangleExp,
