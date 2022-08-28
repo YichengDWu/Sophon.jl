@@ -37,5 +37,4 @@ makedocs(bib; modules=[Sophon],
              "References" => "references.md",
          ])
 
-deploydocs(; repo="github.com/MilkshakeForReal/Sophon.jl", devbranch="main",
-           push_preview=true)
+deploydocs(; repo="github.com/MilkshakeForReal/Sophon.jl", devbranch="main")
