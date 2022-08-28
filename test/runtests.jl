@@ -78,8 +78,7 @@ rng = Random.default_rng()
         end
         @testset "MultiscaleFourier" begin
             x = rand(Float32, 2, 5)
-            m = MultiscaleFourier(2, (30, 30, 1), swish;
-                                  modes=(1 => 10, 10 => 10, 50 => 10))
+            m = MultiscaleFourier((2, 30, 30, 1), swish, (1 => 10, 10 => 10, 50 => 10))
             ps, st = Lux.setup(rng, m)
             y, st = m(x, ps, st)
             @test size(y) == (1, 5)
