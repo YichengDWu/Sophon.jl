@@ -34,7 +34,7 @@ v → branch_net → flatten_layer → linear_layer → b
 
   - `(v, ξ)`: `v` is an array of shape ``(b_1,b_2,...b_d, m)``, where `d` is the dimension
     of the input function, and `m` is the number of input functions. `ξ` is a matrix of shape ``(d', n)``,
-    where `d'` is the dimension of the output function, and `m` is the number of "sensors".
+    where ``d'`` is the dimension of the output function, and `m` is the number of "sensors".
 
 ## Returns
 
