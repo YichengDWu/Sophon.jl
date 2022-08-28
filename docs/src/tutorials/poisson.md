@@ -1,6 +1,6 @@
 # 1D Poisson's Equation
 
-This example is taken from [here](https://arxiv.org/pdf/2012.10047.pdf). Consider a simple 1D Poisson’s equation with Dirichlet boundary conditions. The solution is given by
+This example is taken from [wang2021eigenvector](@cite). Consider a simple 1D Poisson’s equation with Dirichlet boundary conditions. The solution is given by
 
 ```math
 u(x)=\sin (2 \pi x)+0.1 \sin (50 \pi x)
