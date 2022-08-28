@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>1D Convection Equation · Sophon.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://MilkshakeForReal.github.io/Sophon.jl/tutorials/convection/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Sophon.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../discontinuous/">Fitting a nonlinear discontinuous function</a></li><li><a class="tocitem" href="../poisson/">1D Poisson&#39;s Equation</a></li><li class="is-active"><a class="tocitem" href>1D Convection Equation</a><ul class="internal"><li><a class="tocitem" href="#Compared-to-Method-of-Lines"><span>Compared to Method of Lines</span></a></li></ul></li><li><a class="tocitem" href="../helmholtz/">2D Helmholtz Equation</a></li></ul></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>1D Convection Equation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>1D Convection Equation</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/MilkshakeForReal/Sophon.jl/blob/main/docs/src/tutorials/convection.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="D-Convection-Equation"><a class="docs-heading-anchor" href="#D-Convection-Equation">1D Convection Equation</a><a id="D-Convection-Equation-1"></a><a class="docs-heading-anchor-permalink" href="#D-Convection-Equation" title="Permalink"></a></h1><p>Consider the following 1D-convection equation</p><p class="math-container">\[\begin{aligned}
+&amp;\frac{\partial u}{\partial t}+c \frac{\partial u}{\partial x}=0, x \in[0,1], t \in[0,1] \\
+&amp;u(x, 0)=sin(2\pi x) \\
+&amp;u(0,t) = -sin(2\pi ct)\\
+&amp;u(1,t) = -sin(2\pi ct)
+\end{aligned}\]</p><p>where <span>$c = 50/2\pi$</span>. First we solve it with <code>QuasiRandomTraining</code>.</p><pre><code class="language-julia hljs">using NeuralPDE, Lux, Random, Sophon, IntervalSets, CairoMakie
+using Optimization, OptimizationOptimJL, OptimizationOptimisers
+using CUDA
+CUDA.allowscalar(false)
+
+@parameters x, t
+@variables u(..)
+Dₜ = Differential(t)
+Dₓ = Differential(x)
+
+β = 50
+c = β/2π
+eq = Dₜ(u(x,t)) + c * Dₓ(u(x,t)) ~ 0
+u_analytic(x,t) = sin(2π*(x-c*t))
+
+domains = [x ∈ 0..1, t ∈ 0..1]
+
+bcs = [u(0,t) ~ u_analytic(0,t),
+       u(1,t) ~ u_analytic(1,t),
+       u(x,0) ~ u_analytic(x,0)]
+
+@named convection = PDESystem(eq, bcs, domains, [x,t], [u(x,t)])
+
+chain = Siren(2, 1; num_layers = 5, hidden_dims = 50, omega = 1f0)
+ps = Lux.initialparameters(Random.default_rng(), chain) |&gt; GPUComponentArray64
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps, adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100,100,100]))
+prob = discretize(convection, discretization)
+
+@time res = Optimization.solve(prob, Adam(); maxiters = 3000)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: ComponentVector{Float64}(layer_1 = (weight = [0.06134925375353275 -0.19993229571757026; 0.022182428545260077 0.09300546817020336; … ; -0.22590070515319818 -0.03587420178656878; -0.2535690693972428 -0.10908639780098499], bias = [0.010381869504166578; -0.02352821513130635; … ; 0.09758648058420966; -0.0028735435268458166;;]), layer_2 = (weight = [0.05240428735763566 -0.23385427922242494 … 0.21586833795407534 -0.04519927108452973; -0.20098646767789832 -0.09866077305089803 … -0.056628842898750885 0.19621425218997984; … ; -0.314638107540303 -0.23822214824581686 … -0.3127223951807622 -0.1437288314497469; 0.3746816493005917 0.1299202864446229 … 0.11145630744719924 0.3778322676778548], bias = [0.17827672721853371; -0.055410534857001294; … ; 0.02650713186978623; -0.06454558143680324;;]), layer_3 = (weight = [-0.06794833939627187 0.10697444300356646 … -0.2503987948643175 0.1355933830742594; -0.2601379447673866 -0.07722057950619268 … -0.06564120372288171 0.27058083041220443; … ; -0.14745905174013704 0.3413117686446237 … 0.16694615823472067 0.02494365581069576; -0.15387581404935358 -0.2051791134512585 … -0.33801171740997277 -0.0962196542416355], bias = [-0.06700154978774688; -0.07445846597223361; … ; -0.05735207836340045; -0.040968107714442877;;]), layer_4 = (weight = [0.26645380796690227 0.3637382317007392 … 0.36511977464577483 -0.025332927071435106; -0.33505845167330683 -0.11506258102515855 … -0.3241631400587238 -0.13715726176109785; … ; 0.24354835603879157 -0.2766610353606051 … -0.31329056710497627 0.038392459572375075; 0.18979484734543967 0.3938587615211902 … -0.0800457033555126 -0.20820270336863775], bias = [-0.055972725560121686; 0.061389183619150973; … ; 0.021052112288757568; -0.03378768218279043;;]), layer_5 = (weight = [0.28235274966905904 -0.18159124092602294 … 0.011901167396656044 -0.17680482145586143; 0.26220716506229225 0.1980105479110382 … 0.23160173780657672 -0.33304549780772513; … ; -0.3373922668898254 -0.20475875695881524 … -0.022267093523922872 -0.30787280696181785; 0.0018153044828003169 -0.2751660648733421 … -0.3689489107421907 0.306929544013115], bias = [-0.004045640140345041; 0.024074115340806772; … ; -0.0012576566446366479; -0.038280230997281804;;]), layer_6 = (weight = [0.1321387511734705 -0.2891476747554482 … 0.3113712637096401 -0.12658848205221865], bias = [0.009405866349887576;;]))</code></pre><p>Let&#39;s visualize the result.</p><pre><code class="language-julia hljs">phi = discretization.phi
+
+xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
+u_pred = [sum(phi(gpu([x,t]),res.u)) for x in xs, t in ts]
+u_real = u_analytic.(xs,ts&#39;)
+
+axis = (xlabel=&quot;t&quot;, ylabel=&quot;x&quot;, title=&quot;β = $β&quot;)
+fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred&#39;, axis=axis)
+ax2, hm2 = heatmap(fig[1,end+1], ts,xs, abs.(u_pred&#39; .- u_real&#39;), axis = (xlabel=&quot;t&quot;, ylabel=&quot;x&quot;, title=&quot;error&quot;))
+Colorbar(fig[:, end+1], hm2)</code></pre><p><img src="../convection.png" alt/></p><h2 id="Compared-to-Method-of-Lines"><a class="docs-heading-anchor" href="#Compared-to-Method-of-Lines">Compared to Method of Lines</a><a id="Compared-to-Method-of-Lines-1"></a><a class="docs-heading-anchor-permalink" href="#Compared-to-Method-of-Lines" title="Permalink"></a></h2><pre><code class="language-julia hljs">using MethodOfLines
+dx = 0.001
+order = 4
+mol_discretization = MOLFiniteDifference([x =&gt; dx], t, approx_order = order)
+
+# Convert the PDE problem into an ODE problem
+prob = discretize(convection,mol_discretization)
+
+# Solve ODE problem
+using OrdinaryDiffEq
+sol = solve(prob, Tsit5(), saveat=0.001)
+
+grid = get_discrete(convection, mol_discretization)
+discrete_x = grid[x]
+discrete_t = sol[t]
+
+solu = [map(d -&gt; sol[d][i], grid[u(x, t)]) for i in 1:length(sol[t])]
+u_pred = hcat(solu...)
+
+fig_, ax, hm = CairoMakie.heatmap(ts, xs, u_pred&#39;, axis=axis)
+ax2, hm2 = heatmap(fig_[1,end+1], ts,xs, abs.(u_pred&#39; .- u_analytic.(discrete_x, discrete_t&#39;)&#39;), axis = (xlabel=&quot;t&quot;, ylabel=&quot;x&quot;, title=&quot;error&quot;))
+Colorbar(fig_[:, end+1], hm2)</code></pre><p><img src="../convection2.png" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../poisson/">« 1D Poisson&#39;s Equation</a><a class="docs-footer-nextpage" href="../helmholtz/">2D Helmholtz Equation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.22 on <span class="colophon-date" title="Sunday 28 August 2022 04:33">Sunday 28 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
