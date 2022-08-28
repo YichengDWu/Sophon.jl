@@ -12,10 +12,9 @@ DocMeta.setdocmeta!(Sophon, :DocTestSetup, :(using Sophon); recursive=true)
 makedocs(bib; modules=[Sophon],
          repo="https://github.com/MilkshakeForReal/Sophon.jl/blob/{commit}{path}#{line}",
          sitename="Sophon.jl",
-         format=Documenter.HTML(; prettyurls=get(ENV, "CI", "false") == "true",
-                                assets=[indigo],
+         format=Documenter.HTML(; prettyurls=get(ENV, "CI", "false") == "true",                             
                                 canonical="https://MilkshakeForReal.github.io/Sophon.jl",
-                                edit_link="main", assets=String[]),
+                                edit_link="main", assets=String[indigo]),
          strict=[
              :doctest,
              :linkcheck,
