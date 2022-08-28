@@ -1,6 +1,9 @@
 using Sophon
 using Documenter
 using DocumenterCitations
+using DocThemeIndigo
+
+indigo = DocThemeIndigo.install(Sophon)
 
 bib = CitationBibliography(joinpath(@__DIR__, "bibliography.bib"); sorting=:nyt)
 
@@ -13,6 +16,7 @@ makedocs(bib; modules=[Sophon],
          format=Documenter.HTML(; prettyurls=get(ENV, "CI", "false") == "true",
                                 canonical="https://MilkshakeForReal.github.io/Sophon.jl",
                                 edit_link="main", assets=String[]),
+         assets=[indigo],
          strict=[
              :doctest,
              :linkcheck,
@@ -21,6 +25,7 @@ makedocs(bib; modules=[Sophon],
              # Other available options are
              # :autodocs_block, :cross_references, :docs_block, :eval_block, :example_block, :footnote, :meta_block, :missing_docs, :setup_block
          ],
+         authors="Yicheng Wu",
          pages=[
              "Home" => "index.md",
              "Tutorials" => [
