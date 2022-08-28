@@ -162,10 +162,6 @@ x → FourierFeature → FullyConnected → y
   - `activation`: The activation function used to construct `FullyConnected`.
   - `modes`: A tuple of modes used to construct `FourierFeature`.
 
-# Keyword Arguments
-
-  - `modes`: A tuple of modes used to construct `FourierFeature`.
-
 # Examples
 
 ```julia
@@ -183,10 +179,9 @@ Chain(
 
 [wang2021eigenvector](@cite)
 """
-function MultiscaleFourier(in_dims::Int, layer_sizes::NTuple, activation::Function;
-                           modes::NTuple)
-    fourierfeature = FourierFeature(in_dims, modes)
-    fc = FullyConnected((fourierfeature.out_dims, layer_sizes...), activation)
+function MultiscaleFourier(layer_sizes::NTuple{N, T}, activation::Function, modes::NTuple) where {N, T<:Int}
+    fourierfeature = FourierFeature(first(layer_sizes), modes)
+    fc = FullyConnected((fourierfeature.out_dims, layer_sizes[2:end]...), activation)
     return Chain(fourierfeature, fc)
 end
 
