@@ -226,7 +226,7 @@ end
 """
     RBF(in_dims::Int, out_dims::Int, num_centers::Int=out_dims; sigma::AbstractFloat=0.2f0)
 
-Radial Basis Fuction Network.
+Normalized Radial Basis Fuction Network.
 """
 struct RBF{F1, F2} <: AbstractExplicitLayer
     in_dims::Int
