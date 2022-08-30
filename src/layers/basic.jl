@@ -14,6 +14,7 @@ Fourier Feature Network.
             ```math
             \phi^{(i)}(x)=\left[\sin \left(2 \pi W^{(i)} x\right) ; \cos 2 \pi W^{(i)} x\right], \quad W^{(i)} \sim \mathcal{N}\left(0, \sigma^{(i)}\right)
             ```
+
         Case2: A tuple of frequencies `(f1,f2,...,fn)`.
 
             ```math
