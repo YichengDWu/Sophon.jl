@@ -173,7 +173,8 @@ Chain(
     layer_4 = Dense(30 => 1),           # 31 parameters
 )         # Total: 2_791 parameters,
           #        plus 60 states, summarysize 112 bytes.
-julia> MultiscaleFourier((2, 30, 30, 1), sin, (1,2,3,4))
+
+julia> MultiscaleFourier((2, 30, 30, 1), sin, (1, 2, 3, 4))
 Chain(
     layer_1 = FourierFeature(2 => 16),
     layer_2 = Dense(16 => 30, sin),     # 510 parameters
@@ -187,7 +188,8 @@ Chain(
 
 [wang2021eigenvector](@cite)
 """
-function MultiscaleFourier(layer_sizes::NTuple{N, T}, activation::Function, modes::NTuple) where {N, T<:Int}
+function MultiscaleFourier(layer_sizes::NTuple{N, T}, activation::Function,
+                           modes::NTuple) where {N, T <: Int}
     fourierfeature = FourierFeature(first(layer_sizes), modes)
     fc = FullyConnected((fourierfeature.out_dims, layer_sizes[2:end]...), activation)
     return Chain(fourierfeature, fc)

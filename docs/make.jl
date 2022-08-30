@@ -12,7 +12,7 @@ DocMeta.setdocmeta!(Sophon, :DocTestSetup, :(using Sophon); recursive=true)
 makedocs(bib; modules=[Sophon],
          repo="https://github.com/MilkshakeForReal/Sophon.jl/blob/{commit}{path}#{line}",
          sitename="Sophon.jl",
-         format=Documenter.HTML(; prettyurls=get(ENV, "CI", "false") == "true",                             
+         format=Documenter.HTML(; prettyurls=get(ENV, "CI", "false") == "true",
                                 canonical="https://MilkshakeForReal.github.io/Sophon.jl",
                                 edit_link="main", assets=String[indigo]),
          strict=[
@@ -22,8 +22,7 @@ makedocs(bib; modules=[Sophon],
              :example_block,
              # Other available options are
              # :autodocs_block, :cross_references, :docs_block, :eval_block, :example_block, :footnote, :meta_block, :missing_docs, :setup_block
-         ],
-         authors="Yicheng Wu",
+         ], authors="Yicheng Wu",
          pages=[
              "Home" => "index.md",
              "Tutorials" => [
