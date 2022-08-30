@@ -48,6 +48,7 @@ FourierFeature(2 => 16)
 # Reference
 
 [rahimi2007random](@cite)
+
 [tancik2020fourier](@cite)
 
 """
