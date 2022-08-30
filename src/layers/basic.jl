@@ -49,6 +49,7 @@ julia> st
 
 # Reference
 
+[rahimi2007random](@cite)
 [tancik2020fourier](@cite)
 
 """
