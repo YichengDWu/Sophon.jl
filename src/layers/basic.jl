@@ -8,14 +8,14 @@ Fourier Feature Network.
   - `in_dims`: Number of the input dimensions.
   - `modes`:
 
-        Case1: A tuple of pairs of `std => out_dims`, where `std` is the standard deviation of
-        the Gaussian distribution, and `out_dims` is the corresponding number of output dimensions.
+    Case1: A tuple of pairs of `std => out_dims`, where `std` is the standard deviation of
+    the Gaussian distribution, and `out_dims` is the corresponding number of output dimensions.
 
 ```math
 \phi^{(i)}(x)=\left[\sin \left(2 \pi W^{(i)} x\right) ; \cos 2 \pi W^{(i)} x\right], \quad W^{(i)} \sim \mathcal{N}\left(0, \sigma^{(i)}\right)
 ```
 
-        Case2: A tuple of frequencies `(f1,f2,...,fn)`.
+    Case2: A tuple of frequencies `(f1,f2,...,fn)`.
 
 ```math
 \phi^{(i)}(x)=\left[\sin \left(2 \pi f_i x\right) ; \cos 2 \pi f_i x\right]
