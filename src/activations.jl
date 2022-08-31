@@ -3,7 +3,7 @@
 The Gaussian activation function.
 
 ```math
-e^{\frac{-0.5 x^{2}}{a^{2}}}
+e^{\frac{- x^{2}}{2a^{2}}}
 ```
 ## Reference
 
