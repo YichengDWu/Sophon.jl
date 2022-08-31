@@ -10,7 +10,7 @@ rng = Random.default_rng()
             @test f1.out_dims == 8
             f2 = FourierFeature(2, (1 => 4, 2 => 5))
             ps, st = Lux.setup(rng, f2)
-            @test length(st) == (2)
+            @test size(st.weight) == (9, 2)
             y, st = f2(rand(Float32, 2, 2), ps, st)
             @test size(y) == (18, 2)
             @test f2.out_dims == 18
@@ -19,9 +19,13 @@ rng = Random.default_rng()
             f3 = FourierFeature(2, (1, 2, 3))
             @test f3.out_dims == 6 * 2
             ps, st = Lux.setup(rng, f3)
-            @test length(st) == (3)
+            @test st == NamedTuple()
             y, st = f3(rand(Float32, 2, 2), ps, st)
             @test size(y) == (6 * 2, 2)
+
+            f4 = FourierFeature(2, 10, 1)
+            @test f4.out_dims == 10
+            @test_throws AssertionError FourierFeature(2, 9, 1)
         end
         @testset "RBF" begin
             rbf = RBF(2, 4, 3)

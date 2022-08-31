@@ -1,21 +1,20 @@
 @doc raw"""
-    FourierFeature(in_dims::Int, modes::NTuple{N,Pair{S,T}}) where {N,S,T<:Int}
-
+    FourierFeature(in_dims::Int, std::NTuple{N,Pair{S,T}}) where {N,S,T<:Int}
+    FourierFeature(in_dims::Int, frequencies::NTuple{N, T}) where {N, T <: Real}
+    FourierFeature(in_dims::Int, out_dims::Int, std::Real)
 Fourier Feature Network.
 
 # Arguments
 
   - `in_dims`: Number of the input dimensions.
-  - `modes`:
-
-  Case1: A tuple of pairs of `std => out_dims`, where `std` is the standard deviation of
-    the Gaussian distribution, and `out_dims` is the corresponding number of output dimensions.
+  - `std`: A tuple of pairs of `sigma => out_dims`, where `sigma` is the standard deviation
+    of the Gaussian distribution.
 
 ```math
-\phi^{(i)}(x)=\left[\sin \left(2 \pi W^{(i)} x\right) ; \cos 2 \pi W^{(i)} x\right], \quad W^{(i)} \sim \mathcal{N}\left(0, \sigma^{(i)}\right)
+\phi^{(i)}(x)=\left[\sin \left(2 \pi W^{(i)} x\right) ; \cos 2 \pi W^{(i)} x\right],\ W^{(i)} \sim \mathcal{N}\left(0, \sigma^{(i)}\right),\ i\in 1, \dots, D
 ```
 
-  Case2: A tuple of frequencies `(f1,f2,...,fn)`.
+  - `frequencies`: A tuple of frequencies `(f1,f2,...,fn)`.
 
 ```math
 \phi^{(i)}(x)=\left[\sin \left(2 \pi f_i x\right) ; \cos 2 \pi f_i x\right]
@@ -23,87 +22,95 @@ Fourier Feature Network.
 
 # Inputs
 
-  - `x`: An an AbstractArray with `size(x, 1) == in_dims`.
+  - `x`: `AbstractArray`` with `size(x, 1) == in_dims`.
 
 # Returns
 
-  - An `AbstractArray` with `size(y, 1) == sum(last(modes) * 2)`.
-  - The states of the modes.
+  - `AbstractArray` with `size(y, 1) == sum(last(modes) * 2)`.
 
 # States
 
-  - States of each mode wrapped in a NamedTuple with `fields = mode_1, mode_2, ..., mode_N`.
+  - The weight `W` in case 1, otherwise `NamedTuple()`.
 
 # Examples
 
 ```julia
-julia> f = FourierFeature(2, (1 => 3, 50 => 4))
+julia> f = FourierFeature(2,10,1) # Random Fourier Feature
+FourierFeature(2 => 10)
+
+julia> f = FourierFeature(2, (1 => 3, 50 => 4)) # Multi-scale Random Fourier Features
 FourierFeature(2 => 14)
 
-julia> ps, st = Lux.setup(rng, f)
-(NamedTuple(), (mode_1 = Float32[0.7510394 0.0678698; -1.6466209 -0.08511321; -0.4704813 2.0663197], mode_2 = Float32[-98.90031 -42.593884; 110.35572 15.565719; 81.60114 51.257904; -0.53021294 15.216658]))
-
-julia> st
-(mode_1 = Float32[0.7510394 0.0678698; -1.6466209 -0.08511321; -0.4704813 2.0663197], mode_2 = Float32[-98.90031 -42.593884; 110.35572 15.565719; 81.60114 51.257904; -0.53021294 15.216658])
+julia>  f = FourierFeature(2, (1,2,3,4)) # Predefined frequencies
+FourierFeature(2 => 16)
 ```
 
 # Reference
 
 [rahimi2007random](@cite)
+
 [tancik2020fourier](@cite)
 
 """
-struct FourierFeature{M} <: AbstractExplicitLayer
+struct FourierFeature{F} <: AbstractExplicitLayer
     in_dims::Int
     out_dims::Int
-    modes::M
+    frequencies::F
 end
 
 function Base.show(io::IO, f::FourierFeature)
     return print(io, "FourierFeature($(f.in_dims) => $(f.out_dims))")
 end
 
-function FourierFeature(in_dims::Int, modes::NTuple{N, Pair{S, T}}) where {N, S, T <: Int}
-    out_dims = map(x -> 2 * last(x), modes)
-    return FourierFeature{typeof(modes)}(in_dims, sum(out_dims), modes)
+function FourierFeature(in_dims::Int, std::NTuple{N, Pair{S, T}}) where {N, S, T <: Int}
+    out_dims = map(x -> 2 * last(x), std)
+    return FourierFeature{typeof(std)}(in_dims, sum(out_dims), std)
 end
 
-function FourierFeature(in_dims::Int, modes::NTuple{N, T}) where {N, T <: Real}
-    out_dims = length(modes) * 2 * in_dims
-    return FourierFeature{typeof(modes)}(in_dims, out_dims, modes)
+function FourierFeature(in_dims::Int, frequencies::NTuple{N, T}) where {N, T <: Real}
+    out_dims = length(frequencies) * 2 * in_dims
+    return FourierFeature{typeof(frequencies)}(in_dims, out_dims, frequencies)
+end
+
+function FourierFeature(in_dims::Int, out_dims::Int, std::Real)
+    @assert iseven(out_dims) "The number of output dimensions must be even."
+    return FourierFeature(in_dims, (std => out_dims ÷ 2,))
 end
 
 function initialstates(rng::AbstractRNG,
-                       f::FourierFeature{NTuple{NN, Pair{S, T}}}) where {NN, S, T <: Int}
-    N = length(f.modes)
-    names = ntuple(i -> Symbol("mode_$i"), N)
-    frequencies = ntuple(N) do i
-        m = f.modes[i]
-        return randn(rng, Float32, last(m), f.in_dims) .* first(m)
+                       f::FourierFeature{NTuple{N, Pair{S, T}}}) where {N, S, T <: Int}
+    std = f.frequencies
+    frequency_matrix = mapreduce(vcat, std) do sigma
+        return randn(rng, Float32, last(sigma), f.in_dims) .* first(sigma)
     end
-    return NamedTuple{names}(frequencies)
+    return (; weight=frequency_matrix)
 end
 
 function initialstates(rng::AbstractRNG,
-                       f::FourierFeature{NTuple{NN, T}}) where {NN, T <: Real}
-    N = length(f.modes)
-    names = ntuple(i -> Symbol("mode_$i"), N)
-    return NamedTuple{names}(f.modes)
+                       f::FourierFeature{NTuple{N, T}}) where {N, T <: Real}
+    return NamedTuple()
 end
 
-function (f::FourierFeature)(x::AbstractVecOrMat, ps, st::NamedTuple)
+function (l::FourierFeature{NTuple{N, T}})(x::AbstractArray, ps,
+                                           st::NamedTuple) where {N, T <: Real}
     x = 2 * eltype(x)(π) .* x
-    y = mapreduce(vcat, st) do f
+    y = mapreduce(vcat, l.frequencies) do f
         return [sin.(f * x); cos.(f * x)]
     end
     return y, st
 end
 
-function (f::FourierFeature)(x::AbstractArray, ps, st::NamedTuple)
-    x = 2 * eltype(x)(π) .* x
-    y = mapreduce(vcat, st) do f
-        return [sin.(batched_mul(f, x)); cos.(batched_mul(f, x))]
-    end
+function (l::FourierFeature{NTuple{N, Pair{S, T}}})(x::AbstractVecOrMat, ps,
+                                                    st::NamedTuple) where {N, S, T <: Int}
+    W = st.weight
+    y = [sin.(W * x); cos.(W * x)]
+    return y, st
+end
+
+function (f::FourierFeature{NTuple{N, Pair{S, T}}})(x::AbstractArray, ps,
+                                                    st::NamedTuple) where {N, S, T <: Int}
+    W = st.weight
+    y = [sin.(W ⊠ x); cos.(W ⊠ x)]
     return y, st
 end
 
