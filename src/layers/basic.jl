@@ -11,7 +11,7 @@ Fourier Feature Network.
     of the Gaussian distribution.
 
 ```math
-\phi^{(i)}(x)= \frac{1}{\sqrt{D}}\left[\sin \left(2 \pi W^{(i)} x\right) ; \cos 2 \pi W^{(i)} x\right],\ W^{(i)} \sim \mathcal{N}\left(0, \sigma^{(i)}\right),\ i\in 1, \dots, D
+\phi^{(i)}(x)=\left[\sin \left(2 \pi W^{(i)} x\right) ; \cos 2 \pi W^{(i)} x\right],\ W^{(i)} \sim \mathcal{N}\left(0, \sigma^{(i)}\right),\ i\in 1, \dots, D
 ```
 
   - `frequencies`: A tuple of frequencies `(f1,f2,...,fn)`.
@@ -103,16 +103,14 @@ end
 function (l::FourierFeature{NTuple{N, Pair{S, T}}})(x::AbstractVecOrMat, ps,
                                                     st::NamedTuple) where {N, S, T <: Int}
     W = st.weight
-    D = Float32(l.out_dims ÷ 2)
-    y = 1/√D .* [sin.(W * x); cos.(W * x)]
+    y = [sin.(W * x); cos.(W * x)]
     return y, st
 end
 
 function (f::FourierFeature{NTuple{N, Pair{S, T}}})(x::AbstractArray, ps,
                                                     st::NamedTuple) where {N, S, T <: Int}
     W = st.weight
-    D = Float32(l.out_dims ÷ 2)
-    y = 1/√D .* [sin.(W ⊠ x); cos.(W ⊠ x)]
+    y = [sin.(W ⊠ x); cos.(W ⊠ x)]
     return y, st
 end
 
