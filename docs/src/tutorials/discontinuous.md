@@ -3,7 +3,7 @@
 This example is taken from [here](https://royalsocietypublishing.org/doi/epdf/10.1098/rspa.2020.0334). However, we do not use adaptive activation functions. Instead, we show that using suitable non-parametric activation functions immediately performs better.
 
 
-The following  discontinuous  function  with  discontinuity  at ``x=0``  location  is approximated by [`Siren`](@ref).
+Consider the following  discontinuous  function  with  discontinuity  at ``x=0``:
 
 ```math
 u(x)= \begin{cases}0.2 \sin (18 x) & \text { if } x \leq 0 \\ 1+0.3 x \cos (54 x) & \text { otherwise }\end{cases}
