@@ -10,7 +10,7 @@
 ## Installation
 
 ```julia
-julia>] add "https://github.com/MilkshakeForReal/Sophon.jl"
+julia>] add Sophon
 ```
 
 ## Example: 1D Multi-scale Poisson Equation 
