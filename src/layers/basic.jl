@@ -51,6 +51,7 @@ FourierFeature(2 => 16)
 
 [tancik2020fourier](@cite)
 
+[wang2021eigenvector](@cite)
 """
 struct FourierFeature{F} <: AbstractExplicitLayer
     in_dims::Int

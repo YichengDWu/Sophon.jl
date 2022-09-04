@@ -29,7 +29,7 @@ export GPUComponentArray64
 export Scheduler, get_opt
 export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF
-export PINNAttention, MultiscaleFourier, FourierAttention, Siren, SirenAttention
+export PINNAttention, FourierFeatureNet, FourierAttention, Siren, SirenAttention
 export DeepONet
 
 end

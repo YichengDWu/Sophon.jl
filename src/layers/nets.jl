@@ -147,9 +147,9 @@ function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=relu;
 end
 
 """
-    MultiscaleFourier(ayer_sizes::NTuple, activation, modes::NTuple)
+    FourierFeatureNet(ayer_sizes::NTuple, activation, modes::NTuple)
 
-Multi-scale Fourier Feature Net.
+A model that combines [`FourierFeature`](@ref) and [`FullyConnected`](@ref).
 
 ```
 x → FourierFeature → FullyConnected → y
@@ -165,7 +165,7 @@ x → FourierFeature → FullyConnected → y
 # Examples
 
 ```julia
-julia> MultiscaleFourier((2, 30, 30, 1), sin, (1 => 10, 10 => 10, 50 => 10))
+julia> FourierFeatureNet((2, 30, 30, 1), sin, (1 => 10, 10 => 10, 50 => 10))
 Chain(
     layer_1 = FourierFeature(2 => 60),
     layer_2 = Dense(60 => 30, sin),     # 1_830 parameters
@@ -174,7 +174,7 @@ Chain(
 )         # Total: 2_791 parameters,
           #        plus 60 states, summarysize 112 bytes.
 
-julia> MultiscaleFourier((2, 30, 30, 1), sin, (1, 2, 3, 4))
+julia> FourierFeatureNet((2, 30, 30, 1), sin, (1, 2, 3, 4))
 Chain(
     layer_1 = FourierFeature(2 => 16),
     layer_2 = Dense(16 => 30, sin),     # 510 parameters
@@ -183,12 +183,8 @@ Chain(
 )         # Total: 1_471 parameters,
           #        plus 4 states, summarysize 96 bytes.
 ```
-
-# Reference
-
-[wang2021eigenvector](@cite)
 """
-function MultiscaleFourier(layer_sizes::NTuple{N, T}, activation::Function,
+function FourierFeatureNet(layer_sizes::NTuple{N, T}, activation::Function,
                            modes::NTuple) where {N, T <: Int}
     fourierfeature = FourierFeature(first(layer_sizes), modes)
     fc = FullyConnected((fourierfeature.out_dims, layer_sizes[2:end]...), activation)
