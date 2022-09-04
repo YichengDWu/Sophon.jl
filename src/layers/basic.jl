@@ -93,7 +93,7 @@ end
 
 function (l::FourierFeature{NTuple{N, T}})(x::AbstractArray, ps,
                                            st::NamedTuple) where {N, T <: Real}
-    x = 2 * eltype(x)(π) .* x
+    x = π .* 2x
     y = mapreduce(vcat, l.frequencies) do f
         return [sin.(f * x); cos.(f * x)]
     end
