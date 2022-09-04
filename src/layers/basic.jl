@@ -79,9 +79,9 @@ end
 
 function initialstates(rng::AbstractRNG,
                        f::FourierFeature{NTuple{N, Pair{S, T}}}) where {N, S, T <: Int}
-    std = f.frequencies
-    frequency_matrix = mapreduce(vcat, std) do sigma
-        return randn(rng, Float32, last(sigma), f.in_dims) .* first(sigma)
+    std_dims = f.frequencies
+    frequency_matrix = mapreduce(vcat, std_dims) do sigma
+        return standard_normal(rng, last(sigma), f.in_dims; std = first(sigma))
     end
     return (; weight=frequency_matrix)
 end
@@ -228,12 +228,7 @@ end
 
 get_sine_init_weight(::Nothing) = kaiming_uniform(sin)
 function get_sine_init_weight(omega::Real)
-    function init_weight(rng::AbstractRNG, out_dims, in_dims)
-        weight = (rand(rng, Float32, out_dims, in_dims) .- 0.5f0) .* 2.0f0
-        scale = Float32(omega) / in_dims
-        return weight .* scale
-    end
-    return init_weight
+    return (rng::AbstractRNG, out_dims, in_dims) -> standard_uniform(rng, out_dims, in_dims; scale = Float32(omega) / in_dims)
 end
 """
     RBF(in_dims::Int, out_dims::Int, num_centers::Int=out_dims; sigma::AbstractFloat=0.2f0)
@@ -250,14 +245,14 @@ struct RBF{F1, F2} <: AbstractExplicitLayer
 end
 
 function RBF(in_dims::Int, out_dims::Int, num_centers::Int=out_dims,
-             sigma::AbstractFloat=0.2f0, init_center=Lux.glorot_uniform,
+             sigma::AbstractFloat=0.2f0, init_center=standard_uniform,
              init_weight=Lux.glorot_normal)
     return RBF{typeof(init_center), typeof(init_weight)}(in_dims, out_dims, num_centers,
                                                          sigma, init_center, init_weight)
 end
 
 function RBF(mapping::Pair{<:Int, <:Int}, num_centers::Int=out_dims,
-             sigma::AbstractFloat=0.2f0, init_center=Lux.glorot_uniform,
+             sigma::AbstractFloat=0.2f0, init_center=standard_uniform,
              init_weight=Lux.glorot_uniform)
     return RBF(first(mapping), last(mapping), num_centers, sigma, init_center, init_weight)
 end
