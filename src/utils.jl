@@ -61,3 +61,25 @@ ChainRulesCore.@non_differentiable kaiming_normal(::Any...)
 @inline calculate_gain(::typeof(sin)) = √2.0f0 # Siren
 @inline calculate_gain(::Type{<:Function}) = 1 # default
 @inline calculate_gain(f::Function) = calculate_gain(typeof(f))
+
+
+
+"""
+    standard_uniform(rng::AbstractRNG, size...; scale = 1)
+
+Return an `Array{Float32}` of the given `size` containing random numbers drawn from the
+uniform distribution on the interval `[-scale, scale]`.
+"""
+@inline function standard_uniform(rng::AbstractRNG, dims::Integer...; scale::Real=1)
+    return (rand(rng, Float32, dims...) .- 0.5f0) .* 2scale
+end
+
+"""
+    standard_normal(rng::AbstractRNG, size...; std = 1)
+
+Return an `Array{Float32}` of the given `size` containing random numbers drawn from the
+standard normal distribution.
+"""
+@inline function standard_normal(rng::AbstractRNG, dims::Integer...; std::Real=1)
+    return randn(rng, Float32, dims...) .* std
+end
