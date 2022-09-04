@@ -80,9 +80,9 @@ rng = Random.default_rng()
             y3, st3 = m3(x, ps3, st3)
             @test size(y3) == (4, 5)
         end
-        @testset "FourierFeatureNet" begin
+        @testset "FourierNet" begin
             x = rand(Float32, 2, 5)
-            m = FourierFeatureNet((2, 30, 30, 1), swish, (1 => 10, 10 => 10, 50 => 10))
+            m = FourierNet((2, 30, 30, 1), swish, (1 => 10, 10 => 10, 50 => 10))
             ps, st = Lux.setup(rng, m)
             y, st = m(x, ps, st)
             @test size(y) == (1, 5)
