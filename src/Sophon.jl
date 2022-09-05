@@ -3,7 +3,7 @@ module Sophon
 using LinearAlgebra
 using Lux, Random, NNlib, NNlibCUDA
 import Lux: initialparameters, initialstates, parameterlength, statelength,
-            AbstractExplicitLayer, AbstractExplicitContainerLayer
+            AbstractExplicitLayer, AbstractExplicitContainerLayer, zeros32
 
 using Optimisers, Optimization, OptimizationOptimisers
 import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, TriangleExp,
@@ -29,7 +29,7 @@ export GPUComponentArray64
 export Scheduler, get_opt
 export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF
-export PINNAttention, FourierNet, FourierAttention, Siren, SirenAttention
+export PINNAttention, FourierNet, FourierAttention, Siren, SirenAttention, FourierFilterNet
 export DeepONet
 
 end

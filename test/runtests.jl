@@ -114,6 +114,14 @@ rng = Random.default_rng()
         @testset "SirenAttention" begin @test_nowarn SirenAttention(2, 1, sin;
                                                                     hidden_dims=50,
                                                                     num_layers=4) end
+        @testset "FourierFilterNet" begin
+            x = rand(Float32, 2, 5)
+            ffn = FourierFilterNet(2, 4; hidden_dims=10, num_layers=3, bandwidth=10)
+            ps, st = Lux.setup(rng, ffn)
+            y, st = ffn(x, ps, st)
+            @test size(y) == (4, 5)
+            @test eltype(y) == Float32
+        end
     end
 
     @testset "Operators" begin

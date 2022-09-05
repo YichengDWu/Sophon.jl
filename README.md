@@ -3,7 +3,7 @@
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://yichengdwu.github.io/Sophon.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://yichengdwu.github.io/Sophon.jl/dev/)
 [![Build Status](https://github.com/YichengDWu/Sophon.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/YichengDWu/Sophon.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/YichengDWu/Sophon.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/MilkshakeForReal/Sophon.jl)
+[![Coverage](https://codecov.io/gh/YichengDWu/Sophon.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/YichengDWu/Sophon.jl)
 
 `Sophon.jl` provides specialized neural networks and neural operators for Physics-informed machine learning.
 
@@ -54,7 +54,7 @@ lines!(xs, vec(us); label="Prediction")
 axislegend(axis)
 display(fig)
 ```
-![possion](https://github.com/MilkshakeForReal/Sophon.jl/blob/main/assets/poisson.png)
+![possion](https://github.com/YichengDWu/Sophon.jl/blob/main/assets/poisson.png)
 
 ## Related Libraries
 

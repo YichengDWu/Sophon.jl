@@ -27,7 +27,7 @@ function u(x)
     end
 end
 
-function generate_data(n=300)
+function generate_data(n=50)
     x = reshape(collect(range(-1.0f0, 1.0f0, n)), (1, n))
     y = u.(x)
     return (x, y)
@@ -37,8 +37,9 @@ end
 Let's visualize the data.
 
 ```@example ds
-x, y = generate_data()
-Plots.plot(vec(x), vec(y),label=false)
+x_train, y_train = generate_data()
+x_test, y_test = generate_data(200)
+Plots.plot(vec(x_test), vec(y_test),label=false)
 savefig("u.svg"); nothing # hide
 ```
 ![](u.svg)
@@ -52,7 +53,7 @@ model = FullyConnected((1,50,50,50,50,1), relu)
 ### Train the model
 
 ```@example ds
-function train(model)
+function train(model, x, y)
     ps, st = Lux.setup(Random.default_rng(), model)
     opt = Adam()
     st_opt = Optimisers.setup(opt,ps)
@@ -75,10 +76,10 @@ end
 ```
 ### Plot The Result
 ```@example ds
-@time ps, st = train(model)
-y_pred = model(x,ps,st)[1]
-Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
-Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
+@time ps, st = train(model, x_train, y_train)
+y_pred = model(x_test,ps,st)[1]
+Plots.plot(vec(x_test), vec(y_pred),label="Prediction",line = (:dot, 4))
+Plots.plot!(vec(x_test), vec(y_test),label="Exact",legend=:topleft)
 savefig("result1.svg"); nothing # hide
 ```
 ![](result1.svg)
@@ -86,17 +87,31 @@ savefig("result1.svg"); nothing # hide
 ## Siren
 We use four hidden layers with 50 neurons in each.
 ```@example ds
-model = Siren(1,50,50,50,50,1)
+model = Siren(1,50,50,50,50,1; omega = 30f0)
 ```
 ```@example ds
-@time ps, st = train(model)
-y_pred = model(x,ps,st)[1]
-Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
-Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
+@time ps, st = train(model, x_train, y_train)
+y_pred = model(x_test,ps,st)[1]
+Plots.plot(vec(x_test), vec(y_pred),label="Prediction",line = (:dot, 4))
+Plots.plot!(vec(x_test), vec(y_test),label="Exact",legend=:topleft)
 savefig("result.svg"); nothing # hide
 ```
 
 ![](result.svg)
+
+As we can see the model overfits the data, and the high frequencies cannot be optimized away. We need to tunning the hyperparameter `omega`
+
+```@example ds
+model = Siren(1,50,50,50,50,1; omega = 10f0)
+```
+```@example ds
+@time ps, st = train(model, x_train, y_train)
+y_pred = model(x_test,ps,st)[1]
+Plots.plot(vec(x_test), vec(y_pred),label="Prediction",line = (:dot, 4))
+Plots.plot!(vec(x_test), vec(y_test),label="Exact",legend=:topleft)
+savefig("result10.svg"); nothing # hide
+```
+![](result10.svg)
 
 ## Gaussian activation function
 
@@ -107,10 +122,10 @@ model = FullyConnected((1,50,50,50,50,1), gaussian)
 ```
 
 ```@example ds
-@time ps, st = train(model)
-y_pred = model(x,ps,st)[1]
-Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
-Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
+@time ps, st = train(model, x_train, y_train)
+y_pred = model(x_test,ps,st)[1]
+Plots.plot(vec(x_test), vec(y_pred),label="Prediction",line = (:dot, 4))
+Plots.plot!(vec(x_test), vec(y_test),label="Exact",legend=:topleft)
 savefig("result2.svg"); nothing # hide
 ```
 ![](result2.svg)
@@ -126,14 +141,16 @@ model = FullyConnected((1,50,50,50,50,1), quadratic)
 ```
 
 ```@example ds
-@time ps, st = train(model)
-y_pred = model(x,ps,st)[1]
-Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
-Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
+@time ps, st = train(model, x_train, y_train)
+y_pred = model(x_test,ps,st)[1]
+Plots.plot(vec(x_test), vec(y_pred),label="Prediction",line = (:dot, 4))
+Plots.plot!(vec(x_test), vec(y_test),label="Exact",legend=:topleft)
 savefig("result3.svg"); nothing # hide
 ```
 ![](result3.svg)
 
 ## Conclusion
 
-There are many misconceptions about the so-called "Spectral bias". Mainstream attributes the phenomenon that neural networks "suppress" high frequencies to gradient descent. This is not the whole picture. Initialization also plays an important role. Siren solves this problem by initializing larger weights in the first layer, while activation functions such as gassian have large enough gradients themselves. Please refer to [sitzmann2020implicit](@cite), [ramasinghe2021beyond](@cite) and [ramasinghe2022regularizing](@cite) if you want to dive deeper into this.
+The "neural network suppresses high frequency components" is a misrepresentation of spectral bias. The accurate way of putting it is that the lower frequencies in the error are optimized first in the optimization process. This can be seen in Siren's example of overfitting data, where you do not have implicit regularization.
+
+Mainstream attributes the phenomenon that neural networks "suppress" high frequencies to gradient descent. This is not the whole picture. Initialization also plays an important role. Siren mitigats this problem by initializing larger weights in the first layer, while activation functions such as gassian have large enough gradients themselves. Please refer to [sitzmann2020implicit](@cite), [ramasinghe2021beyond](@cite) and [ramasinghe2022regularizing](@cite) if you want to dive deeper into this.
