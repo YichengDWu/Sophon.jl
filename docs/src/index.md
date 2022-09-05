@@ -4,7 +4,7 @@ CurrentModule = Sophon
 
 # Sophon
 
-Documentation for [Sophon](https://github.com/MilkshakeForReal/Sophon.jl).
+Documentation for [Sophon](https://github.com/YichengDWu/Sophon.jl).
 
 ```@index
 ```

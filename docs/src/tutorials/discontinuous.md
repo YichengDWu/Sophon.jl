@@ -27,7 +27,7 @@ function u(x)
     end
 end
 
-function generate_data(n=300)
+function generate_data(n=50)
     x = reshape(collect(range(-1.0f0, 1.0f0, n)), (1, n))
     y = u.(x)
     return (x, y)
@@ -37,8 +37,9 @@ end
 Let's visualize the data.
 
 ```@example ds
-x, y = generate_data()
-Plots.plot(vec(x), vec(y),label=false)
+x_train, y_train = generate_data()
+x_test, y_test = generate_data(200)
+Plots.plot(vec(x_test), vec(y_test),label=false)
 savefig("u.svg"); nothing # hide
 ```
 ![](u.svg)
@@ -52,7 +53,7 @@ model = FullyConnected((1,50,50,50,50,1), relu)
 ### Train the model
 
 ```@example ds
-function train(model)
+function train(model, x, y)
     ps, st = Lux.setup(Random.default_rng(), model)
     opt = Adam()
     st_opt = Optimisers.setup(opt,ps)
@@ -75,10 +76,10 @@ end
 ```
 ### Plot The Result
 ```@example ds
-@time ps, st = train(model)
-y_pred = model(x,ps,st)[1]
-Plots.plot(vec(x), vec(y_pred),label="Prediction",line = (:dot, 4))
-Plots.plot!(vec(x), vec(y),label="Exact",legend=:topleft)
+@time ps, st = train(model, x_train, y_train)
+y_pred = model(x_test,ps,st)[1]
+Plots.plot(vec(x_test), vec(y_pred),label="Prediction",line = (:dot, 4))
+Plots.plot!(vec(x_test), vec(y),label="Exact",legend=:topleft)
 savefig("result1.svg"); nothing # hide
 ```
 ![](result1.svg)

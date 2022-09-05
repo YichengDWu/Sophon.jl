@@ -185,7 +185,7 @@ Chain(
 ```
 """
 function FourierNet(layer_sizes::NTuple{N, T}, activation::Function,
-                           modes::NTuple) where {N, T <: Int}
+                    modes::NTuple) where {N, T <: Int}
     fourierfeature = FourierFeature(first(layer_sizes), modes)
     fc = FullyConnected((fourierfeature.out_dims, layer_sizes[2:end]...), activation)
     return Chain(fourierfeature, fc)
@@ -307,34 +307,100 @@ Chain(
 ```
 """
 function FullyConnected(layer_sizes::NTuple{N, T}, activation::Function;
-                        outermost::Bool=true,
+                        outermost::Bool=true, init_bias=zeros32,
                         init_weight::Function=kaiming_uniform(activation)) where {N,
                                                                                   T <: Int}
-    return FullyConnected(layer_sizes, activation, Val(outermost); init_weight=init_weight)
+    return FullyConnected(layer_sizes, activation, Val(outermost); init_weight=init_weight,
+                          init_bias=init_bias)
 end
 
 function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
                         num_layers::Int, outermost::Bool=true,
-                        init_weight::Function=kaiming_uniform(activation))
+                        init_weight::Function=kaiming_uniform(activation),
+                        init_bias=zeros32)
     return FullyConnected((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims),
-                          activation, Val(outermost); init_weight=init_weight)
+                          activation, Val(outermost); init_weight=init_weight,
+                          init_bias=init_bias)
 end
 
 @generated function FullyConnected(layer_sizes::NTuple{N, T}, activation::Function,
-                                   ::Val{F}; init_weight) where {N, T <: Int, F}
+                                   ::Val{F}; init_weight, init_bias) where {N, T <: Int, F}
     N == 2 &&
-        return :(Dense(layer_sizes[1], layer_sizes[2], activation; init_weight=init_weight))
+        return :(Dense(layer_sizes[1], layer_sizes[2], activation; init_weight=init_weight,
+                       init_bias=init_bias))
     function get_layer(i)
         return :(Dense(layer_sizes[$i] => layer_sizes[$(i + 1)], activation;
-                       init_weight=init_weight))
+                       init_weight=init_weight, init_bias=init_bias))
     end
     layers = [
-        :(Dense(layer_sizes[1] => layer_sizes[2], activation; init_weight=init_weight)),
+        :(Dense(layer_sizes[1] => layer_sizes[2], activation; init_weight=init_weight,
+                init_bias=init_bias)),
     ]
     append!(layers, [get_layer(i) for i in 2:(N - 2)])
     append!(layers,
             F ?
-            [:(Dense(layer_sizes[$(N - 1)] => layer_sizes[$N]; init_weight=init_weight))] :
-            [get_layer(N - 1)])
+            [
+                :(Dense(layer_sizes[$(N - 1)] => layer_sizes[$N]; init_weight=init_weight,
+                        init_bias=init_bias)),
+            ] : [get_layer(N - 1)])
     return :(Chain($(layers...)))
+end
+
+struct MultiplicativeFilterNet{F, L, O} <:
+       AbstractExplicitContainerLayer{(:filters, :linear_layers, :output_layer)}
+    filters::F
+    linear_layers::L
+    output_layer::O
+end
+
+function (m::MultiplicativeFilterNet)(x::AbstractArray, ps, st::NamedTuple)
+    g, st_filter = m.filters(x, ps.filters, st.filters)
+    z, st_linear = m.linear_layers(g, ps.linear_layers, st.linear_layers)
+    y, st_output = m.output_layer(z, ps.output_layer, st.output_layer)
+
+    st = (filters=st_filter, linear_layers=st_linear, output_layer=st_output)
+    return y, st
+end
+
+@doc raw"""
+    FourierFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int,
+                     bandwidth::Real)
+
+## Keyword Arguments
+  - `bandwidth`: The maximum bandwidth of the network. The bandwidth is the sum of each filter's bandwidth.
+## Parameters
+
+- Parameters of the filters:
+```math
+    W\sim \mathcal{U}(-\frac{ω}{n}, \frac{ω}{n}), \quad b\sim \mathcal{U}(-\pi, \pi),
+```
+where `n` is the number of filters.
+
+For a periodic function with period ``P``, The Fourier series in amplitude-phase form is
+```math
+s_N(x)=\frac{a_0}{2}+\sum_{n=1}^N{a_n}\cdot \sin \left( \frac{2\pi}{P}nx+\varphi _n \right)
+```
+We have the following relation between the banthwidth and the parameters of the model:
+```math
+ω = 2πB=\frac{2πN}{P}.
+```
+where ``B`` is the bandwidth of the network.
+"""
+function FourierFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int,
+                          bandwidth::Real)
+    names = ntuple(i -> Symbol("filter_$i"), num_layers)
+    scale = 2.0f0π * bandwidth / num_layers
+    layers = ntuple(i -> Dense(in_dims, hidden_dims, sin; init_bias=init_uniform(1.0f0π),
+                               init_weight=init_uniform(scale)), num_layers)
+    nt = NamedTuple{names}(layers)
+    filters = BranchLayer{typeof(nt)}(nt)
+
+    layers = ntuple(i -> Dense(hidden_dims, hidden_dims; init_weight=kaiming_uniform(sin)),
+                    num_layers - 1)
+    linear_layers = PairwiseFusion(.*, layers...)
+
+    output_layer = Dense(hidden_dims, out_dims; init_weight=kaiming_uniform(sin))
+    return MultiplicativeFilterNet{typeof(filters), typeof(linear_layers),
+                                   typeof(output_layer)}(filters, linear_layers,
+                                                         output_layer)
 end
