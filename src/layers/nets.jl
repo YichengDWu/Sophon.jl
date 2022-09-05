@@ -266,9 +266,13 @@ end
 end
 
 """
-    FullyConnected(layer_sizes::NTuple{N, Int}, activation; outermost = true, init_weight = kaiming_uniform(activation))
+    FullyConnected(layer_sizes::NTuple{N, Int}, activation; outermost = true,
+                   init_weight = kaiming_uniform(activation),
+                   init_bias = zeros32)
     FullyConnected(in_dims::Int, out_dims::Int, activation::Function;
-                   hidden_dims::Int, num_layers::Int, outermost=true, init_weight = kaiming_uniform(activation))
+                   hidden_dims::Int, num_layers::Int, outermost=true,
+                   init_weight = kaiming_uniform(activation),
+                   init_bias = zeros32)
 
 Create fully connected layers.
 
