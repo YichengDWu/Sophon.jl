@@ -45,7 +45,7 @@ julia>  f = FourierFeature(2, (1,2,3,4)) # Predefined frequencies
 FourierFeature(2 => 16)
 ```
 
-# Reference
+# References
 
 [rahimi2007random](@cite)
 

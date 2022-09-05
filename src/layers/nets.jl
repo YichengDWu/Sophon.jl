@@ -389,6 +389,12 @@ We have the following relation between the banthwidth and the parameters of the 
 ω = 2πB=\frac{2πN}{P}.
 ```
 where ``B`` is the bandwidth of the network.
+
+## References
+
+[fathony2021multiplicative](@cite)
+
+[lindell2021bacon](@cite)
 """
 function FourierFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int,
                           bandwidth::Real)
