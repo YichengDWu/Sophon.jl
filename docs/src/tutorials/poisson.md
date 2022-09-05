@@ -32,7 +32,6 @@ res = Optimization.solve(prob, Adam(5.0f-3); maxiters=2000)
 prob = remake(prob; u0=res.u)
 res = Optimization.solve(prob, LBFGS(); maxiters=1000)
 
-using CairoMakie
 phi = discretization.phi
 xs = 0:0.001:1
 u_true = @. sin(2 * pi * xs) + 0.1 * sin(50 * pi * xs)
