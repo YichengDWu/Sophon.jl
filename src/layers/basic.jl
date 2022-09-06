@@ -115,6 +115,67 @@ function (f::FourierFeature{NTuple{N, Pair{S, T}}})(x::AbstractArray, ps,
     return y, st
 end
 
+@doc raw"""
+    DiscreteFourierFeature(in_dims::Int, out_dims::Int, N::Int, period::Real)
+
+The discrete Fourier filter proposed in [lindell2021bacon](@cite). For a periodic function
+with period ``P``, the Fourier series in amplitude-phase form is
+```math
+s_N(x)=\frac{a_0}{2}+\sum_{n=1}^N{a_n}\cdot \sin \left( \frac{2\pi}{P}nx+\varphi _n \right)
+```
+
+The output is guaranteed to be periodic.
+## Arguments
+  - `in_dims`: Number of the input dimensions.
+  - `out_dims`: Number of the output dimensions.
+  - `N`: ``N`` in the formula.
+  - `period`: ``P`` in the formula.
+"""
+struct DiscreteFourierFeature{F, P} <: AbstractExplicitLayer
+    in_dims::Int
+    out_dims::Int
+    N::F
+    period::P
+end
+
+function Base.show(io::IO, f::DiscreteFourierFeature)
+    return print(io, "DiscreteFourierFeature($(f.in_dims) => $(f.out_dims))")
+end
+
+function DiscreteFourierFeature(in_dims::Int, out_dims::Int, N::Int, period::Real)
+    return DiscreteFourierFeature{typeof(N), typeof(period)}(in_dims, out_dims, N, period)
+end
+
+function DiscreteFourierFeature(ch::Pair{<:Int, <:Int}, N::Int, period::Real)
+    DiscreteFourierFeature(first(ch), last(ch), N, period)
+end
+
+function initialstates(rng::AbstractRNG, m::DiscreteFourierFeature{<:Int})
+    s = 2π / m.period
+    s = s ≈ round(s) ? Int(s) : Float32(s)
+    weight = rand(rng, 0:m.N, m.out_dims, m.in_dims) .* s
+    return (; weight=weight)
+end
+
+function initialparameters(rng::AbstractRNG, m::DiscreteFourierFeature{<:Int})
+    bias = init_uniform(rng, m.out_dims, 1; scale = 1f0π)
+    return (; bias=bias)
+end
+
+function parameterlength(b::DiscreteFourierFeature{<:Int})
+    return b.out_dims
+end
+
+statelength(b::DiscreteFourierFeature{<:Int}) = b.out_dims * b.in_dims
+
+@inline function (b::DiscreteFourierFeature{<:Int})(x::AbstractVector, ps, st::NamedTuple)
+    return sin.(st.weight * x .+ vec(ps.bias)), st
+end
+
+@inline function (d::DiscreteFourierFeature{<:Int})(x::AbstractMatrix, ps, st::NamedTuple)
+    return sin.(st.weight * x .+ ps.bias), st
+end
+
 """
     TriplewiseFusion(connection, layers...)
 

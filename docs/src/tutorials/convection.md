@@ -31,14 +31,12 @@ u_analytic(x,t) = sin(2π*(x-c*t))
 
 domains = [x ∈ 0..1, t ∈ 0..1]
 
-bcs = [u(0,t) ~ u_analytic(0,t),
-       u(1,t) ~ u_analytic(1,t),
-       u(x,0) ~ u_analytic(x,0)]
+bcs = [u(x,0) ~ u_analytic(x,0)]
 
 @named convection = PDESystem(eq, bcs, domains, [x,t], [u(x,t)])
 
-chain = Siren(2, 1; num_layers = 5, hidden_dims = 50, omega = 1f0)
-ps = Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
+chain = Bacon(2,1; hidden_dims = 30, num_layers=4, period = 1, N = 8)
+ps = Lux.initialparameters(Random.default_rng(), chain) #|> GPUComponentArray64
 discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps, adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100,100,100]))
 prob = discretize(convection, discretization)
 
