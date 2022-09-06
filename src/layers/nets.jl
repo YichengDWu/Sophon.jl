@@ -380,7 +380,7 @@ end
 ```
     where `n` is the number of filters.
 
-    For a periodic function with period ``P``, The Fourier series in amplitude-phase form is
+    For a periodic function with period ``P``, the Fourier series in amplitude-phase form is
 ```math
 s_N(x)=\frac{a_0}{2}+\sum_{n=1}^N{a_n}\cdot \sin \left( \frac{2\pi}{P}nx+\varphi _n \right)
 ```
