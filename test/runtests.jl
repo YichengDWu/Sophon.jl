@@ -65,7 +65,7 @@ rng = Random.default_rng()
             @test size(y2) == (3, 5)
         end
 
-        @testset "BandLimitedLaayer" begin
+        @testset "DiscreteFourierFeature" begin
             p = 2π
             in_dims, out_dims = 5, 3
             m = DiscreteFourierFeature(in_dims, out_dims, 5, p)
@@ -80,8 +80,8 @@ rng = Random.default_rng()
             p2 = 1
             m2 = DiscreteFourierFeature(in_dims, out_dims, 5, p2)
             ps2, st2 = Lux.setup(rng, m2)
-            @test eltype(ps.bias) == Float32
-            @test eltype(st.weight) == Float32
+            @test eltype(ps2.bias) == Float32
+            @test eltype(st2.weight) == Float32
             x2 = rand(Float32, 5)
             x2 = hcat(x2, x2 .+ p2)
             y2, st2 = m(x2, ps2, st2)

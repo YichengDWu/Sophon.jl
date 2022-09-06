@@ -11,7 +11,7 @@ Consider the following 1D-convection equation
 \end{aligned}
 ```
 
-where ``c = 50/2\pi``. First we solve it with `QuasiRandomTraining`.
+where ``c = \beta /2\pi``. First we solve it with `QuasiRandomTraining`.
 
 ```@example convection
 using NeuralPDE, Lux, Random, Sophon, IntervalSets, CairoMakie
@@ -24,7 +24,7 @@ CUDA.allowscalar(false)
 Dₜ = Differential(t)
 Dₓ = Differential(x)
 
-β = 50
+β = 10
 c = β/2π
 eq = Dₜ(u(x,t)) + c * Dₓ(u(x,t)) ~ 0
 u_analytic(x,t) = sin(2π*(x-c*t))
@@ -35,9 +35,9 @@ bcs = [u(x,0) ~ u_analytic(x,0)]
 
 @named convection = PDESystem(eq, bcs, domains, [x,t], [u(x,t)])
 
-chain = Bacon(2,1; hidden_dims = 30, num_layers=4, period = 1, N = 8)
+chain = Bacon(2,1; hidden_dims = 50, num_layers=4, period = 1, N = 8)
 ps = Lux.initialparameters(Random.default_rng(), chain) #|> GPUComponentArray64
-discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps, adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100,100,100]))
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps, adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
 prob = discretize(convection, discretization)
 
 @time res = Optimization.solve(prob, Adam(); maxiters = 3000)
@@ -60,6 +60,10 @@ Colorbar(fig[:, end+1], hm2)
 save("convection.png", fig); nothing # hide
 ```
 ![](convection.png)
+
+
+
+
 
 ## Compared to Method of Lines
 
