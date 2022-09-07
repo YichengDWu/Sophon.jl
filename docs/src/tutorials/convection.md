@@ -55,7 +55,7 @@ Let's visualize the result.
 phi = discretization.phi
 
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
-u_pred = [sum(phi(gpu([x,t]),res.u)) for x in xs, t in ts]
+u_pred = [sum(phi([x,t],res.u)) for x in xs, t in ts]
 u_real = u_analytic.(xs,ts')
 
 fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
@@ -69,7 +69,7 @@ This may not look so accurate, which is fine. What we want to show is that our m
 phi = discretization.phi
 
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain)*2 for d in domains]
-u_pred = [sum(phi(gpu([x,t]),res.u)) for x in xs, t in ts]
+u_pred = [sum(phi([x,t],res.u)) for x in xs, t in ts]
 u_real = u_analytic.(xs,ts')
 
 fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
@@ -92,7 +92,7 @@ And now you have an astonishingly good result.
 phi = discretization.phi
 
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
-u_pred = [sum(phi(gpu([x,t]),res.u)) for x in xs, t in ts]
+u_pred = [sum(phi([x,t],res.u)) for x in xs, t in ts]
 u_real = u_analytic.(xs,ts')
 
 fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
