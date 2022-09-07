@@ -87,7 +87,9 @@ prob = discretize(convection, discretization)
 
 phi = discretization.phi
 
-u_pred = [sum(phi(gpu([x,t]),res.u)) for x in xs, t in ts]
+xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
+u_pred = [sum(phi([x,t],res.u)) for x in xs, t in ts]
+u_real = u_analytic.(xs,ts')
 
 fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
 ax2, hm2 = heatmap(fig[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="error"))
