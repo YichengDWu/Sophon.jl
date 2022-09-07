@@ -415,6 +415,12 @@ function FourierFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_lay
                                                          output_layer)
 end
 
+"""
+    BACON(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, period::Real,
+               N::Int)
+
+Band-limited Coordinate Networks (BACON) [lindell2021bacon](@cite).
+"""
 function BACON(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, period::Real,
                N::Int)
     names = ntuple(i -> Symbol("filter_$i"), num_layers)
