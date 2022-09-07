@@ -74,3 +74,24 @@ fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", 
 save("convection2.png", fig); nothing # hide
 ```
 ![](convection2.png)
+
+## Respecting causality
+
+[`CausalTraining`](@ref) will only start optimizing the loss of the succeeding time after the loss of the preceding time has been optimized.
+
+```@example convection
+discretization = PhysicsInformedNN(chain, CausalTraining(300; epsilon = 0.1); adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
+prob = discretize(convection, discretization) 
+
+@time res = Optimization.solve(prob, Adam(); maxiters = 2000)
+
+phi = discretization.phi
+
+u_pred = [sum(phi(gpu([x,t]),res.u)) for x in xs, t in ts]
+
+fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
+ax2, hm2 = heatmap(fig[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="error"))
+Colorbar(fig[:, end+1], hm2)
+
+save("convection3.png", fig); nothing # hide
+```
