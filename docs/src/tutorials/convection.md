@@ -59,11 +59,13 @@ u_pred = [sum(phi([x,t],res.u)) for x in xs, t in ts]
 u_real = u_analytic.(xs,ts')
 
 fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
+ax2, hm2 = heatmap(fig[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="error"))
+Colorbar(fig[:, end+1], hm2)
 save("convection.png", fig); nothing # hide
 ```
 ![](convection.png)
 
-This may not look so accurate, which is fine. What we want to show is that our model is indeed, periodic.
+We can verify that our model is indeed, periodic.
 
 ```@example convection
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain)*2 for d in domains]
@@ -72,29 +74,3 @@ fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", 
 save("convection2.png", fig); nothing # hide
 ```
 ![](convection2.png)
-## Respecting Causality is all you need
-This is a time-dependent PDE, and our training process actually violates causality. Therefore we use [`CausalTraining`](@ref).
-
-```@example convection
-discretization = PhysicsInformedNN(chain, CausalTraining(300; epsilon = 0.1); adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
-prob = discretize(convection, discretization) 
-
-@time res = Optimization.solve(prob, Adam(); maxiters = 2000)
-```
-
-And now you have an astonishingly good result.
-
-```@example convection
-phi = discretization.phi
-
-xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
-u_pred = [sum(phi([x,t],res.u)) for x in xs, t in ts]
-u_real = u_analytic.(xs,ts')
-
-fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
-ax2, hm2 = heatmap(fig[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="error"))
-Colorbar(fig[:, end+1], hm2)
-
-save("convection3.png", fig); nothing # hide
-```
-![](convection3.png)
