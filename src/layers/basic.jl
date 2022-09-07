@@ -94,7 +94,7 @@ end
 
 function (l::FourierFeature{NTuple{N, T}})(x::AbstractArray, ps,
                                            st::NamedTuple) where {N, T <: Real}
-    x = 2f0π .* x
+    x = 2.0f0π .* x
     y = mapreduce(vcat, l.frequencies) do f
         return [sin.(f * x); cos.(f * x)]
     end
@@ -147,18 +147,18 @@ function DiscreteFourierFeature(in_dims::Int, out_dims::Int, N::Int, period::Rea
 end
 
 function DiscreteFourierFeature(ch::Pair{<:Int, <:Int}, N::Int, period::Real)
-    DiscreteFourierFeature(first(ch), last(ch), N, period)
+    return DiscreteFourierFeature(first(ch), last(ch), N, period)
 end
 
 function initialstates(rng::AbstractRNG, m::DiscreteFourierFeature{<:Int})
     s = 2π / m.period
     s = s ≈ round(s) ? Int(s) : Float32(s)
-    weight = rand(rng, 0:m.N, m.out_dims, m.in_dims) .* s
+    weight = rand(rng, 0:(m.N), m.out_dims, m.in_dims) .* s
     return (; weight=weight)
 end
 
 function initialparameters(rng::AbstractRNG, m::DiscreteFourierFeature{<:Int})
-    bias = init_uniform(rng, m.out_dims, 1; scale = 1f0π)
+    bias = init_uniform(rng, m.out_dims, 1; scale=1.0f0π)
     return (; bias=bias)
 end
 
@@ -293,7 +293,7 @@ function get_sine_init_weight(omega::Real)
     return (rng::AbstractRNG, out_dims::Int, in_dims::Int) -> init_uniform(rng, out_dims,
                                                                            in_dims;
                                                                            scale=Float32(omega) /
-                                                                           in_dims)
+                                                                                 in_dims)
 end
 """
     RBF(in_dims::Int, out_dims::Int, num_centers::Int=out_dims; sigma::AbstractFloat=0.2f0)

@@ -415,16 +415,16 @@ function FourierFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_lay
                                                          output_layer)
 end
 
-
-function BACON(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int,
-                          period::Real, N::Int)
+function BACON(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, period::Real,
+               N::Int)
     names = ntuple(i -> Symbol("filter_$i"), num_layers)
-    Ns =  ntuple(_ -> N ÷ num_layers, num_layers)
-    if N % num_layers !=0
-        Ns = (Ns[1:end-1]..., Ns[end] + N % num_layers)
+    Ns = ntuple(_ -> N ÷ num_layers, num_layers)
+    if N % num_layers != 0
+        Ns = (Ns[1:(end - 1)]..., Ns[end] + N % num_layers)
     end
 
-    layers = ntuple(i -> DiscreteFourierFeature(in_dims, hidden_dims, Ns[i], period), num_layers)
+    layers = ntuple(i -> DiscreteFourierFeature(in_dims, hidden_dims, Ns[i], period),
+                    num_layers)
     nt = NamedTuple{names}(layers)
     filters = BranchLayer{typeof(nt)}(nt)
 
