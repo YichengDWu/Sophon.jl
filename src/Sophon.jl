@@ -26,7 +26,7 @@ include("compact/componentarrays.jl")
 include("layers/operators.jl")
 
 export GPUComponentArray64
-export Scheduler
+export Scheduler, CausalTraining
 export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature
 export PINNAttention, FourierNet, FourierAttention, Siren, SirenAttention, FourierFilterNet,
