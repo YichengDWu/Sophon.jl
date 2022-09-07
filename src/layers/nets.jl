@@ -416,7 +416,7 @@ function FourierFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_lay
 end
 
 
-function Bacon(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int,
+function BACON(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int,
                           period::Real, N::Int)
     names = ntuple(i -> Symbol("filter_$i"), num_layers)
     Ns =  ntuple(_ -> N ÷ num_layers, num_layers)

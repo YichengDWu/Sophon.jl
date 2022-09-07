@@ -33,18 +33,22 @@ bcs = [u(x,0) ~ u_analytic(x,0)]
 @named convection = PDESystem(eq, bcs, domains, [x,t], [u(x,t)])
 ```
 ## Imposing periodic boundary conditions
-We will use [`Bacon`](@ref) to impose the boundary conditions.
+We will use [`BACON`](@ref) to impose the boundary conditions.
+
+
+### How should I configure the hyperparameters?
+
 
 ```@example convection
-chain = Bacon(2,1; hidden_dims = 32, num_layers=4, period = 1, N = 8)
+chain = BACON(2,1; hidden_dims = 32, num_layers=5, period = 1, N = 5)
 ```
 
 !!! note
     For demonstration purposes, the model is also periodic in time
 
 ```@example convection
-discretization = PhysicsInformedNN(chain, QuasiRandomTraining(200); adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
-prob = discretize(convection, discretization)
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(300); adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
+prob = discretize(convection, discretization) 
 
 @time res = Optimization.solve(prob, Adam(); maxiters = 2000)
 

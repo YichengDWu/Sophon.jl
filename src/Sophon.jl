@@ -30,7 +30,7 @@ export Scheduler, get_opt
 export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature
 export PINNAttention, FourierNet, FourierAttention, Siren, SirenAttention, FourierFilterNet,
-       Bacon
+       BACON
 export DeepONet
 
 end
