@@ -1,17 +1,15 @@
 # 1D Convection Equation
 
-Consider the following 1D-convection equation
+Consider the following 1D-convection equation with periodic boundary conditions.
 
 ```math
 \begin{aligned}
 &\frac{\partial u}{\partial t}+c \frac{\partial u}{\partial x}=0, x \in[0,1], t \in[0,1] \\
 &u(x, 0)=sin(2\pi x) \\
-&u(0,t) = -sin(2\pi ct)\\
-&u(1,t) = -sin(2\pi ct)
 \end{aligned}
 ```
 
-where ``c = 50/2\pi``. First we solve it with `QuasiRandomTraining`.
+First we define the PDE.
 
 ```@example convection
 using NeuralPDE, Lux, Random, Sophon, IntervalSets, CairoMakie
@@ -24,25 +22,31 @@ CUDA.allowscalar(false)
 Dₜ = Differential(t)
 Dₓ = Differential(x)
 
-β = 50
-c = β/2π
+c = 4
 eq = Dₜ(u(x,t)) + c * Dₓ(u(x,t)) ~ 0
 u_analytic(x,t) = sin(2π*(x-c*t))
 
 domains = [x ∈ 0..1, t ∈ 0..1]
 
-bcs = [u(0,t) ~ u_analytic(0,t),
-       u(1,t) ~ u_analytic(1,t),
-       u(x,0) ~ u_analytic(x,0)]
+bcs = [u(x,0) ~ u_analytic(x,0)]
 
 @named convection = PDESystem(eq, bcs, domains, [x,t], [u(x,t)])
+```
+## Imposing periodic boundary conditions
+We will use [`BACON`](@ref) to impose the boundary conditions. To this end, we simply set `period` to be one.
 
-chain = Siren(2, 1; num_layers = 5, hidden_dims = 50, omega = 1f0)
-ps = Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
-discretization = PhysicsInformedNN(chain, QuasiRandomTraining(100); init_params=ps, adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100,100,100]))
-prob = discretize(convection, discretization)
+```@example convection
+chain = BACON(2,1; hidden_dims = 32, num_layers=5, period = 1, N = 5)
+```
 
-@time res = Optimization.solve(prob, Adam(); maxiters = 3000)
+!!! note
+    For demonstration purposes, the model is also periodic in time
+
+```@example convection
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(300); adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
+prob = discretize(convection, discretization) 
+
+@time res = Optimization.solve(prob, Adam(); maxiters = 2000)
 ```
 
 Let's visualize the result.
@@ -54,40 +58,47 @@ xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 u_pred = [sum(phi(gpu([x,t]),res.u)) for x in xs, t in ts]
 u_real = u_analytic.(xs,ts')
 
-axis = (xlabel="t", ylabel="x", title="β = $β")
-fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
-ax2, hm2 = heatmap(fig[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="error"))
-Colorbar(fig[:, end+1], hm2)
-
+fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
 save("convection.png", fig); nothing # hide
 ```
 ![](convection.png)
 
-## Compared to Method of Lines
+This may not look so accurate, which is fine. What we want to show is that our model is indeed, periodic.
 
 ```@example convection
-using MethodOfLines
-dx = 0.001
-order = 4
-mol_discretization = MOLFiniteDifference([x => dx], t, approx_order = order)
+phi = discretization.phi
 
-# Convert the PDE problem into an ODE problem
-prob = discretize(convection,mol_discretization)
+xs, ts= [infimum(d.domain):0.01:supremum(d.domain)*2 for d in domains]
+u_pred = [sum(phi(gpu([x,t]),res.u)) for x in xs, t in ts]
+u_real = u_analytic.(xs,ts')
 
-# Solve ODE problem
-using OrdinaryDiffEq
-sol = solve(prob, Tsit5(), saveat=0.001)
-
-grid = get_discrete(convection, mol_discretization)
-discrete_x = grid[x]
-discrete_t = sol[t]
-
-solu = [map(d -> sol[d][i], grid[u(x, t)]) for i in 1:length(sol[t])]
-u_pred = hcat(solu...)
-
-fig_, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=axis)
-ax2, hm2 = heatmap(fig_[1,end+1], ts,xs, abs.(u_pred' .- u_analytic.(discrete_x, discrete_t')'), axis = (xlabel="t", ylabel="x", title="error"))
-Colorbar(fig_[:, end+1], hm2)
-save("convection2.png", fig_); nothing # hide
+fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
+save("convection2.png", fig); nothing # hide
 ```
 ![](convection2.png)
+## Respecting Causality is all you need
+This is a time-dependent PDE, and our training process actually violates causality. Therefore we use [`CausalTraining`](@ref).
+
+```@example convection
+discretization = PhysicsInformedNN(chain, CausalTraining(300; epsilon = 0.1); adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
+prob = discretize(convection, discretization) 
+
+@time res = Optimization.solve(prob, Adam(); maxiters = 2000)
+```
+
+And now you have an astonishingly good result.
+
+```@example convection
+phi = discretization.phi
+
+xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
+u_pred = [sum(phi(gpu([x,t]),res.u)) for x in xs, t in ts]
+u_real = u_analytic.(xs,ts')
+
+fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
+ax2, hm2 = heatmap(fig[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="error"))
+Colorbar(fig[:, end+1], hm2)
+
+save("convection3.png", fig); nothing # hide
+```
+![](convection3.png)

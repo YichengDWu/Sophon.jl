@@ -94,7 +94,7 @@ end
 
 function (l::FourierFeature{NTuple{N, T}})(x::AbstractArray, ps,
                                            st::NamedTuple) where {N, T <: Real}
-    x = 2f0π .* x
+    x = 2.0f0π .* x
     y = mapreduce(vcat, l.frequencies) do f
         return [sin.(f * x); cos.(f * x)]
     end
@@ -113,6 +113,67 @@ function (f::FourierFeature{NTuple{N, Pair{S, T}}})(x::AbstractArray, ps,
     W = st.weight
     y = [sin.(W ⊠ x); cos.(W ⊠ x)]
     return y, st
+end
+
+@doc raw"""
+    DiscreteFourierFeature(in_dims::Int, out_dims::Int, N::Int, period::Real)
+
+The discrete Fourier filter proposed in [lindell2021bacon](@cite). For a periodic function
+with period ``P``, the Fourier series in amplitude-phase form is
+```math
+s_N(x)=\frac{a_0}{2}+\sum_{n=1}^N{a_n}\cdot \sin \left( \frac{2\pi}{P}nx+\varphi _n \right)
+```
+
+The output is guaranteed to be periodic.
+## Arguments
+  - `in_dims`: Number of the input dimensions.
+  - `out_dims`: Number of the output dimensions.
+  - `N`: ``N`` in the formula.
+  - `period`: ``P`` in the formula.
+"""
+struct DiscreteFourierFeature{F, P} <: AbstractExplicitLayer
+    in_dims::Int
+    out_dims::Int
+    N::F
+    period::P
+end
+
+function Base.show(io::IO, f::DiscreteFourierFeature)
+    return print(io, "DiscreteFourierFeature($(f.in_dims) => $(f.out_dims))")
+end
+
+function DiscreteFourierFeature(in_dims::Int, out_dims::Int, N::Int, period::Real)
+    return DiscreteFourierFeature{typeof(N), typeof(period)}(in_dims, out_dims, N, period)
+end
+
+function DiscreteFourierFeature(ch::Pair{<:Int, <:Int}, N::Int, period::Real)
+    return DiscreteFourierFeature(first(ch), last(ch), N, period)
+end
+
+function initialstates(rng::AbstractRNG, m::DiscreteFourierFeature{<:Int})
+    s = 2π / m.period
+    s = s ≈ round(s) ? Int(s) : Float32(s)
+    weight = rand(rng, 0:(m.N), m.out_dims, m.in_dims) .* s
+    return (; weight=weight)
+end
+
+function initialparameters(rng::AbstractRNG, m::DiscreteFourierFeature{<:Int})
+    bias = init_uniform(rng, m.out_dims, 1; scale=1.0f0π)
+    return (; bias=bias)
+end
+
+function parameterlength(b::DiscreteFourierFeature{<:Int})
+    return b.out_dims
+end
+
+statelength(b::DiscreteFourierFeature{<:Int}) = b.out_dims * b.in_dims
+
+@inline function (b::DiscreteFourierFeature{<:Int})(x::AbstractVector, ps, st::NamedTuple)
+    return sin.(st.weight * x .+ vec(ps.bias)), st
+end
+
+@inline function (d::DiscreteFourierFeature{<:Int})(x::AbstractMatrix, ps, st::NamedTuple)
+    return sin.(st.weight * x .+ ps.bias), st
 end
 
 """
@@ -232,7 +293,7 @@ function get_sine_init_weight(omega::Real)
     return (rng::AbstractRNG, out_dims::Int, in_dims::Int) -> init_uniform(rng, out_dims,
                                                                            in_dims;
                                                                            scale=Float32(omega) /
-                                                                           in_dims)
+                                                                                 in_dims)
 end
 """
     RBF(in_dims::Int, out_dims::Int, num_centers::Int=out_dims; sigma::AbstractFloat=0.2f0)
