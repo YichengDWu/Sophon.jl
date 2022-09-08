@@ -8,7 +8,7 @@ Consider the following  discontinuous  function  with  discontinuity  at ``x=0``
 ```math
 u(x)= \begin{cases}0.2 \sin (18 x) & \text { if } x \leq 0 \\ 1+0.3 x \cos (54 x) & \text { otherwise }\end{cases}
 ```
-The domain is ``[-1,1]``. The number of training points used is `300`.
+The domain is ``[-1,1]``. The number of training points used is `50`.
 
 ## Import pacakges
 ```@example ds
@@ -37,7 +37,7 @@ end
 Let's visualize the data.
 
 ```@example ds
-x_train, y_train = generate_data()
+x_train, y_train = generate_data(50)
 x_test, y_test = generate_data(200)
 Plots.plot(vec(x_test), vec(y_test),label=false)
 savefig("u.svg"); nothing # hide
