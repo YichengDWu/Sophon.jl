@@ -14,8 +14,6 @@ First we define the PDE.
 ```@example convection
 using NeuralPDE, Lux, Random, Sophon, IntervalSets, CairoMakie
 using Optimization, OptimizationOptimJL, OptimizationOptimisers
-using CUDA
-CUDA.allowscalar(false)
 
 @parameters x, t
 @variables u(..)
