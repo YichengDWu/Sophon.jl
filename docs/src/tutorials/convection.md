@@ -97,3 +97,4 @@ Colorbar(fig[:, end+1], hm2)
 
 save("convection3.png", fig); nothing # hide
 ```
+![](convection3.png)
