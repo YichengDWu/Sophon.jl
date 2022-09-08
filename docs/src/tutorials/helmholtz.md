@@ -34,11 +34,10 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 
 @named helmholtz = PDESystem(eq, bcs, domains, [x,y], [u(x,y)])
 
-chain = Siren(2, 1; num_layers = 4, hidden_dims = 50, omega = 10f0)
+chain = BACON(2,1; hidden_dims = 32, num_layers=4, period = 2, N = 8)
 ps= Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
 
-adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [1000,1000,1000,1000])
-discretization = PhysicsInformedNN(chain, QuasiRandomTraining(200); init_params = ps, adaptive_loss = adaptive_loss)
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(200))
 prob = discretize(helmholtz, discretization)
 phi = discretization.phi
 
