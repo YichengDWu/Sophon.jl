@@ -419,7 +419,8 @@ end
     BACON(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, period::Real,
                N::Int)
 
-Band-limited Coordinate Networks (BACON) from [lindell2021bacon](@cite).
+Band-limited Coordinate Networks (BACON) from [lindell2021bacon](@cite). Similar to [`FourierFilterNet`](@ref) but the
+frequcies are dicrete and nontrainable.
 """
 function BACON(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, period::Real,
                N::Int)
