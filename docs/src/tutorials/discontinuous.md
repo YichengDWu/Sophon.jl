@@ -74,7 +74,7 @@ function train(model, x, y)
 end
 
 ```
-### Plot The Result
+### Plot the result
 ```@example ds
 @time ps, st = train(model, x_train, y_train)
 y_pred = model(x_test,ps,st)[1]
