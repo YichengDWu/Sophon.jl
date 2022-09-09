@@ -154,13 +154,13 @@ function initialstates(rng::AbstractRNG, m::DiscreteFourierFeature{<:Int})
     s = 2 / m.period
     s = s ≈ round(s) ? Int(s) : Float32(s)
     weight = rand(rng, 0:(m.N), m.out_dims, m.in_dims)
-    return (; weight=weight, fundamental_freq = s)
+    return (; weight=weight, fundamental_freq=s)
 end
 function initialstates(rng::AbstractRNG, m::DiscreteFourierFeature)
     s = 2π / m.period
     s = s ≈ round(s) ? Int(s) : Float32(s)
     weight = rand(rng, 0:(m.N), m.out_dims, m.in_dims)
-    return (; weight=weight, fundamental_freq = s)
+    return (; weight=weight, fundamental_freq=s)
 end
 
 function initialparameters(rng::AbstractRNG, m::DiscreteFourierFeature{<:Int})
