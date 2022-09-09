@@ -4,8 +4,8 @@ Let us consider the Helmholtz equation in two space dimensions
 
 ```math
 \begin{aligned}
-&\Delta u(x, y)+k^{2} u(x, y)=q(x, y), \quad(x, y) \in \Omega:=(-1,1) \\
-&u(x, y)=h(x, y), \quad(x, y) \in \partial \Omega
+&\Delta u(x, y)+k^{2} u(x, y)=q(x, y), \quad(x, y) \in \Omega:=(-1,1)^2 \\
+&u(x, y)=0, \quad(x, y) \in \partial \Omega
 \end{aligned}
 ```
 where 
