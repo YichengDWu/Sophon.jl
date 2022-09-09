@@ -41,7 +41,7 @@ discretization = PhysicsInformedNN(chain, QuasiRandomTraining(200))
 prob = discretize(helmholtz, discretization)
 phi = discretization.phi
 
-@time res = Optimization.solve(prob, Adam(); maxiters=2000)
+@time res = Optimization.solve(prob, Adam(); maxiters=3000)
 ```
 
 Let's plot the result.
