@@ -151,14 +151,14 @@ function DiscreteFourierFeature(ch::Pair{<:Int, <:Int}, N::Int, period::Real)
 end
 
 function initialstates(rng::AbstractRNG, m::DiscreteFourierFeature{<:Int})
-    s = 2π / m.period
+    s = 2 / m.period
     s = s ≈ round(s) ? Int(s) : Float32(s)
     weight = rand(rng, 0:(m.N), m.out_dims, m.in_dims) .* s
     return (; weight=weight)
 end
 
 function initialparameters(rng::AbstractRNG, m::DiscreteFourierFeature{<:Int})
-    bias = init_uniform(rng, m.out_dims, 1; scale=1.0f0π)
+    bias = init_uniform(rng, m.out_dims, 1)
     return (; bias=bias)
 end
 
@@ -169,11 +169,11 @@ end
 statelength(b::DiscreteFourierFeature{<:Int}) = b.out_dims * b.in_dims
 
 @inline function (b::DiscreteFourierFeature{<:Int})(x::AbstractVector, ps, st::NamedTuple)
-    return sin.(st.weight * x .+ vec(ps.bias)), st
+    return sinpi.(st.weight * x .+ vec(ps.bias)), st
 end
 
 @inline function (d::DiscreteFourierFeature{<:Int})(x::AbstractMatrix, ps, st::NamedTuple)
-    return sin.(st.weight * x .+ ps.bias), st
+    return sinpi.(st.weight * x .+ ps.bias), st
 end
 
 """
