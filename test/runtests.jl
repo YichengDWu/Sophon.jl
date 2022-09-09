@@ -72,7 +72,7 @@ rng = Random.default_rng()
             ps, st = Lux.setup(rng, m)
             @test eltype(ps.bias) == Float32
             @test eltype(st.weight) == Int
-            @test elype(st.fundamental_freq) == Int
+            @test eltype(st.fundamental_freq) == Int
             x = rand(Float32, 5)
             x = hcat(x, x .+ p)
             y, st = m(x, ps, st)
@@ -83,7 +83,7 @@ rng = Random.default_rng()
             ps2, st2 = Lux.setup(rng, m2)
             @test eltype(ps2.bias) == Float32
             @test eltype(st2.weight) == Int
-            @test elype(st.fundamental_freq) == Int
+            @test eltype(st.fundamental_freq) == Int
             x2 = rand(Float32, 5)
             x2 = hcat(x2, x2 .+ p2)
             y2, st2 = m(x2, ps2, st2)
