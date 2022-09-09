@@ -83,10 +83,10 @@ rng = Random.default_rng()
             ps2, st2 = Lux.setup(rng, m2)
             @test eltype(ps2.bias) == Float32
             @test eltype(st2.weight) == Int
-            @test eltype(st.fundamental_freq) == Int
+            @test eltype(st2.fundamental_freq) == Int
             x2 = rand(Float32, 5)
             x2 = hcat(x2, x2 .+ p2)
-            y2, st2 = m(x2, ps2, st2)
+            y2, st2 = m2(x2, ps2, st2)
             @test y2[:, 1] ≈ y2[:, 2]
         end
     end
