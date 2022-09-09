@@ -143,7 +143,7 @@ function Base.show(io::IO, f::DiscreteFourierFeature)
 end
 
 function DiscreteFourierFeature(in_dims::Int, out_dims::Int, N::Int, period::Real)
-    return DiscreteFourierFeature{typeof(period), typeof(N)}(in_dims, out_dims, perio, N)
+    return DiscreteFourierFeature{typeof(period), typeof(N)}(in_dims, out_dims, period, N)
 end
 
 function DiscreteFourierFeature(ch::Pair{<:Int, <:Int}, N::Int, period::Real)
@@ -178,12 +178,19 @@ end
 
 statelength(b::DiscreteFourierFeature) = b.out_dims * b.in_dims
 
-@inline function (b::DiscreteFourierFeature)(x::AbstractVector, ps, st::NamedTuple)
+@inline function (b::DiscreteFourierFeature{<:Int})(x::AbstractVector, ps, st::NamedTuple)
     return sinpi.(st.weight * x .* st.fundamental_freq .+ vec(ps.bias)), st
+end
+@inline function (b::DiscreteFourierFeature)(x::AbstractVector, ps, st::NamedTuple)
+    return sin.(st.weight * x .* st.fundamental_freq .+ vec(ps.bias)), st
+end
+
+@inline function (d::DiscreteFourierFeature{<:Int})(x::AbstractMatrix, ps, st::NamedTuple)
+    return sinpi.(st.weight * x .* st.fundamental_freq .+ ps.bias), st
 end
 
 @inline function (d::DiscreteFourierFeature)(x::AbstractMatrix, ps, st::NamedTuple)
-    return sinpi.(st.weight * x .* st.fundamental_freq .+ ps.bias), st
+    return sin.(st.weight * x .* st.fundamental_freq .+ ps.bias), st
 end
 
 """
