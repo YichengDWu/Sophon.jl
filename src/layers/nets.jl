@@ -122,6 +122,31 @@ function FourierAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
 end
 
 """
+    SirenAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
+    hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0))
+
+```
+x → Dense(..., activation) → u                           u
+                              ↘                           ↘
+x → Siren[1] →  s1 → Siren[2] → connection → Siren[3] → connection
+                              ↗                           ↗
+x → Dense(..., activation) → v                           v
+```
+
+Combined model of [`Siren`](@ref) and [`PINNAttention`](@ref).
+"""
+function SirenAttention(in_dims::Int, out_dims::Int, activation::Function=relu;
+                        hidden_dims::Int=512, num_layers::Int=6, omega=30.0f0)
+    H_net = Sine(in_dims, hidden_dims; omega=omega)
+    U_net = Dense(in_dims, hidden_dims, activation)
+    V_net = Dense(in_dims, hidden_dims, activation)
+    fusion_layers = FullyConnected(hidden_dims, hidden_dims, sin; num_layers=num_layers - 1,
+                                   hidden_dims=hidden_dims)
+    layers = PINNAttention(H_net, U_net, V_net, fusion_layers)
+    return Chain(layers, Dense(hidden_dims, out_dims))
+end
+
+"""
     FourierNet(ayer_sizes::NTuple, activation, modes::NTuple)
 
 A model that combines [`FourierFeature`](@ref) and [`FullyConnected`](@ref).
