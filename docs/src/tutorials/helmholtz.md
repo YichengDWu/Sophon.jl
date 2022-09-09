@@ -34,18 +34,18 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 
 @named helmholtz = PDESystem(eq, bcs, domains, [x,y], [u(x,y)])
 
-chain = BACON(2,1; hidden_dims = 32, num_layers=4, period = 2, N = 8)
-ps= Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
+chain = BACON(2,1; hidden_dims = 32, num_layers=5, period = 2, N = 5)
 
 discretization = PhysicsInformedNN(chain, QuasiRandomTraining(200))
 prob = discretize(helmholtz, discretization)
-phi = discretization.phi
 
 @time res = Optimization.solve(prob, Adam(); maxiters=3000)
 ```
 
 Let's plot the result.
 ```@example helmholtz
+phi = discretization.phi
+
 xs, ys= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 u_analytic(x,y) = sin(a1*pi*x)*sin(a2*pi*y)
 u_real = [u_analytic(x,y) for x in xs, y in ys]
