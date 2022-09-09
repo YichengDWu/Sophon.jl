@@ -151,6 +151,6 @@ savefig("result3.svg"); nothing # hide
 
 ## Conclusion
 
-The "neural network suppresses high frequency components" is a misrepresentation of spectral bias. The accurate way of putting it is that the lower frequencies in the error are optimized first in the optimization process. This can be seen in Siren's example of overfitting data, where you do not have implicit regularization. The high frequency in the network will never go away because it has fitted the data perfectly.
+"Neural networks suppresse high frequency components" is a misrepresentation of spectral bias. The accurate way of putting it is that the lower frequencies in the error are optimized first in the optimization process. This can be seen in Siren's example of overfitting data, where you do not have implicit regularization. The high frequency in the network will never go away because it has fitted the data perfectly.
 
 Mainstream attributes the phenomenon that neural networks "suppress" high frequencies to gradient descent. This is not the whole picture. Initialization also plays an important role. Siren mitigats this problem by initializing larger weights in the first layer, while activation functions such as gassian have large enough gradients and sufficiently large support of the second derivative with proper hyperparameters. Please refer to [sitzmann2020implicit](@cite), [ramasinghe2021beyond](@cite) and [ramasinghe2022regularizing](@cite) if you want to dive deeper into this.
