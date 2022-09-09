@@ -160,7 +160,7 @@ rng = Random.default_rng()
             @test_throws AssertionError DeepONet((3, 6, 7), relu, (4, 8, 2), tanh)
         end
 
-        @testset "Single dimenstion" begin
+        @testset "Single dimension" begin
             x = rand(Float32, 8)
             ξ = rand(Float32, 1, 10)
             model3 = DeepONet((8, 5, 4), relu, (1, 6, 4, 4), tanh)
