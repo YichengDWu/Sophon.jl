@@ -134,9 +134,6 @@ rng = Random.default_rng()
             @test size(y2) == (5, 5)
         end
 
-        @testset "SirenAttention" begin @test_nowarn SirenAttention(2, 1, sin;
-                                                                    hidden_dims=50,
-                                                                    num_layers=4) end
         @testset "FourierFilterNet" begin
             x = rand(Float32, 2, 5)
             ffn = FourierFilterNet(2, 4; hidden_dims=10, num_layers=3, bandwidth=10)
