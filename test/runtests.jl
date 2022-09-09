@@ -171,7 +171,7 @@ rng = Random.default_rng()
             @test_nowarn gradient(p -> sum(first(model3((x, ξ), p, st))), ps)
         end
 
-        @testset "Multi dimenstion" begin
+        @testset "Multi dimension" begin
             x = rand(Float32, 2, 3, 5)
             ξ = rand(Float32, 1, 10)
             branch_sizes = (2, 5, 6)
