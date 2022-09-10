@@ -47,7 +47,7 @@ Let's plot the result.
 phi = discretization.phi
 
 xs, ys= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
-u_analytic(x,y) = sin(a1*pi*x)*sin(a2*pi*y)
+u_analytic(x,y) = sinpi(a1*x)*sinpi(a2*y)
 u_real = [u_analytic(x,y) for x in xs, y in ys]
 u_pred = [sum(phi([x,y], res.u)) for x in xs, y in ys]
 
