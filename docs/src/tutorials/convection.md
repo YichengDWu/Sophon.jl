@@ -22,7 +22,7 @@ Dₓ = Differential(x)
 
 c = 4
 eq = Dₜ(u(x,t)) + c * Dₓ(u(x,t)) ~ 0
-u_analytic(x,t) = sin(2π*(x-c*t))
+u_analytic(x,t) = sinpi(2*(x-c*t))
 
 domains = [x ∈ 0..1, t ∈ 0..1]
 
