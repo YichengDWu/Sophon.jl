@@ -24,9 +24,11 @@ include("training/causal.jl")
 include("training/evo.jl")
 include("compact/componentarrays.jl")
 include("layers/operators.jl")
+include("adaptive_losses/augmented_lagrangian.jl")
 
 export GPUComponentArray64
 export Scheduler, CausalTraining
+export AugmentedLagrangian
 export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature
 export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON
