@@ -8,6 +8,8 @@
 
 `Sophon.jl` provides specialized neural networks and neural operators for Physics-informed machine learning.
 
+Please star this repo if you fine it useful.
+
 ## Installation
 
 ```julia
