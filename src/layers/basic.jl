@@ -365,3 +365,7 @@ struct Scalar <: AbstractExplicitLayer end
 
 initialparameters(rng::AbstractRNG, s::Scalar) = (; scalar=0.0f0)
 parameterlength(s::Scalar) = 1
+
+@inline function (s::Scalar)(x::AbstractArray, ps, st::NamedTuple)
+    return x .+ ps.scalar, st
+end

@@ -120,7 +120,8 @@ function (m::DeepONet{B, T, F, NoOpLayer})(x::Tuple{AbstractVecOrMat, AbstractVe
                                            st::NamedTuple) where {B, T, F}
     b, st_branch_net = m.branch_net(first(x), ps.branch_net, st.branch_net)
     t, st_trunk_net = m.trunk_net(last(x), ps.trunk_net, st.trunk_net)
+    v, st_bias = m.bias(transpose(b) * t, ps.bias, st.bias)
 
-    st = merge(st, (branch_net=st_branch_net, trunk_net=st_trunk_net))
-    return transpose(b) * t .+ ps.bias.scalar, st
+    st = merge(st, (branch_net=st_branch_net, trunk_net=st_trunk_net, bias=st_bias))
+    return v, st
 end
