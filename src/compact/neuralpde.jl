@@ -1,5 +1,5 @@
-function SciMLBase.symbolic_discretize(pde_system::PDESystem,
-                                       discretization::PhysicsInformedNN)
+function SciMLBase.symbolic_discretize(pde_system::NeuralPDE.PDESystem,
+                                       discretization::NeuralPDE.PhysicsInformedNN)
     eqs = pde_system.eqs
     bcs = pde_system.bcs
     chain = discretization.chain
@@ -14,7 +14,7 @@ function SciMLBase.symbolic_discretize(pde_system::PDESystem,
     additional_loss = discretization.additional_loss
     adaloss = discretization.adaptive_loss
 
-    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(pde_system.indvars,
+    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = NeuralPDE.get_vars(pde_system.indvars,
                                                                                pde_system.depvars)
 
     multioutput = discretization.multioutput
@@ -28,9 +28,9 @@ function SciMLBase.symbolic_discretize(pde_system::PDESystem,
         # But with Flux there's already a chosen type from the user
 
         if chain isa AbstractArray
-            if chain[1] isa Flux.Chain
+            if chain[1] isa NeuralPDE.Flux.Chain
                 init_params = map(chain) do x
-                    _x = Flux.destructure(x)[1]
+                    _x = NeuralPDE.Flux.destructure(x)[1]
                 end
             else
                 x = map(chain) do x
@@ -43,8 +43,8 @@ function SciMLBase.symbolic_discretize(pde_system::PDESystem,
                                                                                for i in x))
             end
         else
-            if chain isa Flux.Chain
-                init_params = Flux.destructure(chain)[1]
+            if chain isa NeuralPDE.Flux.Chain
+                init_params = NeuralPDE.Flux.destructure(chain)[1]
                 init_params = init_params isa Array ? Float64.(init_params) :
                               init_params
             else
@@ -122,10 +122,10 @@ function SciMLBase.symbolic_discretize(pde_system::PDESystem,
         get_variables(bcs, dict_indvars, dict_depvars)
     end
 
-    pde_integration_vars = get_integration_variables(eqs, dict_indvars, dict_depvars)
-    bc_integration_vars = get_integration_variables(bcs, dict_indvars, dict_depvars)
+    pde_integration_vars = NeuralPDE.get_integration_variables(eqs, dict_indvars, dict_depvars)
+    bc_integration_vars = NeuralPDE.get_integration_variables(bcs, dict_indvars, dict_depvars)
 
-    pinnrep = PINNRepresentation(eqs, bcs, domains, eq_params, defaults, default_p,
+    pinnrep = NeuralPDE.PINNRepresentation(eqs, bcs, domains, eq_params, defaults, default_p,
                                  param_estim, additional_loss, adaloss, depvars, indvars,
                                  dict_indvars, dict_depvars, dict_depvar_input, logger,
                                  multioutput, iteration, init_params, flat_init_params, phi,
@@ -159,7 +159,7 @@ function SciMLBase.symbolic_discretize(pde_system::PDESystem,
                                                                                  bc_indvars,
                                                                                  bc_integration_vars)]
 
-    pde_loss_functions, bc_loss_functions = merge_strategy_with_loss_function(pinnrep,
+    pde_loss_functions, bc_loss_functions = NeuralPDE.merge_strategy_with_loss_function(pinnrep,
                                                                               strategy,
                                                                               datafree_pde_loss_functions,
                                                                               datafree_bc_loss_functions)
@@ -169,7 +169,7 @@ function SciMLBase.symbolic_discretize(pde_system::PDESystem,
                                                         pde_loss_functions,
                                                         bc_loss_functions,
                                                         additional_loss)
-        pinnrep.loss_functions = PINNLossFunctions(bc_loss_functions, pde_loss_functions,
+        pinnrep.loss_functions = NeuralPDE.PINNLossFunctions(bc_loss_functions, pde_loss_functions,
                                                    all_loss_function, additional_loss,
                                                    datafree_pde_loss_functions,
                                                    datafree_bc_loss_functions)
@@ -263,7 +263,7 @@ function SciMLBase.symbolic_discretize(pde_system::PDESystem,
             return full_weighted_loss
         end
 
-        pinnrep.loss_functions = PINNLossFunctions(bc_loss_functions, pde_loss_functions,
+        pinnrep.loss_functions = NeuralPDE.PINNLossFunctions(bc_loss_functions, pde_loss_functions,
                                                 full_loss_function, additional_loss,
                                                 datafree_pde_loss_functions,
                                                 datafree_bc_loss_functions)

@@ -23,6 +23,7 @@ include("training/rad.jl")
 include("training/causal.jl")
 include("training/evo.jl")
 include("compact/componentarrays.jl")
+include("compact/neuralpde.jl")
 include("layers/operators.jl")
 include("adaptive_losses/augmented_lagrangian.jl")
 
