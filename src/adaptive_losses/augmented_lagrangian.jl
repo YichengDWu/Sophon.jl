@@ -15,7 +15,6 @@ function AugmentedLagrangian(pde_loss_lenghth::Int, bc_loss_length::Int,
     AugmentedLagrangian{Float64}(zeros(Float64, bc_loss_length),
                                  zeros(Float64, additional_loss_length),
                                  ϵ,
-                                 η,
                                  μ_max,
                                  0.0,
                                  1.0)
