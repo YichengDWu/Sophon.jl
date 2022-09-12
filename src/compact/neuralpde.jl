@@ -188,7 +188,7 @@ function SciMLBase.symbolic_discretize(pde_system::NeuralPDE.PDESystem,
         adaloss.additional_loss_weights = ones(adaloss_T, num_additional_loss) .*
                                         adaloss.additional_loss_weights
 
-        reweight_losses_func = generate_adaptive_loss_function(pinnrep, adaloss,
+        reweight_losses_func = NeuralPDE.generate_adaptive_loss_function(pinnrep, adaloss,
                                                             pde_loss_functions,
                                                             bc_loss_functions)
 
@@ -236,26 +236,26 @@ function SciMLBase.symbolic_discretize(pde_system::NeuralPDE.PDESystem,
             end
 
             ChainRulesCore.@ignore_derivatives begin if iteration[1] % log_frequency == 0
-                logvector(pinnrep.logger, pde_losses, "unweighted_loss/pde_losses",
+                NeuralPDE.logvector(pinnrep.logger, pde_losses, "unweighted_loss/pde_losses",
                         iteration[1])
-                logvector(pinnrep.logger, bc_losses, "unweighted_loss/bc_losses", iteration[1])
-                logvector(pinnrep.logger, weighted_pde_losses,
+                NeuralPDE.logvector(pinnrep.logger, bc_losses, "unweighted_loss/bc_losses", iteration[1])
+                NeuralPDE.logvector(pinnrep.logger, weighted_pde_losses,
                         "weighted_loss/weighted_pde_losses",
                         iteration[1])
-                logvector(pinnrep.logger, weighted_bc_losses,
+                NeuralPDE.logvector(pinnrep.logger, weighted_bc_losses,
                         "weighted_loss/weighted_bc_losses",
                         iteration[1])
-                logscalar(pinnrep.logger, sum_weighted_pde_losses,
+                NeuralPDE.logscalar(pinnrep.logger, sum_weighted_pde_losses,
                         "weighted_loss/sum_weighted_pde_losses", iteration[1])
-                logscalar(pinnrep.logger, sum_weighted_bc_losses,
+                NeuralPDE.logscalar(pinnrep.logger, sum_weighted_bc_losses,
                         "weighted_loss/sum_weighted_bc_losses", iteration[1])
-                logscalar(pinnrep.logger, full_weighted_loss,
+                NeuralPDE.logscalar(pinnrep.logger, full_weighted_loss,
                         "weighted_loss/full_weighted_loss",
                         iteration[1])
-                logvector(pinnrep.logger, adaloss.pde_loss_weights,
+                NeuralPDE.logvector(pinnrep.logger, adaloss.pde_loss_weights,
                         "adaptive_loss/pde_loss_weights",
                         iteration[1])
-                logvector(pinnrep.logger, adaloss.bc_loss_weights,
+                NeuralPDE.logvector(pinnrep.logger, adaloss.bc_loss_weights,
                         "adaptive_loss/bc_loss_weights",
                         iteration[1])
             end end
