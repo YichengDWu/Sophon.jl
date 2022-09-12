@@ -1,3 +1,7 @@
+"""
+
+Must define a callback function `(...) -> adaptive_loss.reweight = true`
+"""
 mutable struct AugmentedLagrangian{T} <: NeuralPDE.AbstractAdaptiveLoss
     bc_loss_weights::Vector{T}
     additional_loss_weights::Vector{T}
@@ -5,6 +9,7 @@ mutable struct AugmentedLagrangian{T} <: NeuralPDE.AbstractAdaptiveLoss
     μ_max::T
     η::T
     μ::Float64
+    reweight::Bool # very hacky stuff
 end
 
 function AugmentedLagrangian(pde_loss_lenghth::Int, bc_loss_length::Int,
@@ -17,7 +22,8 @@ function AugmentedLagrangian(pde_loss_lenghth::Int, bc_loss_length::Int,
                                  ϵ,
                                  μ_max,
                                  0.0,
-                                 1.0)
+                                 1.0,
+                                 false)
 end
 
 function generate_full_loss_function(pinnrep::NeuralPDE.PINNRepresentation,
@@ -34,13 +40,20 @@ function generate_full_loss_function(pinnrep::NeuralPDE.PINNRepresentation,
 
         loss = pde_loss + bc_loss + adaloss.μ/2 * penalty
 
-        ChainRulesCore.@ignore_derivatives begin
-            if √penalty ≥ 0.25*adaloss.η && √penalty > adaloss.ϵ
-                adaloss.μ = min(adaloss.μ*2.0, adaloss.μ_max)
-                adaloss.bc_loss_weights .= adaloss.bc_loss_weights .+ adaloss.μ .* bc_losses
+        if adaloss.reweight
+            ChainRulesCore.@ignore_derivatives begin
+                if √penalty ≥ 0.25*adaloss.η && √penalty > adaloss.ϵ
+                    adaloss.μ = min(adaloss.μ*2.0, adaloss.μ_max)
+                    @show pde_loss
+                    @show adaloss.μ
+                    @show adaloss.η
+                    adaloss.bc_loss_weights .= adaloss.bc_loss_weights .+ adaloss.μ .* bc_losses
+                end
+                adaloss.η  = √penalty
+                adaloss.reweight = false
             end
-            adaloss.η  = √penalty
         end
+
         return loss
     end
 end
