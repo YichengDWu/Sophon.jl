@@ -144,7 +144,7 @@ function get_pde_loss_function(init_loss_functions, datafree_pde_functions, pde_
             L_pde = ChainRulesCore.@ignore_derivatives abs2.(datafree_pde_loss_func(pde_set, θ))
             L = ChainRulesCore.@ignore_derivatives hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
             W = ChainRulesCore.@ignore_derivatives exp.(-ϵ / points .* cumsum(L; dims=2))
-            Main.a[] = W
+
             mean(abs2, W .* datafree_pde_loss_func(pde_set, θ))
         end
     end
