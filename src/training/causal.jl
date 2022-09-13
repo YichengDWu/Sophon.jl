@@ -151,23 +151,25 @@ function get_pde_loss_function(init_loss_functions, datafree_pde_functions, pde_
                            lt=(x, y) -> isless(x[tidx], y[tidx])) for set in pde_sets]
     pde_sets = [adapt(device, set) for set in pde_sets]
 
-    function get_loss_function(datafree_pde_loss_func, pde_set)
+    function get_loss_function(i, datafree_pde_loss_func, pde_set)
         return θ -> begin
+            ub = points
             ChainRulesCore.@ignore_derivatives begin if strategy.reweight
                 L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
                 L_pde = abs2.(datafree_pde_loss_func(pde_set, θ))
                 L = hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
-                strategy.W = exp.(-ϵ / points .* cumsum(L; dims=2))
+                strategy.W[i,:] .= vec(exp.(-ϵ / points .* cumsum(L; dims=2)))
                 strategy.reweight = false
+                ub = findfirst(Base.Fix2(>, 1e-4), strategy.W[i,:])
             end end
 
-            mean(abs2, strategy.W .* datafree_pde_loss_func(pde_set, θ))
+            mean(strategy.W[i:i,1:ub] .* abs2.(datafree_pde_loss_func(pde_set[:,1:ub], θ)))
         end
     end
 
-    pde_loss_functions = [get_loss_function(pde_loss_func, pde_set)
-                          for (pde_loss_func, pde_set) in zip(datafree_pde_functions,
-                                                              pde_sets)]
+    pde_loss_functions = [get_loss_function(i, pde_loss_func, pde_set)
+                          for (i, (pde_loss_func, pde_set)) in enumerate(zip(datafree_pde_functions,
+                                                              pde_sets))]
 
     return pde_loss_functions
 end
