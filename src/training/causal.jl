@@ -8,6 +8,10 @@
 ## References
 
 [1] Wang S, Sankaran S, Perdikaris P. Respecting causality is all you need for training physics-informed neural networks[J]. arXiv preprint arXiv:2203.07404, 2022.
+
+!!!note
+    Don't directly use it with `BFGS` or `LBFGS`. It will not work. Rewrite a callback function
+    to set `CausalTraining.reweight = true`.
 """
 struct CausalTraining <: NeuralPDE.AbstractTrainingStrategy
     points::Int64
@@ -132,18 +136,16 @@ function get_pde_loss_function(init_loss_functions, datafree_pde_functions, pde_
                 for pde_bound in pde_bounds]
     pde_sets = [sortslices(set; dims=2, alg=InsertionSort,
                            lt=(x, y) -> isless(x[tidx], y[tidx])) for set in pde_sets]
+    pde_sets = [adapt(device, set) for set in pde_sets]
 
     function get_loss_function(datafree_pde_loss_func, pde_set)
         return θ -> begin
-            ChainRulesCore.@ignore_derivatives begin
-                L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
-                set_ = adapt(device, pde_set)
-                L_pde = abs2.(datafree_pde_loss_func(set_, θ))
-                L = hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
-                W = exp.(-ϵ / points .* cumsum(L; dims=2))
-            end
-
-            mean(abs2, W .* datafree_pde_loss_func(set_, θ))
+            L_init = ChainRulesCore.@ignore_derivatives reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
+            L_pde = ChainRulesCore.@ignore_derivatives abs2.(datafree_pde_loss_func(pde_set, θ))
+            L = ChainRulesCore.@ignore_derivatives hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
+            W = ChainRulesCore.@ignore_derivatives exp.(-ϵ / points .* cumsum(L; dims=2))
+            Main.a[] = W
+            mean(abs2, W .* datafree_pde_loss_func(pde_set, θ))
         end
     end
 
