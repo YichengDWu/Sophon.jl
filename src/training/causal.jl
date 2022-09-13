@@ -12,14 +12,15 @@
 struct CausalTraining <: NeuralPDE.AbstractTrainingStrategy
     points::Int64
     init_points::Int64
+    bc_points::Int64
     epsilon::AbstractSchedule
     sampling_alg::QuasiMonteCarlo.SamplingAlgorithm
 end
 
-function CausalTraining(points; epsilon, init_points=points,
+function CausalTraining(points; epsilon, init_points=points, bc_points=points,
                         sampling_alg=LatinHypercubeSample())
     epsilon = epsilon isa Real ? Constant(Float64(epsilon)) : epsilon
-    return CausalTraining(points, init_points, epsilon, sampling_alg)
+    return CausalTraining(points, init_points, bc_points, epsilon, sampling_alg)
 end
 
 function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepresentation,
@@ -48,7 +49,9 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
     real_datafree_bc_loss_function = datafree_bc_loss_function[bc_idx]
 
     strategy_ = QuasiRandomTraining(strategy.init_points;
-                                    sampling_alg=strategy.sampling_alg)
+                                    sampling_alg=strategy.sampling_alg, resampling=false,
+                                    minibatch=1)
+
     init_loss_functions = [NeuralPDE.get_loss_function(_loss, bound, eltypeθ, strategy_)
                            for (_loss, bound) in zip(datafree_init_loss_function,
                                                      init_bounds)]
@@ -77,46 +80,43 @@ function get_pde_and_bc_loss_function(init_loss_functions, datafree_bc_loss_func
                                       eltypeθ, device, ϵ, stategy)
     sampling_alg = stategy.sampling_alg
     points = stategy.points
+    bc_points = stategy.bc_points
 
-    function get_bc_loss_func(bc_loss_func, bc_bound)
+    bc_sets = [NeuralPDE.generate_quasi_random_points(bc_points, bound, eltypeθ,
+                                                      sampling_alg) for bound in bc_bounds]
+
+    pde_sets = NeuralPDE.generate_quasi_random_points(points, pde_bounds, eltypeθ,
+                                                      sampling_alg)
+    pde_sets = [sortslices(set; dims=2, alg=InsertionSort,
+                           lt=(x, y) -> isless(x[tidx], y[tidx])) for set in pde_sets]
+
+    function get_bc_loss_func(bc_loss_func, bc_set)
         return θ -> begin
-            set = NeuralPDE.generate_quasi_random_points(points, bc_bound, eltypeθ,
-                                                         sampling_alg)
-            set = sortslices(set; dims=2, alg=InsertionSort,
-                             lt=(x, y) -> isless(x[tidx], y[tidx]))
-            set_ = ChainRulesCore.@ignore_derivatives adapt(device, set)
+            set_ = adapt(device, bc_set)
             abs2.(bc_loss_func(set_, θ))
         end
     end
 
-    bc_loss_functions = [get_bc_loss_func(bc_loss_func, bc_bound)
-                         for (bc_loss_func, bc_bound) in zip(datafree_bc_loss_functions,
-                                                             bc_bounds)]
+    bc_loss_functions = [get_bc_loss_func(bc_loss_func, bc_set)
+                         for (bc_loss_func, bc_set) in zip(datafree_bc_loss_functions,
+                                                           bc_sets)]
 
-    function get_pde_loss_function(datafree_pde_loss_func, pde_bound)
+    function get_pde_loss_function(datafree_pde_loss_func, pde_set)
         return θ -> begin
-            L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
-            L_bc = reduce((x, y) -> x .+ y,
-                          [loss_func(θ) for loss_func in bc_loss_functions])
-
-            set = NeuralPDE.generate_quasi_random_points(points, pde_bound, eltypeθ,
-                                                         sampling_alg)
-            set = sortslices(set; dims=2, alg=InsertionSort,
-                             lt=(x, y) -> isless(x[tidx], y[tidx]))
-            set_ = adapt(device, set)
-            L_pde = ChainRulesCore.@ignore_derivatives abs2.(datafree_pde_loss_func(set_,
-                                                                                    θ))
-            L = ChainRulesCore.@ignore_derivatives hcat(adapt(device, [L_init;;]),
-                                                        L_bc[:, 1:(end - 1)] .+
-                                                        L_pde[:, 1:(end - 1)])
-            W = ChainRulesCore.@ignore_derivatives exp.(-ϵ / points .* cumsum(L; dims=2))
+            ChainRulesCore.@ignore_derivatives begin
+                L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
+                set_ = adapt(device, pde_set)
+                L_pde = abs2.(datafree_pde_loss_func(set_, θ))
+                L = hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
+                W = exp.(-ϵ / points .* cumsum(L; dims=2))
+            end
             mean(abs2, W .* datafree_pde_loss_func(set_, θ))
         end
     end
 
-    pde_loss_functions = [get_pde_loss_function(pde_loss_func, pde_bound)
-                          for (pde_loss_func, pde_bound) in zip(datafree_pde_functions,
-                                                                pde_bounds)]
+    pde_loss_functions = [get_pde_loss_function(pde_loss_func, pde_set)
+                          for (pde_loss_func, pde_set) in zip(datafree_pde_functions,
+                                                              pde_sets)]
     reduced_bc_loss_functions = [θ -> mean(loss_func(θ)) for loss_func in bc_loss_functions]
 
     return pde_loss_functions, reduced_bc_loss_functions
@@ -127,27 +127,29 @@ function get_pde_loss_function(init_loss_functions, datafree_pde_functions, pde_
     sampling_alg = stategy.sampling_alg
     points = stategy.points
 
-    function get_loss_function(datafree_pde_loss_func, pde_bound)
-        return θ -> begin
-            L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
+    pde_sets = [NeuralPDE.generate_quasi_random_points(points, pde_bound, eltypeθ,
+                                                       sampling_alg)
+                for pde_bound in pde_bounds]
+    pde_sets = [sortslices(set; dims=2, alg=InsertionSort,
+                           lt=(x, y) -> isless(x[tidx], y[tidx])) for set in pde_sets]
 
-            set = NeuralPDE.generate_quasi_random_points(points, pde_bound, eltypeθ,
-                                                         sampling_alg)
-            set = sortslices(set; dims=2, alg=InsertionSort,
-                             lt=(x, y) -> isless(x[tidx], y[tidx]))
-            set_ = adapt(device, set)
-            L_pde = ChainRulesCore.@ignore_derivatives abs2.(datafree_pde_loss_func(set_,
-                                                                                    θ))
-            L = ChainRulesCore.@ignore_derivatives hcat(adapt(device, [L_init;;]),
-                                                        L_pde[:, 1:(end - 1)])
-            W = ChainRulesCore.@ignore_derivatives exp.(-ϵ / points .* cumsum(L; dims=2))
+    function get_loss_function(datafree_pde_loss_func, pde_set)
+        return θ -> begin
+            ChainRulesCore.@ignore_derivatives begin
+                L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
+                set_ = adapt(device, pde_set)
+                L_pde = abs2.(datafree_pde_loss_func(set_, θ))
+                L = hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
+                W = exp.(-ϵ / points .* cumsum(L; dims=2))
+            end
+
             mean(abs2, W .* datafree_pde_loss_func(set_, θ))
         end
     end
 
-    pde_loss_functions = [get_loss_function(pde_loss_func, pde_bound)
-                          for (pde_loss_func, pde_bound) in zip(datafree_pde_functions,
-                                                                pde_bounds)]
+    pde_loss_functions = [get_loss_function(pde_loss_func, pde_set)
+                          for (pde_loss_func, pde_set) in zip(datafree_pde_functions,
+                                                              pde_sets)]
 
     return pde_loss_functions
 end
