@@ -41,7 +41,7 @@ chain = BACON(2,1; hidden_dims = 32, num_layers=5, period = 1, N = 5)
     For demonstration purposes, the model is also periodic in time
 
 ```@example convection
-discretization = PhysicsInformedNN(chain, QuasiRandomTraining(300;resampling = false, minibatch = 1); adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(300; resampling = false, minibatch = 1); adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
 prob = discretize(convection, discretization) 
 
 @time res = Optimization.solve(prob, LBFGS(); maxiters = 500)
@@ -57,7 +57,7 @@ u_pred = [sum(phi([x,t],res.u)) for x in xs, t in ts]
 u_real = u_analytic.(xs,ts')
 
 fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
-ax2, hm2 = heatmap(fig[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="error"))
+ax2, hm2 = heatmap(fig[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="Absolute error"))
 Colorbar(fig[:, end+1], hm2)
 save("convection.png", fig); nothing # hide
 ```
@@ -73,35 +73,3 @@ save("convection2.png", fig); nothing # hide
 ```
 ![](convection2.png)
 
-## Respecting causality
-
-[`CausalTraining`](@ref) will only start optimizing the loss of the succeeding time after the loss of the preceding time has been optimized.
-
-```@example convection
-
-strategy =  CausalTraining(300; epsilon = 0.2, reweight_every = 20)
-function callback(p,l)
-    strategy.reweight = true
-    return nothing
-end
-discretization = PhysicsInformedNN(chain, strategy; adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
-prob = discretize(convection, discretization) 
-
-@time res = Optimization.solve(prob, Adam(); maxiters = 2000, callback = callback)
-
-phi = discretization.phi
-
-xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
-u_pred = [sum(phi([x,t],res.u)) for x in xs, t in ts]
-u_real = u_analytic.(xs,ts')
-
-fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
-ax2, hm2 = heatmap(fig[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="error"))
-Colorbar(fig[:, end+1], hm2)
-
-save("convection3.png", fig); nothing # hide
-```
-![](convection3.png)
-
-!!! note
-    The hyperparameter `epsilon` in [`CausalTraining`](@ref) is very sensitive.
