@@ -36,11 +36,9 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 
 chain = BACON(2,1; hidden_dims = 32, num_layers=5, period = 2, N = 5)
 
-discretization = PhysicsInformedNN(chain, QuasiRandomTraining(200; resampling = false, minibatch = 1))
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(300; bcs_points = 50, resampling = false, minibatch = 1))
 prob = discretize(helmholtz, discretization)
-@time res = Optimization.solve(prob, Adam(); maxiters=200)
 
-prob = remake(prob; u0 = res.u)
 @time res = Optimization.solve(prob, LBFGS(); maxiters=400)
 ```
 
