@@ -135,9 +135,9 @@ function get_pde_and_bc_loss_function(init_loss_functions, datafree_bc_loss_func
 end
 
 function get_pde_loss_function(init_loss_functions, datafree_pde_functions, pde_bounds,
-                               tidx, eltypeθ, device, ϵ, stategy)
-    sampling_alg = stategy.sampling_alg
-    points = stategy.points
+                               tidx, eltypeθ, device, ϵ, strategy)
+    sampling_alg = strategy.sampling_alg
+    points = strategy.points
 
     pde_sets = [NeuralPDE.generate_quasi_random_points(points, pde_bound, eltypeθ,
                                                        sampling_alg)
@@ -153,11 +153,12 @@ function get_pde_loss_function(init_loss_functions, datafree_pde_functions, pde_
                     L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
                     L_pde = abs2.(datafree_pde_loss_func(pde_set, θ))
                     L = hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
-                    W = exp.(-ϵ / points .* cumsum(L; dims=2))
+                    strategy.W = exp.(-ϵ / points .* cumsum(L; dims=2))
+                    strategy.reweight = false
                 end
             end
 
-            mean(abs2, W .* datafree_pde_loss_func(pde_set, θ))
+            mean(abs2, strategy.W .* datafree_pde_loss_func(pde_set, θ))
         end
     end
 
