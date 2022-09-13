@@ -41,7 +41,7 @@ chain = BACON(2,1; hidden_dims = 32, num_layers=5, period = 1, N = 8)
     For demonstration purposes, the model is also periodic in time
 
 ```@example convection
-discretization = PhysicsInformedNN(chain, QuasiRandomTraining(500; resampling = false, minibatch = 1); adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
+discretization = PhysicsInformedNN(chain, QuasiRandomTraining(500; resampling = false, minibatch = 1); adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [400]))
 
 prob = discretize(convection, discretization) 
 
