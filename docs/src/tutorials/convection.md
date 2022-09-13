@@ -34,7 +34,7 @@ bcs = [u(x,0) ~ u_analytic(x,0)]
 We will use [`BACON`](@ref) to impose the boundary conditions. To this end, we simply set `period` to be one.
 
 ```@example convection
-chain = BACON(2,1; hidden_dims = 32, num_layers=5, period = 1, N = 8)
+chain = BACON(2,1; hidden_dims = 32, num_layers=5, period = 1, N = 6)
 ```
 
 !!! note
@@ -87,8 +87,8 @@ function callback(p,l)
 
     u_pred = [sum(phi([x,t],p)) for x in xs, t in ts]
     
-    #fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = #$c"))
-    fig = plot(vec(strategy.W))
+    fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = #$c"))
+    #fig = plot(vec(strategy.W))
     display(fig)
     return false
 end
