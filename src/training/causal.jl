@@ -10,8 +10,7 @@
 [1] Wang S, Sankaran S, Perdikaris P. Respecting causality is all you need for training physics-informed neural networks[J]. arXiv preprint arXiv:2203.07404, 2022.
 
 !!!note
-    Don't directly use it with `BFGS` or `LBFGS`. It will be slow. Rewrite a callback function
-    to set `CausalTraining.reweight = true`.
+    You must write a callback function to set `CausalTraining.reweight = true`.
 """
 mutable struct CausalTraining <: NeuralPDE.AbstractTrainingStrategy
     points::Int64
@@ -20,13 +19,13 @@ mutable struct CausalTraining <: NeuralPDE.AbstractTrainingStrategy
     epsilon::AbstractSchedule
     sampling_alg::QuasiMonteCarlo.SamplingAlgorithm
     reweight::Bool
-    W::Maitrix{Float64}
+    W::Matrix{Float64}
 end
 
 function CausalTraining(points; epsilon, init_points=points, bc_points=points,
                         sampling_alg=LatinHypercubeSample())
     epsilon = epsilon isa Real ? Constant(Float64(epsilon)) : epsilon
-    return CausalTraining(points, init_points, bc_points, epsilon, sampling_alg, true, Array{Float64}(undef,1,points))
+    return CausalTraining(points, init_points, bc_points, epsilon, sampling_alg, true, Array{Float64}(undef,1,1))
 end
 
 function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepresentation,
@@ -85,10 +84,10 @@ end
 
 function get_pde_and_bc_loss_function(init_loss_functions, datafree_bc_loss_functions,
                                       datafree_pde_functions, bc_bounds, pde_bounds, tidx,
-                                      eltypeθ, device, ϵ, stategy)
-    sampling_alg = stategy.sampling_alg
-    points = stategy.points
-    bc_points = stategy.bc_points
+                                      eltypeθ, device, ϵ, strategy)
+    sampling_alg = strategy.sampling_alg
+    points = strategy.points
+    bc_points = strategy.bc_points
 
     bc_sets = [NeuralPDE.generate_quasi_random_points(bc_points, bound, eltypeθ,
                                                       sampling_alg) for bound in bc_bounds]
@@ -114,12 +113,16 @@ function get_pde_and_bc_loss_function(init_loss_functions, datafree_bc_loss_func
 
     function get_pde_loss_function(datafree_pde_loss_func, pde_set)
         return θ -> begin
-            L_init = ChainRulesCore.@ignore_derivativesreduce(+, [loss_func(θ) for loss_func in init_loss_functions])
-            L_pde = ChainRulesCore.@ignore_derivatives abs2.(datafree_pde_loss_func(pde_set, θ))
-            L = ChainRulesCore.@ignore_derivatives hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
-            W = ChainRulesCore.@ignore_derivatives exp.(-ϵ / points .* cumsum(L; dims=2))
-
-            mean(abs2, W .* datafree_pde_loss_func(pde_set, θ))
+            ChainRulesCore.@ignore_derivatives begin
+                if strategy.reweight
+                    L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
+                    L_pde = abs2.(datafree_pde_loss_func(pde_set, θ))
+                    L = hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
+                    strategy.W = exp.(-ϵ / points .* cumsum(L; dims=2))
+                    strategy.reweight = false
+                end
+            end
+            mean(abs2, strategy.W .* datafree_pde_loss_func(pde_set, θ))
         end
     end
 
@@ -145,10 +148,14 @@ function get_pde_loss_function(init_loss_functions, datafree_pde_functions, pde_
 
     function get_loss_function(datafree_pde_loss_func, pde_set)
         return θ -> begin
-            L_init = ChainRulesCore.@ignore_derivatives reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
-            L_pde = ChainRulesCore.@ignore_derivatives abs2.(datafree_pde_loss_func(pde_set, θ))
-            L = ChainRulesCore.@ignore_derivatives hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
-            W = ChainRulesCore.@ignore_derivatives exp.(-ϵ / points .* cumsum(L; dims=2))
+            ChainRulesCore.@ignore_derivatives begin
+                if strategy.reweight
+                    L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
+                    L_pde = abs2.(datafree_pde_loss_func(pde_set, θ))
+                    L = hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
+                    W = exp.(-ϵ / points .* cumsum(L; dims=2))
+                end
+            end
 
             mean(abs2, W .* datafree_pde_loss_func(pde_set, θ))
         end

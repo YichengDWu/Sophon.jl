@@ -78,10 +78,16 @@ save("convection2.png", fig); nothing # hide
 [`CausalTraining`](@ref) will only start optimizing the loss of the succeeding time after the loss of the preceding time has been optimized.
 
 ```@example convection
-discretization = PhysicsInformedNN(chain, CausalTraining(300; epsilon = 0.2); adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
+
+strategy =  CausalTraining(300; epsilon = 0.2, reweight_every = 20)
+function callback(p,l)
+    strategy.reweight = true
+    return nothing
+end
+discretization = PhysicsInformedNN(chain, strategy; adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [100]))
 prob = discretize(convection, discretization) 
 
-@time res = Optimization.solve(prob, Adam(); maxiters = 2000)
+@time res = Optimization.solve(prob, Adam(); maxiters = 2000, callback = callback)
 
 phi = discretization.phi
 
