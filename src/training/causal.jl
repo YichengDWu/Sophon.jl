@@ -10,7 +10,7 @@
 [1] Wang S, Sankaran S, Perdikaris P. Respecting causality is all you need for training physics-informed neural networks[J]. arXiv preprint arXiv:2203.07404, 2022.
 
 !!!note
-    You must write a callback function to set `CausalTraining.reweight = true`.
+You must write a callback function to set `CausalTraining.reweight = true`.
 """
 mutable struct CausalTraining <: NeuralPDE.AbstractTrainingStrategy
     points::Int64
@@ -19,13 +19,15 @@ mutable struct CausalTraining <: NeuralPDE.AbstractTrainingStrategy
     epsilon::AbstractSchedule
     sampling_alg::QuasiMonteCarlo.SamplingAlgorithm
     reweight::Bool
-    W::Matrix{Float64}
+    W::AbstractMatrix{Float64}
+    bc_loss_weights::Vector
 end
 
-function CausalTraining(points; epsilon, init_points=points, bc_points=points,
-                        sampling_alg=LatinHypercubeSample())
+function CausalTraining(points; epsilon, bc_loss_weights, init_points=points,
+                        bc_points=points, sampling_alg=LatinHypercubeSample())
     epsilon = epsilon isa Real ? Constant(Float64(epsilon)) : epsilon
-    return CausalTraining(points, init_points, bc_points, epsilon, sampling_alg, true, Array{Float64}(undef,1,1))
+    return CausalTraining(points, init_points, bc_points, epsilon, sampling_alg, true,
+                          Array{Float64}(undef, 1, 1), bc_loss_weights)
 end
 
 function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepresentation,
@@ -60,8 +62,13 @@ function NeuralPDE.merge_strategy_with_loss_function(pinnrep::NeuralPDE.PINNRepr
     init_loss_functions = [NeuralPDE.get_loss_function(_loss, bound, eltypeθ, strategy_)
                            for (_loss, bound) in zip(datafree_init_loss_function,
                                                      init_bounds)]
+    init_weights = strategy.bc_loss_weights[init_idx]
 
-    strategy.W = ones(Float64, length(datafree_pde_loss_function), strategy.points)
+    init_loss_functions = [θ -> init_weight * f(θ)
+                           for (init_weight, f) in zip(init_weights, init_loss_functions)]
+
+    strategy.W = adapt(device,
+                       ones(Float64, length(datafree_pde_loss_function), strategy.points))
 
     if isempty(real_datafree_bc_loss_function)
         pde_loss_functions = get_pde_loss_function(init_loss_functions,
@@ -113,15 +120,13 @@ function get_pde_and_bc_loss_function(init_loss_functions, datafree_bc_loss_func
 
     function get_pde_loss_function(datafree_pde_loss_func, pde_set)
         return θ -> begin
-            ChainRulesCore.@ignore_derivatives begin
-                if strategy.reweight
-                    L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
-                    L_pde = abs2.(datafree_pde_loss_func(pde_set, θ))
-                    L = hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
-                    strategy.W = exp.(-ϵ / points .* cumsum(L; dims=2))
-                    strategy.reweight = false
-                end
-            end
+            ChainRulesCore.@ignore_derivatives begin if strategy.reweight
+                L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
+                L_pde = abs2.(datafree_pde_loss_func(pde_set, θ))
+                L = hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
+                strategy.W = exp.(-ϵ / points .* cumsum(L; dims=2))
+                strategy.reweight = false
+            end end
             mean(abs2, strategy.W .* datafree_pde_loss_func(pde_set, θ))
         end
     end
@@ -148,15 +153,13 @@ function get_pde_loss_function(init_loss_functions, datafree_pde_functions, pde_
 
     function get_loss_function(datafree_pde_loss_func, pde_set)
         return θ -> begin
-            ChainRulesCore.@ignore_derivatives begin
-                if strategy.reweight
-                    L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
-                    L_pde = abs2.(datafree_pde_loss_func(pde_set, θ))
-                    L = hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
-                    strategy.W = exp.(-ϵ / points .* cumsum(L; dims=2))
-                    strategy.reweight = false
-                end
-            end
+            ChainRulesCore.@ignore_derivatives begin if strategy.reweight
+                L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
+                L_pde = abs2.(datafree_pde_loss_func(pde_set, θ))
+                L = hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
+                strategy.W = exp.(-ϵ / points .* cumsum(L; dims=2))
+                strategy.reweight = false
+            end end
 
             mean(abs2, strategy.W .* datafree_pde_loss_func(pde_set, θ))
         end
