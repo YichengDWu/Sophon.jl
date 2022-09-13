@@ -16,7 +16,7 @@ The excat solution is ``u(x,y)=\sin{a_1\pi x}\sin{a_2\pi y}``. We chose ``k=1, a
 
 ```@example helmholtz
 using NeuralPDE, IntervalSets, Sophon, Lux, Random
-using Optimization, OptimizationOptimisers
+using Optimization, OptimizationOptimJL
 
 @parameters x,y
 @variables u(..)
