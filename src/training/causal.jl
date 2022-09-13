@@ -157,10 +157,11 @@ function get_pde_loss_function(init_loss_functions, datafree_pde_functions, pde_
             ChainRulesCore.@ignore_derivatives begin if strategy.reweight
                 L_init = reduce(+, [loss_func(θ) for loss_func in init_loss_functions])
                 L_pde = abs2.(datafree_pde_loss_func(pde_set, θ))
-                L = hcat(adapt(device, [L_init;;]), L_pde[:, 1:(end - 1)])
+                L = hcat(adapt(device, [0.0;;]), L_pde[:, 1:(end - 1)])
                 strategy.W[i,:] .= vec(exp.(-ϵ / points .* cumsum(L; dims=2)))
                 strategy.reweight = false
-                ub = findfirst(Base.Fix2(>, 1e-4), strategy.W[i,:])
+                ub = findfirst(Base.Fix2(<, 1e-4), strategy.W[i,:])
+                ub = isnothing(ub) ? points : ub
             end end
 
             mean(strategy.W[i:i,1:ub] .* abs2.(datafree_pde_loss_func(pde_set[:,1:ub], θ)))
