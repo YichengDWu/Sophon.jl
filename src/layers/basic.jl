@@ -361,11 +361,19 @@ function Base.show(io::IO, rbf::RBF)
     return print(io, "RBF($(rbf.in_dims) => $(rbf.out_dims))")
 end
 
-struct Scalar <: AbstractExplicitLayer end
+"""
+    Scalar(connection::Function)
+Return connection(scalar, x)
+"""
+struct Scalar{F} <: AbstractExplicitLayer
+    connection::F
+end
+
+Scalar(connection::Function) = Scalar{typeof(connection)}(connection)
 
 initialparameters(rng::AbstractRNG, s::Scalar) = (; scalar=0.0f0)
 parameterlength(s::Scalar) = 1
 
 @inline function (s::Scalar)(x::AbstractArray, ps, st::NamedTuple)
-    return x .+ ps.scalar, st
+    return s.connection(ps.scalar, x), st
 end

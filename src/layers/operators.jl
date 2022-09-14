@@ -78,7 +78,7 @@ end
 function DeepONet(branch_net::AbstractExplicitLayer, trunk_net::AbstractExplicitLayer;
                   flatten_layer::AbstractExplicitLayer=FlattenLayer(),
                   linear_layer::AbstractExplicitLayer=NoOpLayer(),
-                  bias::AbstractExplicitLayer=Scalar())
+                  bias::AbstractExplicitLayer=Scalar(.+))
     return DeepONet{typeof(branch_net), typeof(trunk_net), typeof(flatten_layer),
                     typeof(linear_layer), typeof(bias)}(branch_net, trunk_net,
                                                         flatten_layer, linear_layer, bias)
