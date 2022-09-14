@@ -34,7 +34,7 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 
 @named helmholtz = PDESystem(eq, bcs, domains, [x,y], [u(x,y)])
 
-chain = BACON(2,1; hidden_dims = 32, num_layers=5, period = 2, N = 5)
+chain = BACON(2, 1, 5, 2; hidden_dims = 32, num_layers=5)
 
 discretization = PhysicsInformedNN(chain, QuasiRandomTraining(300; bcs_points = 100, resampling = false, minibatch = 1))
 prob = discretize(helmholtz, discretization)
