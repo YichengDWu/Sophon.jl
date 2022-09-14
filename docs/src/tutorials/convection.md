@@ -45,7 +45,7 @@ discretization = PhysicsInformedNN(chain, QuasiRandomTraining(500; resampling = 
 
 prob = discretize(convection, discretization) 
 
-@time res = Optimization.solve(prob, LBFGS(); maxiters = 500)
+@time res = Optimization.solve(prob, LBFGS(); maxiters = 1000)
 ```
 
 Let's visualize the result.
