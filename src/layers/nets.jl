@@ -391,16 +391,14 @@ function FourierFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_lay
 end
 
 """
-    BACON(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, period::Real,
-               N::Int)
+    BACON(in_dims::Int, out_dims::Int, N::Int, period::Real; hidden_dims::Int, num_layers::Int)
 
 Band-limited Coordinate Networks (BACON) from [lindell2021bacon](@cite). Similar to [`FourierFilterNet`](@ref) but the
 frequcies are dicrete and nontrainable.
 
 Tips: It is recommended to set `period` to be `1,2,π` or `2π` for better performance.
 """
-function BACON(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, period::Real,
-               N::Int)
+function BACON(in_dims::Int, out_dims::Int, N::Int, period::Real; hidden_dims::Int, num_layers::Int)
     names = ntuple(i -> Symbol("filter_$i"), num_layers)
     Ns = ntuple(_ -> N ÷ num_layers, num_layers)
     if N % num_layers != 0
