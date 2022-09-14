@@ -39,7 +39,7 @@ chain = BACON(2, 1, 5, 2; hidden_dims = 32, num_layers=5)
 discretization = PhysicsInformedNN(chain, QuasiRandomTraining(300; bcs_points = 50, resampling = false, minibatch = 1))
 prob = discretize(helmholtz, discretization)
 
-@time res = Optimization.solve(prob, LBFGS(); maxiters=500)
+@time res = Optimization.solve(prob, LBFGS(); maxiters=1000)
 ```
 
 Let's plot the result.
