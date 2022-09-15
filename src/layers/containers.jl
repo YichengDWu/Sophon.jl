@@ -1,9 +1,13 @@
 """
     ChainState(model, rng::AbstractRNG=Random.default_rng())
+
+Wraps a model in a stateful container.
+
 ## Arguments
-    - `model`: `AbstractExplicitLayer`, or a named tuple of them.
+
+    - `model`: `AbstractExplicitLayer`, or a named tuple of them, which will be treated as a `Chain`.
 """
-struct ChainState{L, S}
+mutable struct ChainState{L, S}
     model::L
     state::S
 end
@@ -21,24 +25,31 @@ function ChainState(; rng::AbstractRNG=Random.default_rng(), kwargs...)
     return ChainState((; kwargs...), rng)
 end
 
+@inline ChainState(a::ChainState) = a
+
 @inline function initialparameters(rng::AbstractRNG, s::ChainState)
     return initialparameters(rng, s.model)
 end
 
 function (c::ChainState{<:NamedTuple})(x, ps)
     y, st = Lux.applychain(c.model, x, ps, c.state)
-    ChainRulesCore.@ignore_derivatives @set! c.state = st
+    ChainRulesCore.@ignore_derivatives c.state = st
     return y
 end
 
 function (c::ChainState{<:AbstractExplicitLayer})(x, ps)
     y, st = c.model(x, ps, c.state)
-    ChainRulesCore.@ignore_derivatives @set! c.state = st
+    ChainRulesCore.@ignore_derivatives c.state = st
     return y
 end
 
-function (c::ChainState{<:NamedTuple})(f::Symbol, x, ps)
-    y, st = Lux.applychain(c.model.f, x, ps, c.state.f)
-    ChainRulesCore.@ignore_derivatives @set! c.state.f = st
-    return y
+const NTofChainState{names} = NamedTuple{names, <:Tuple{Vararg{ChainState}}}
+
+# construct a new ChainState
+function Lux.cpu(c::ChainState)
+    return ChainState(c.model, cpu(c.state))
+end
+
+function Lux.gpu(c::ChainState)
+    return ChainState(c.model, gpu(c.state))
 end
