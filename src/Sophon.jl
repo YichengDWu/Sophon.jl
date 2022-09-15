@@ -13,10 +13,12 @@ using ParameterSchedulers: AbstractSchedule
 using SciMLBase, NeuralPDE, ComponentArrays
 using StatsBase, QuasiMonteCarlo
 using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
+using Setfield
 
 include("layers/basic.jl")
 include("layers/nets.jl")
 include("utils.jl")
+include("layers/containers.jl")
 include("activations.jl")
 include("training/scheduler.jl")
 include("training/rad.jl")
@@ -31,5 +33,6 @@ export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature
 export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON
 export DeepONet
+export ChainState
 
 end
