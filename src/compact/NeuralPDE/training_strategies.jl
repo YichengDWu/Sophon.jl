@@ -4,7 +4,7 @@ struct QuasiRandom{S} <: NeuralPDE.AbstractTrainingStrategy
     sampling_alg::S
 end
 
-function QuasiRandom(pde_points::Int, boundary_points::Int=points,
+function QuasiRandom(pde_points::Int, boundary_points::Int=pde_points,
                              sampling_alg=LatinHypercubeSample())
     return QuasiRandom{typeof(sampling_alg)}([pde_points], [boundary_points], sampling_alg)
 end
