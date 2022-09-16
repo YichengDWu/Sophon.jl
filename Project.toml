@@ -22,7 +22,6 @@ ParameterSchedulers = "d7d3b36b-41b8-4d0d-a2bf-768c6151755e"
 QuasiMonteCarlo = "8a4e6c94-4038-4cdc-81c3-7e6ffdb2a71b"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
@@ -42,7 +41,6 @@ OptimizationOptimisers = "0.1"
 ParameterSchedulers = "0.3"
 QuasiMonteCarlo = "0.2"
 SciMLBase = "1"
-Setfield = "1"
 StatsBase = "0.33"
 julia = "1.7"
 

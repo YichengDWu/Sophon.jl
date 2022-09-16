@@ -21,10 +21,10 @@ function SciMLBase.symbolic_discretize(pde_system::PDESystem, discretization::PI
 
     if phi isa NamedTuple
         map(phi) do ϕ
-            @set! ϕ.state = adapt(parameterless_type(getdata(init_params)), ϕ.state)
+            Lux.@set! ϕ.state = adapt(parameterless_type(getdata(init_params)), ϕ.state)
         end
     else
-        @set! phi.state = adapt(parameterless_type(getdata(init_params)), phi.state)
+        Lux.@set! phi.state = adapt(parameterless_type(getdata(init_params)), phi.state)
     end
 
     if !(eqs isa Array)
