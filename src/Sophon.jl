@@ -11,10 +11,13 @@ import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, Tria
                             Shifted, ComposedSchedule, Constant
 using ParameterSchedulers: AbstractSchedule
 using SciMLBase, NeuralPDE, ComponentArrays
+using SciMLBase: parameterless_type
 using StatsBase, QuasiMonteCarlo
 using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
+using Setfield
 
 include("layers/basic.jl")
+include("layers/containers.jl")
 include("layers/nets.jl")
 include("utils.jl")
 include("activations.jl")
@@ -23,13 +26,17 @@ include("training/rad.jl")
 include("training/causal.jl")
 include("training/evo.jl")
 include("compact/componentarrays.jl")
+include("compact/NeuralPDE/pinn_types.jl")
+include("compact/NeuralPDE/discretize.jl")
+include("compact/NeuralPDE/training_strategies.jl")
 include("layers/operators.jl")
 
-export GPUComponentArray64
-export Scheduler
+export GPUComponentArray64, GPUComponentArray
+export Scheduler, QuasiRandom
 export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature
 export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON
 export DeepONet
+export PINN, ChainState
 
 end

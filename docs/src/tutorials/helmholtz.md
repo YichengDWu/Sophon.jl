@@ -15,7 +15,7 @@ q(x, y)=-\left(a_{1} \pi\right)^{2} \sin \left(a_{1} \pi x\right) \sin \left(a_{
 The excat solution is ``u(x,y)=\sin{a_1\pi x}\sin{a_2\pi y}``. We chose ``k=1, a_1 = 1`` and ``a_2 = 4``.
 
 ```@example helmholtz
-using NeuralPDE, IntervalSets, Sophon, Lux, Random
+using NeuralPDE, IntervalSets, Sophon, Lux, Random, CUDA
 using Optimization, OptimizationOptimJL
 
 @parameters x,y
@@ -35,8 +35,9 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 @named helmholtz = PDESystem(eq, bcs, domains, [x,y], [u(x,y)])
 
 chain = BACON(2, 1, 5, 2; hidden_dims = 32, num_layers=5)
+ps = Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
 
-discretization = PhysicsInformedNN(chain, QuasiRandomTraining(300; bcs_points = 100, resampling = false, minibatch = 1))
+discretization = PINN(chain, QuasiRandom(300, 100), init_params = ps)
 prob = discretize(helmholtz, discretization)
 
 @time res = Optimization.solve(prob, LBFGS(); maxiters=1000)
@@ -49,7 +50,10 @@ phi = discretization.phi
 xs, ys= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 u_analytic(x,y) = sinpi(a1*x)*sinpi(a2*y)
 u_real = [u_analytic(x,y) for x in xs, y in ys]
-u_pred = [sum(phi([x,y], res.u)) for x in xs, y in ys]
+
+phi_cpu = cpu(phi)
+ps_cpu = cpu(res.u)
+u_pred = [sum(phi_cpu(([x,y]), ps_cpu)) for x in xs, y in ys]
 
 using CairoMakie
 axis = (xlabel="x", ylabel="y", title="Analytical Solution")
