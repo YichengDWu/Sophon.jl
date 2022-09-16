@@ -14,7 +14,6 @@ using SciMLBase, NeuralPDE, ComponentArrays
 using SciMLBase: parameterless_type
 using StatsBase, QuasiMonteCarlo
 using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
-using Setfield
 
 include("layers/basic.jl")
 include("layers/containers.jl")
