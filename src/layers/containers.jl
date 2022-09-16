@@ -1,55 +1,91 @@
-"""
-    ChainState(model, rng::AbstractRNG=Random.default_rng())
 
-Wraps a model in a stateful container.
+"""
+TriplewiseFusion(connection, layers...)
+
+```
+     u1                    u2
+        ↘                     ↘
+h1 → layer1 → connection → layer2 → connection
+        ↗                     ↗
+     v1                    v2
+```
 
 ## Arguments
 
-    - `model`: `AbstractExplicitLayer`, or a named tuple of them, which will be treated as a `Chain`.
+  - `connection`: A functio takes 3 inputs and combines them.
+  - `layers`: `AbstractExplicitLayer`s or a `Chain`.
+
+## Inputs
+
+Layer behaves differently based on input type:
+
+ 1. A tripe of `(h, u, v)`, where `u` and `v` itself are tuples of length `N`, the `layers` is also a tuple of
+    length `N`. The computation is as follows
+
+```julia
+for i in 1:N
+    h = connection(layers[i](h), u[i], v[i])
+end
+```
+
+ 2. A triple of `(h, u, v)`, where `u` and `v` are `AbstractArray`s.
+
+```julia
+for i in 1:N
+    h = connection(layers[i](h), u, v)
+end
+```
+
+## Parameters
+
+  - Parameters of each `layer` wrapped in a NamedTuple with
+    `fields = layer_1, layer_2, ..., layer_N`
+
+## States
+
+  - States of each `layer` wrapped in a NamedTuple with
+    `fields = layer_1, layer_2, ..., layer_N`
 """
-mutable struct ChainState{L, S}
-    model::L
-    state::S
+struct TriplewiseFusion{F, T <: NamedTuple} <: AbstractExplicitContainerLayer{(:layers,)}
+    connection::F
+    layers::T
 end
 
-function ChainState(model, rng::AbstractRNG=Random.default_rng())
-    states = initialstates(rng, model)
-    return ChainState{typeof(model), typeof(states)}(model, states)
+function TriplewiseFusion(connection, layers::AbstractExplicitLayer...)
+    names = ntuple(i -> Symbol("layer_$i"), length(layers))
+    return TriplewiseFusion(connection, NamedTuple{names}(layers))
 end
 
-function ChainState(model, state::NamedTuple)
-    return ChainState{typeof(model), typeof(state)}(model, state)
+function TriplewiseFusion(connection, chain::Chain)
+    layers = chain.layers
+    return TriplewiseFusion{typeof(connection), typeof(layers)}(connection, layers)
 end
 
-function ChainState(; rng::AbstractRNG=Random.default_rng(), kwargs...)
-    return ChainState((; kwargs...), rng)
+function (m::TriplewiseFusion)(x::Union{NTuple{3, AbstractArray},
+                                        Tuple{AbstractArray, Vararg{Tuple}}}, ps,
+                               st::NamedTuple)
+    return applytriplewisefusion(m.layers, m.connection, x, ps, st)
 end
 
-@inline ChainState(a::ChainState) = a
-
-@inline function initialparameters(rng::AbstractRNG, s::ChainState)
-    return initialparameters(rng, s.model)
+@generated function applytriplewisefusion(layers::NamedTuple{names}, connection::C, x::T,
+                                          ps, st::NamedTuple{names}) where {names, C, T}
+    N = length(names)
+    y_symbols = [gensym() for _ in 1:(N + 1)]
+    st_symbols = [gensym() for _ in 1:N]
+    calls = [:($(y_symbols[N + 1]) = x[1])]
+    function getuv(i)
+        return T <: Tuple{AbstractArray, Vararg{Tuple}} ? (:(x[2][$i]), :(x[3][$i])) :
+               (:(x[2]), :(x[3]))
+    end
+    append!(calls,
+            [:(($(y_symbols[i]), $(st_symbols[i])) = layers[$i]($(y_symbols[N + 1]),
+                                                                ps.$(names[i]),
+                                                                st.$(names[i]));
+               $(y_symbols[N + 1]) = connection($(y_symbols[i]), $(getuv(i)...)))
+             for i in 1:N])
+    push!(calls, :(st = NamedTuple{$names}((($(Tuple(st_symbols)...),)))))
+    push!(calls, :(return $(y_symbols[N + 1]), st))
+    return Expr(:block, calls...)
 end
 
-function (c::ChainState{<:NamedTuple})(x, ps)
-    y, st = Lux.applychain(c.model, x, ps, c.state)
-    ChainRulesCore.@ignore_derivatives c.state = st
-    return y
-end
-
-function (c::ChainState{<:AbstractExplicitLayer})(x, ps)
-    y, st = c.model(x, ps, c.state)
-    ChainRulesCore.@ignore_derivatives c.state = st
-    return y
-end
-
-const NTofChainState{names} = NamedTuple{names, <:Tuple{Vararg{ChainState}}}
-
-# construct a new ChainState
-function Lux.cpu(c::ChainState)
-    return ChainState(c.model, cpu(c.state))
-end
-
-function Lux.gpu(c::ChainState)
-    return ChainState(c.model, gpu(c.state))
-end
+Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))

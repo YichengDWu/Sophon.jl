@@ -1,23 +1,3 @@
-struct PINN{PHI, P, T, DER, ADA, K} <: NeuralPDE.AbstractPINN
-    phi::PHI
-    init_params::P
-    strategy::T
-    derivative::DER
-    additional_loss::Any
-    adaptive_loss::ADA
-    kwargs::K
-end
-
-function PINN(chain, strategy; init_params=nothing, derivative=NeuralPDE.numeric_derivative,
-              additional_loss=nothing, adaptive_loss=NonAdaptiveLoss(), kwargs...)
-    phi = chain isa NamedTuple ? ChainState.(chain) : ChainState(chain)
-
-    return PINN{typeof(phi), typeof(init_params), typeof(strategy), typeof(derivative),
-                typeof(adaptive_loss), typeof(kwargs)}(phi, init_params, strategy,
-                                                       derivative, additional_loss,
-                                                       adaptive_loss, kwargs)
-end
-
 function SciMLBase.symbolic_discretize(pde_system::PDESystem, discretization::PINN)
     (; eqs, bcs, domain, ps, defaults, indvars, depvars) = pde_system
     (; phi, init_params, strategy, derivative, additional_loss, adaptive_loss, kwargs) = discretization
@@ -41,10 +21,10 @@ function SciMLBase.symbolic_discretize(pde_system::PDESystem, discretization::PI
 
     if phi isa NamedTuple
         map(phi) do ϕ
-            @set! ϕ.st = adapt(parameterless_type(getdata(init_params)), ϕ.st)
+            @set! ϕ.state = adapt(parameterless_type(getdata(init_params)), ϕ.state)
         end
     else
-        @set! phi.st = adapt(parameterless_type(getdata(init_params)), phi.st)
+        @set! phi.state = adapt(parameterless_type(getdata(init_params)), phi.state)
     end
 
     if !(eqs isa Array)

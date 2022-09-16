@@ -37,7 +37,7 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 chain = BACON(2, 1, 5, 2; hidden_dims = 32, num_layers=5)
 ps = Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
 
-discretization = PINN(chain, QuasiRandomTraining(300; bcs_points = 100, resampling = false, minibatch = 1), init_params = ps)
+discretization = PINN(chain, QuasiRandom(300, 100), init_params = ps)
 prob = discretize(helmholtz, discretization)
 
 @time res = Optimization.solve(prob, LBFGS(); maxiters=1000)
