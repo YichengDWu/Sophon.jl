@@ -35,10 +35,11 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 @named helmholtz = PDESystem(eq, bcs, domains, [x,y], [u(x,y)])
 
 chain = BACON(2, 1, 5, 2; hidden_dims = 32, num_layers=5)
-ps = Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
+pinn = PINN(chain; device_type = CuArray{Float64})
+sampler = QuisaRandomSampler(helmholtz, 300, 100; device_type = CuArray{Float64})
+strategy = NonAdaptiveTraining()
 
-discretization = PINN(chain, QuasiRandom(300, 100), init_params = ps)
-prob = discretize(helmholtz, discretization)
+prob = Sophon.discretize(helmholtz, pinn, sampler, strategy) 
 
 @time res = Optimization.solve(prob, LBFGS(); maxiters=1000)
 ```

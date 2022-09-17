@@ -1,21 +1,36 @@
-struct PINN{PHI, P, T, DER, ADA, K} <: NeuralPDE.AbstractPINN
+"""
+    PINN(chain; device_type::Type=Array{Float64}, kwargs...)
+"""
+struct PINN{T, PHI, P, K}
     phi::PHI
     init_params::P
-    strategy::T
-    derivative::DER
-    additional_loss::Any
-    adaptive_loss::ADA
     kwargs::K
 end
 
-function PINN(chain, strategy; init_params=nothing, derivative=NeuralPDE.numeric_derivative,
-              additional_loss=nothing, adaptive_loss=NonAdaptiveLoss{Float32}(), kwargs...)
-    phi = chain isa NamedTuple ? ChainState.(chain) : ChainState(chain)
+function PINN(chain::NamedTuple; device_type::Type=Array{Float64}, kwargs...)
+    phi = ChainState.(chain)
+    phi = map(phi) do ϕ
+        return ϕ.state = adapt(device, ϕ.state)
+    end
 
-    return PINN{typeof(phi), typeof(init_params), typeof(strategy), typeof(derivative),
-                typeof(adaptive_loss), typeof(kwargs)}(phi, init_params, strategy,
-                                                       derivative, additional_loss,
-                                                       adaptive_loss, kwargs)
+    init_params = ComponentArray(initialparameters(Random.default_rng(), phi))
+    init_params = adapt(device_type, init_params)
+
+    return PINN{device_type, typeof(phi), typeof(init_params), typeof(kwargs)}(phi,
+                                                                               init_params,
+                                                                               kwargs)
+end
+
+function PINN(chain::AbstractExplicitLayer; device_type::Type=Array{Float64}, kwargs...)
+    phi = ChainState(chain)
+    phi.state = adapt(device, phi.state)
+
+    init_params = ComponentArray(initialparameters(Random.default_rng(), phi))
+    init_params = adapt(device_type, init_params)
+
+    return PINN{device_type, typeof(phi), typeof(init_params), typeof(kwargs)}(phi,
+                                                                               init_params,
+                                                                               kwargs)
 end
 
 """

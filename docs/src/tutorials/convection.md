@@ -41,9 +41,11 @@ chain = BACON(2,1,8,1; hidden_dims = 32, num_layers=4)
     For demonstration purposes, the model is also periodic in time
 
 ```@example convection
-discretization = PINN(chain, QuasiRandom(500, 100); adaptive_loss = NonAdaptiveLoss(; bc_loss_weights = [500]))
+sampler = QuisaRandomSampler(convection, 500, 100) # data points
+strategy = NonAdaptiveTraining(1 , 500) # weights
+pinn = PINN(chain)
 
-prob = discretize(convection, discretization) 
+prob = Sophon.discretize(convection, pinn, sampler, strategy) 
 
 @time res = Optimization.solve(prob, LBFGS(); maxiters = 1000)
 ```
@@ -51,7 +53,7 @@ prob = discretize(convection, discretization)
 Let's visualize the result.
 
 ```@example convection
-phi = discretization.phi
+phi = pinn.phi
 
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 u_pred = [sum(phi([x,t],res.u)) for x in xs, t in ts]
