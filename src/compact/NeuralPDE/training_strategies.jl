@@ -1,5 +1,10 @@
 abstract type AbstractTrainingAlg end
 
+"""
+    NonAdaptiveTraining(pde_weights=1, bcs_weights=pde_weights)
+
+Fixed weights for the loss functions.
+"""
 struct NonAdaptiveTraining{P, B} <: AbstractTrainingAlg
     pde_weights::P
     bcs_weights::B

@@ -1,8 +1,8 @@
 abstract type PINNSampler{T, N1, N2} end
 
 """
-    QuisaRandomSampler(pde::NeuralPDE.PDESystem, pinn::PINN, pde_points,
-                            bcs_points=pde_points; sampling_alg=LatinHypercubeSample())
+    QuisaRandomSampler(pde::NeuralPDE.PDESystem, pde_points, bcs_points=pde_points;
+                       sampling_alg=LatinHypercubeSample())
 
 Sampler to generate the datasets for PDE and boundary conditions using a quisa-random sampling algorithm.
 """
