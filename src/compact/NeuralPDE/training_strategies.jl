@@ -23,15 +23,15 @@ function get_pde_and_bcs_loss_function(strategy::NonAdaptiveTraining{P, B},
     f = get_pde_and_bcs_loss_function((pde_weights..., bcs_weights...),
                            (datafree_pde_loss_function..., datafree_bc_loss_function...))
 
-    return eval(f)
+    return f
 end
 
 function get_pde_and_bcs_loss_function(weights::NTuple{N},
                                 datafree_loss_function::Tuple) where {N}
-    ex = :(mean(abs2, $(weights[1]) .* $(datafree_loss_function[1])((p[1]), θ)))
+    ex = :(mean($(weights[1]) .* abs2.($(datafree_loss_function[1])(p[1], θ))))
     for i in 2:N
-        ex = :(mean(abs2, $(weights[i]) .* $(datafree_loss_function[i])((p[$i]), θ)) + $ex)
+        ex = :(mean($(weights[i]) .* abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
     end
     loss_f = :((θ, p) -> $ex)
-    return loss_f
+    return eval(loss_f)
 end
