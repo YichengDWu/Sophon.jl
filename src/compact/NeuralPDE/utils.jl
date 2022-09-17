@@ -26,7 +26,7 @@ function get_l2_loss_function(loss_function, dataset)
     return loss
 end
 
-@inline non_additional_loss(phi, θ) = 0
+@inline null_additional_loss(phi, θ) = 0
 
 function build_symbolic_loss_function(pinnrep::NamedTuple, eqs;
                                       eq_params = SciMLBase.NullParameters(),
@@ -74,13 +74,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eqs;
         sep = [(acum[i] + 1):acum[i + 1] for i in 1:(length(acum) - 1)]
 
         for i in eachindex(depvars)
-            if (phi isa Vector && phi[1].f isa Optimisers.Restructure) ||
-               (!(phi isa Vector) && phi.f isa Optimisers.Restructure)
-                # Flux.Chain
-                push!(expr_θ, :($θ[$(sep[i])]))
-            else # Lux.AbstractExplicitLayer
-                push!(expr_θ, :($θ.depvar.$(depvars[i])))
-            end
+            push!(expr_θ, :($θ.depvar.$(depvars[i])))
             push!(expr_phi, :(phi[$i]))
         end
 
@@ -89,26 +83,6 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eqs;
 
         vars_phi = Expr(:(=), NeuralPDE.build_expr(:tuple, phi_nums), NeuralPDE.build_expr(:tuple, expr_phi))
         push!(ex.args, vars_phi)
-    end
-
-    #Add an expression for parameter symbols
-    if param_estim == true && eq_params != SciMLBase.NullParameters()
-        param_len = length(eq_params)
-        last_indx = [0; accumulate(+, map(length, init_params))][end]
-        params_symbols = Symbol[]
-        expr_params = Expr[]
-        for (i, eq_param) in enumerate(eq_params)
-            if (phi isa Vector && phi[1].f isa Optimisers.Restructure) ||
-               (!(phi isa Vector) && phi.f isa Optimisers.Restructure)
-                push!(expr_params, :($θ[$((i + last_indx):(i + last_indx))]))
-            else
-                push!(expr_params, :($θ.p[$((i):(i))]))
-            end
-            push!(params_symbols, Symbol(:($eq_param)))
-        end
-        params_eq = Expr(:(=), NeuralPDE.build_expr(:tuple, params_symbols),
-                         NeuralPDE.build_expr(:tuple, expr_params))
-        push!(ex.args, params_eq)
     end
 
     if eq_params != SciMLBase.NullParameters() && param_estim == false
