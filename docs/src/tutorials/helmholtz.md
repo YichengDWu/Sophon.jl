@@ -46,7 +46,7 @@ prob = Sophon.discretize(helmholtz, pinn, sampler, strategy)
 
 Let's plot the result.
 ```@example helmholtz
-phi = discretization.phi
+phi = pinn.phi
 
 xs, ys= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 u_analytic(x,y) = sinpi(a1*x)*sinpi(a2*y)
