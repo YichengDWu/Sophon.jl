@@ -5,7 +5,7 @@ struct NonAdaptiveTraining{P, B} <: AbstractTrainingAlg
     bcs_weights::B
 end
 
-function NonAdaptiveTraining(pde_weights, bcs_weights=pde_points)
+function NonAdaptiveTraining(pde_weights=1, bcs_weights=pde_weights)
     return NonAdaptiveTraining{typeof(pde_weights), typeof(bcs_weights)}(pde_weights, bcs_weights)
 end
 
