@@ -10,7 +10,7 @@ end
 function PINN(chain::NamedTuple; device_type::Type=Array{Float64}, kwargs...)
     phi = ChainState.(chain)
     phi = map(phi) do ϕ
-        return Lux.@set! ϕ.state = adapt(device, ϕ.state)
+        return Lux.@set! ϕ.state = adapt(device_type, ϕ.state)
     end
 
     init_params = ComponentArray(initialparameters(Random.default_rng(), phi))
