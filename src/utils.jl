@@ -1,5 +1,6 @@
 @inline GPUComponentArray64(nt::NamedTuple) = nt |> ComponentArray |> gpu .|> Float64
 @inline GPUComponentArray(nt::NamedTuple) = nt |> ComponentArray |> gpu
+@inline ComponentArray64(nt::NamedTuple) = nt |> ComponentArray .|> Float64
 
 """
     kaiming_uniform(rng::AbstractRNG, size...; gain = √2f0)

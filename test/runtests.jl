@@ -184,11 +184,11 @@ rng = Random.default_rng()
         end
     end
 
-    @testset "containers" begin @testset "ChainState" begin
+    @testset "containers" begin @testset "Sophon.ChainState" begin
         x = rand(Float32, 3, 6)
         @testset "named tuple" begin
             layers = (a=Dense(3, 4), b=Dense(4, 5))
-            cs = ChainState(; a=Dense(3, 4), b=Dense(4, 5))
+            cs = Sophon.ChainState(; a=Dense(3, 4), b=Dense(4, 5))
             ps = Lux.initialparameters(rng, cs)
             y = cs(x, ps)
             @test size(y) == (5, 6)
@@ -196,12 +196,12 @@ rng = Random.default_rng()
             @test_nowarn gradient(p -> sum(cs(x, p)), ps)
 
             st = Lux.initialstates(rng, layers)
-            @test_nowarn ChainState(ps, st)
+            @test_nowarn Sophon.ChainState(ps, st)
 
-            @test_nowarn ChainState(layers...)
+            @test_nowarn Sophon.ChainState(layers...)
         end
         @testset "single model" begin
-            model = ChainState(BACON(3, 4, 8, 1; num_layers=2, hidden_dims=5))
+            model = Sophon.ChainState(BACON(3, 4, 8, 1; num_layers=2, hidden_dims=5))
             ps = Lux.initialparameters(rng, model)
 
             y = model(x, ps)

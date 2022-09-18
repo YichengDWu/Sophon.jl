@@ -35,17 +35,18 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 @named helmholtz = PDESystem(eq, bcs, domains, [x,y], [u(x,y)])
 
 chain = BACON(2, 1, 5, 2; hidden_dims = 32, num_layers=5)
-ps = Lux.initialparameters(Random.default_rng(), chain) |> GPUComponentArray64
+pinn = PINN(chain; device_type = Array{Float64}) # use device_type = CuArray{Float64} to enable GPU
+sampler = QuisaRandomSampler(helmholtz, 300, 100; device_type = Array{Float64}) # use device_type = CuArray{Float64} to enable GPU
+strategy = NonAdaptiveTraining()
 
-discretization = PINN(chain, QuasiRandom(300, 100), init_params = ps)
-prob = discretize(helmholtz, discretization)
+prob = Sophon.discretize(helmholtz, pinn, sampler, strategy) 
 
 @time res = Optimization.solve(prob, LBFGS(); maxiters=1000)
 ```
 
 Let's plot the result.
 ```@example helmholtz
-phi = discretization.phi
+phi = pinn.phi
 
 xs, ys= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 u_analytic(x,y) = sinpi(a1*x)*sinpi(a2*y)
