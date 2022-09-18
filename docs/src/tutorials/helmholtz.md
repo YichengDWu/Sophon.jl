@@ -41,7 +41,7 @@ strategy = NonAdaptiveTraining()
 
 prob = Sophon.discretize(helmholtz, pinn, sampler, strategy) 
 
-@time res = Optimization.solve(prob, LBFGS(); maxiters=500)
+@time res = Optimization.solve(prob, LBFGS(); maxiters=1000)
 ```
 
 Let's plot the result.
