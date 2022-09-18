@@ -74,7 +74,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eqs;
         sep = [(acum[i] + 1):acum[i + 1] for i in 1:(length(acum) - 1)]
 
         for i in eachindex(depvars)
-            push!(expr_θ, :($θ.depvar.$(depvars[i])))
+            push!(expr_θ, :($θ.$(depvars[i])))
             push!(expr_phi, :(phi[$i]))
         end
 
