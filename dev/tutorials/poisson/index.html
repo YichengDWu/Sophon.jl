@@ -16,16 +16,15 @@ bcs = [u(0) ~ 0, u(1) ~ 0]
 \mathrm{\frac{d}{d x}}\left( \frac{du(x)}{dx} \right) =&amp;  - 39.47841760435743 \sin\left( 6.283185307179586 x \right) - 2467.4011002723396 \sin\left( 157.07963267948966 x \right)
 \end{align}
  \]</p><pre><code class="language-julia hljs">chain = Siren(1, 32, 32, 32, 32, 1)
-adaptive_loss = NonAdaptiveLoss(;bc_loss_weights=[100,100])
-discretization = PINN(chain,  GridTraining(0.01); adaptive_loss = adaptive_loss)
-prob = discretize(poisson, discretization)
+pinn = PINN(chain)
+sampler = QuisaRandomSampler(poisson, 100, 1)
+strategy = NonAdaptiveTraining(1 , 50)
 
-res = Optimization.solve(prob, Adam(5.0f-3); maxiters=2000)
+prob = Sophon.discretize(poisson, pinn, sampler, strategy)
 
-prob = remake(prob; u0=res.u)
-res = Optimization.solve(prob, LBFGS(); maxiters=1000)
+res = Optimization.solve(prob, LBFGS(); maxiters=2000)
 
-phi = discretization.phi
+phi = pinn.phi
 xs = 0:0.001:1
 u_true = @. sin(2 * pi * xs) + 0.1 * sin(50 * pi * xs)
 us = phi(xs&#39;, res.u)
@@ -39,4 +38,4 @@ u_analytical(x,p) = sin.(2 * pi .* x) + 0.1 * sin.(50 * pi .* x)
 error(x,p) = abs2.(vec(phi([x;;],res.u)) .- u_analytical(x,p))
 
 relative_L2_error = solve(IntegralProblem(error,0,1),HCubatureJL(),reltol=1e-3,abstol=1e-3) ./ solve(IntegralProblem((x,p) -&gt; abs2.(u_analytical(x,p)),0, 1),HCubatureJL(),reltol=1e-3,abstol=1e-3)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-element Vector{Float64}:
- 1.4091085487178948e-6</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../discontinuous/">« Fitting a nonlinear discontinuous function</a><a class="docs-footer-nextpage" href="../convection/">1D Convection Equation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Friday 16 September 2022 22:51">Friday 16 September 2022</span>. Using Julia version 1.8.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 0.0004703312075643813</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../discontinuous/">« Fitting a nonlinear discontinuous function</a><a class="docs-footer-nextpage" href="../convection/">1D Convection Equation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Sunday 18 September 2022 01:54">Sunday 18 September 2022</span>. Using Julia version 1.8.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
