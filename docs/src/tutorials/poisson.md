@@ -26,7 +26,7 @@ bcs = [u(0) ~ 0, u(1) ~ 0]
 ```@example poisson
 chain = Siren(1, 32, 32, 32, 32, 1)
 pinn = PINN(chain)
-sampler = QuisaRandomSampler(poisson, 100, 1) 
+sampler = QuisaRandomSampler(poisson, 200, 1) 
 strategy = NonAdaptiveTraining(1 , 50)
 
 prob = Sophon.discretize(poisson, pinn, sampler, strategy)
