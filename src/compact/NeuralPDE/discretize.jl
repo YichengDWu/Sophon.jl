@@ -79,5 +79,6 @@ function discretize(pde_system::PDESystem, pinn::PINN{T}, sampler::PINNSampler{S
                                                     additional_loss=additional_loss,
                                                     derivative=derivative)
     f = OptimizationFunction(loss_function, Optimization.AutoZygote())
-    return Optimization.OptimizationProblem(f, pinn.init_params, [pde_datasets; boundary_datasets])
+    return Optimization.OptimizationProblem(f, pinn.init_params,
+                                            [pde_datasets; boundary_datasets])
 end

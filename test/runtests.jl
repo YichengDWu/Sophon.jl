@@ -212,7 +212,7 @@ rng = Random.default_rng()
         @testset "PINN" begin
             chain = Chain(Dense(3, 4), Dense(4, 5))
             @test_nowarn PINN(chain)
-            @test_nowarn PINN(u = chain, p = chain)
+            @test_nowarn PINN(u=chain, p=chain)
         end
     end
 end end
