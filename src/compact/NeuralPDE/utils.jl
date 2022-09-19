@@ -29,18 +29,13 @@ end
 @inline null_additional_loss(phi, θ) = 0
 
 function build_symbolic_loss_function(pinnrep::NamedTuple, eqs;
-                                      eq_params = SciMLBase.NullParameters(),
-                                      param_estim = false,
-                                      default_p = nothing,
-                                      bc_indvars = pinnrep.indvars,
-                                      integrand = nothing,
-                                      dict_transformation_vars = nothing,
-                                      transformation_vars = nothing,
-                                      integrating_depvars = pinnrep.depvars)
-    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input,
-    phi, derivative, integral,
-    multioutput, init_params, strategy, eq_params,
-    param_estim, default_p) = pinnrep
+                                      eq_params=SciMLBase.NullParameters(),
+                                      param_estim=false, default_p=nothing,
+                                      bc_indvars=pinnrep.indvars, integrand=nothing,
+                                      dict_transformation_vars=nothing,
+                                      transformation_vars=nothing,
+                                      integrating_depvars=pinnrep.depvars)
+    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, init_params, strategy, eq_params, param_estim, default_p) = pinnrep
 
     eltypeθ = eltype(pinnrep.init_params)
 
@@ -73,15 +68,17 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eqs;
         acum = [0; accumulate(+, map(length, init_params))]
         sep = [(acum[i] + 1):acum[i + 1] for i in 1:(length(acum) - 1)]
 
-        for i in eachindex(depvars)
-            push!(expr_θ, :($θ.$(depvars[i])))
-            push!(expr_phi, :(phi[$i]))
+        for u in depvars
+            push!(expr_θ, :($θ.$(u)))
+            push!(expr_phi, :(phi.$(u)))
         end
 
-        vars_θ = Expr(:(=), NeuralPDE.build_expr(:tuple, θ_nums), NeuralPDE.build_expr(:tuple, expr_θ))
+        vars_θ = Expr(:(=), NeuralPDE.build_expr(:tuple, θ_nums),
+                      NeuralPDE.build_expr(:tuple, expr_θ))
         push!(ex.args, vars_θ)
 
-        vars_phi = Expr(:(=), NeuralPDE.build_expr(:tuple, phi_nums), NeuralPDE.build_expr(:tuple, expr_phi))
+        vars_phi = Expr(:(=), NeuralPDE.build_expr(:tuple, phi_nums),
+                        NeuralPDE.build_expr(:tuple, expr_phi))
         push!(ex.args, vars_phi)
     end
 
@@ -128,7 +125,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eqs;
     end
     let_ex = Expr(:let, vars_eq, vcat_expr_loss_functions)
     push!(ex.args, let_ex)
-    expr_loss_function = :(($vars) -> begin $ex end)
+    return expr_loss_function = :(($vars) -> begin $ex end)
 end
 
 function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars)
@@ -136,11 +133,10 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars)
 
     bc_indvars = bc_indvars === nothing ? pinnrep.indvars : bc_indvars
 
-    expr_loss_function = build_symbolic_loss_function(pinnrep, eqs;
-                                                      bc_indvars = bc_indvars,
-                                                      eq_params = eq_params,
-                                                      param_estim = param_estim,
-                                                      default_p = default_p)
+    expr_loss_function = build_symbolic_loss_function(pinnrep, eqs; bc_indvars=bc_indvars,
+                                                      eq_params=eq_params,
+                                                      param_estim=param_estim,
+                                                      default_p=default_p)
     u = NeuralPDE.get_u()
     _loss_function = NeuralPDE.NeuralPDE.@RuntimeGeneratedFunction(expr_loss_function)
     loss_function = (cord, θ) -> begin _loss_function(cord, θ, phi, derivative, integral, u,
@@ -149,10 +145,9 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars)
 end
 
 function get_numeric_integral(pinnrep::NamedTuple)
-    (; strategy, indvars, depvars, derivative,
-    depvars, indvars, dict_indvars, dict_depvars) = pinnrep
+    (; strategy, indvars, depvars, derivative, depvars, indvars, dict_indvars, dict_depvars) = pinnrep
 
-    integral = (u, cord, phi, integrating_var_id, integrand_func, lb, ub, θ; strategy = strategy, indvars = indvars, depvars = depvars, dict_indvars = dict_indvars, dict_depvars = dict_depvars) -> begin
+    integral = (u, cord, phi, integrating_var_id, integrand_func, lb, ub, θ; strategy=strategy, indvars=indvars, depvars=depvars, dict_indvars=dict_indvars, dict_depvars=dict_depvars) -> begin
         function integration_(cord, lb, ub, θ)
             cord_ = cord
             function integrand_(x, p)
@@ -160,7 +155,7 @@ function get_numeric_integral(pinnrep::NamedTuple)
                 return integrand_func(cord_, p, phi, derivative, nothing, u, nothing)
             end
             prob_ = IntegralProblem(integrand_, lb, ub, θ)
-            sol = solve(prob_, CubatureJLh(), reltol = 1e-3, abstol = 1e-3)[1]
+            sol = solve(prob_, CubatureJLh(); reltol=1e-3, abstol=1e-3)[1]
 
             return sol
         end
@@ -201,26 +196,23 @@ function parse_equation(pinnrep::NamedTuple, eq)
     right_expr = transform_expression(pinnrep, toexpr(eq_rhs))
     left_expr = NeuralPDE._dot_(left_expr)
     right_expr = NeuralPDE._dot_(right_expr)
-    loss_func = :($left_expr .- $right_expr)
+    return loss_func = :($left_expr .- $right_expr)
 end
 
-function transform_expression(pinnrep::NamedTuple, ex; is_integral = false,
-                              dict_transformation_vars = nothing,
-                              transformation_vars = nothing)
+function transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
+                              dict_transformation_vars=nothing, transformation_vars=nothing)
     if ex isa Expr
-        ex = _transform_expression(pinnrep, ex; is_integral = is_integral,
-                                   dict_transformation_vars = dict_transformation_vars,
-                                   transformation_vars = transformation_vars)
+        ex = _transform_expression(pinnrep, ex; is_integral=is_integral,
+                                   dict_transformation_vars=dict_transformation_vars,
+                                   transformation_vars=transformation_vars)
     end
     return ex
 end
 
-function _transform_expression(pinnrep::NamedTuple, ex; is_integral = false,
-                               dict_transformation_vars = nothing,
-                               transformation_vars = nothing)
-    (; indvars, depvars, dict_indvars, dict_depvars,
-    dict_depvar_input, multioutput, strategy, phi,
-    derivative, integral, init_params) = pinnrep
+function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
+                               dict_transformation_vars=nothing,
+                               transformation_vars=nothing)
+    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput, strategy, phi, derivative, integral, init_params) = pinnrep
     flat_init_params = init_params
     eltypeθ = eltype(flat_init_params)
 
@@ -308,20 +300,19 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral = false,
 
                 num_depvar = map(int_depvar -> dict_depvars[int_depvar],
                                  integrating_depvars)
-                integrand_ = transform_expression(pinnrep, _args[2];
-                                                  is_integral = false,
-                                                  dict_transformation_vars = dict_transformation_vars,
-                                                  transformation_vars = transformation_vars)
+                integrand_ = transform_expression(pinnrep, _args[2]; is_integral=false,
+                                                  dict_transformation_vars=dict_transformation_vars,
+                                                  transformation_vars=transformation_vars)
                 integrand__ = NeuralPDE._dot_(integrand_)
 
                 integrand = build_symbolic_loss_function(pinnrep, nothing;
-                                                         integrand = integrand__,
-                                                         integrating_depvars = integrating_depvars,
-                                                         eq_params = SciMLBase.NullParameters(),
-                                                         dict_transformation_vars = dict_transformation_vars,
-                                                         transformation_vars = transformation_vars,
-                                                         param_estim = false,
-                                                         default_p = nothing)
+                                                         integrand=integrand__,
+                                                         integrating_depvars=integrating_depvars,
+                                                         eq_params=SciMLBase.NullParameters(),
+                                                         dict_transformation_vars=dict_transformation_vars,
+                                                         transformation_vars=transformation_vars,
+                                                         param_estim=false,
+                                                         default_p=nothing)
                 # integrand = repr(integrand)
                 lb = toexpr.(lb)
                 ub = toexpr.(ub)
@@ -332,10 +323,10 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral = false,
                         push!(lb_, l)
                     else
                         l_expr = NeuralPDE.build_symbolic_loss_function(pinnrep, nothing;
-                                                                        integrand = NeuralPDE._dot_(l),
-                                                                        integrating_depvars = integrating_depvars,
-                                                                        param_estim = false,
-                                                                        default_p = nothing)
+                                                                        integrand=NeuralPDE._dot_(l),
+                                                                        integrating_depvars=integrating_depvars,
+                                                                        param_estim=false,
+                                                                        default_p=nothing)
                         l_f = NeuralPDE.@RuntimeGeneratedFunction(l_expr)
                         push!(lb_, l_f)
                     end
@@ -345,10 +336,10 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral = false,
                         push!(ub_, u_)
                     else
                         u_expr = NeuralPDE.build_symbolic_loss_function(pinnrep, nothing;
-                                                                        integrand = NeuralPDE._dot_(u_),
-                                                                        integrating_depvars = integrating_depvars,
-                                                                        param_estim = false,
-                                                                        default_p = nothing)
+                                                                        integrand=NeuralPDE._dot_(u_),
+                                                                        integrating_depvars=integrating_depvars,
+                                                                        param_estim=false,
+                                                                        default_p=nothing)
                         u_f = NeuralPDE.@RuntimeGeneratedFunction(u_expr)
                         push!(ub_, u_f)
                     end
@@ -369,10 +360,9 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral = false,
                 break
             end
         else
-            ex.args[i] = _transform_expression(pinnrep, ex.args[i];
-                                               is_integral = is_integral,
-                                               dict_transformation_vars = dict_transformation_vars,
-                                               transformation_vars = transformation_vars)
+            ex.args[i] = _transform_expression(pinnrep, ex.args[i]; is_integral=is_integral,
+                                               dict_transformation_vars=dict_transformation_vars,
+                                               transformation_vars=transformation_vars)
         end
     end
     return ex

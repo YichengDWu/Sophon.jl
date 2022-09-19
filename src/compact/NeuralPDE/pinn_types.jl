@@ -1,13 +1,21 @@
 """
-    PINN(chain; device_type::Type=Array{Float64}, kwargs...)
+    PINN(chain; device_type::Type=Array{Float64})
+
+## Arguments
+
+  - `chain`: `AbstractExplicitLayer` or a named tuple of `AbstractExplicitLayer`s.
+  - `device_type`: `Array{T}` or `CuArray{T}`, or any other array types.
 """
-struct PINN{T, PHI, P, K}
+struct PINN{T, PHI, P}
     phi::PHI
     init_params::P
-    kwargs::K
 end
 
-function PINN(chain::NamedTuple; device_type::Type=Array{Float64}, kwargs...)
+function PINN(; device_type::Type=Array{Float64}, kwargs...)
+    return PINN((; kwargs...); device_type=device_type)
+end
+
+function PINN(chain::NamedTuple; device_type::Type=Array{Float64})
     phi = map(ChainState, chain)
     phi = map(phi) do ϕ
         return Lux.@set! ϕ.state = adapt(device_type, ϕ.state)
@@ -16,21 +24,17 @@ function PINN(chain::NamedTuple; device_type::Type=Array{Float64}, kwargs...)
     init_params = ComponentArray(initialparameters(Random.default_rng(), phi))
     init_params = adapt(device_type, init_params)
 
-    return PINN{device_type, typeof(phi), typeof(init_params), typeof(kwargs)}(phi,
-                                                                               init_params,
-                                                                               kwargs)
+    return PINN{device_type, typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
-function PINN(chain::AbstractExplicitLayer; device_type::Type=Array{Float64}, kwargs...)
+function PINN(chain::AbstractExplicitLayer; device_type::Type=Array{Float64})
     phi = ChainState(chain)
     Lux.@set! phi.state = adapt(device_type, phi.state)
 
     init_params = ComponentArray(initialparameters(Random.default_rng(), phi))
     init_params = adapt(device_type, init_params)
 
-    return PINN{device_type, typeof(phi), typeof(init_params), typeof(kwargs)}(phi,
-                                                                               init_params,
-                                                                               kwargs)
+    return PINN{device_type, typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
 """

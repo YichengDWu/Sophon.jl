@@ -5,6 +5,7 @@ abstract type PINNSampler{T, N1, N2} end
                        sampling_alg=LatinHypercubeSample())
 
 Sampler to generate the datasets for PDE and boundary conditions using a quisa-random sampling algorithm.
+It momerizes the domain of the PDE and the boundary conditions, and you can call `sample` on it to generate the datasets.
 """
 struct QuisaRandomSampler{T, N1, N2, S} <: PINNSampler{T, N1, N2}
     pde_points::NTuple{N1, Int}

@@ -40,7 +40,7 @@ export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature
 export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON
 export DeepONet
-export PINN, symbolic_discretize, discretize, get_optimization_problem,
-       QuisaRandomSampler, NonAdaptiveTraining, get_optimization_problem
+export PINN, symbolic_discretize, discretize, get_optimization_problem, QuisaRandomSampler,
+       NonAdaptiveTraining, get_optimization_problem
 
 end

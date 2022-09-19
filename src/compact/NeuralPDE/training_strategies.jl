@@ -11,12 +11,13 @@ struct NonAdaptiveTraining{P, B} <: AbstractTrainingAlg
 end
 
 function NonAdaptiveTraining(pde_weights=1, bcs_weights=pde_weights)
-    return NonAdaptiveTraining{typeof(pde_weights), typeof(bcs_weights)}(pde_weights, bcs_weights)
+    return NonAdaptiveTraining{typeof(pde_weights), typeof(bcs_weights)}(pde_weights,
+                                                                         bcs_weights)
 end
 
 function get_pde_and_bcs_loss_function(strategy::NonAdaptiveTraining{P, B},
-                                datafree_pde_loss_function,
-                                datafree_bc_loss_function) where {P, B}
+                                       datafree_pde_loss_function,
+                                       datafree_bc_loss_function) where {P, B}
     (; pde_weights, bcs_weights) = strategy
 
     N1 = length(datafree_pde_loss_function)
@@ -26,13 +27,14 @@ function get_pde_and_bcs_loss_function(strategy::NonAdaptiveTraining{P, B},
     bcs_weights = B <: Number ? ntuple(_ -> first(bcs_weights), N2) : Tuple(bcs_points)
 
     f = get_pde_and_bcs_loss_function((pde_weights..., bcs_weights...),
-                           (datafree_pde_loss_function..., datafree_bc_loss_function...))
+                                      (datafree_pde_loss_function...,
+                                       datafree_bc_loss_function...))
 
     return f
 end
 
 function get_pde_and_bcs_loss_function(weights::NTuple{N},
-                                datafree_loss_function::Tuple) where {N}
+                                       datafree_loss_function::Tuple) where {N}
     ex = :(mean($(weights[1]) .* abs2.($(datafree_loss_function[1])(p[1], θ))))
     for i in 2:N
         ex = :(mean($(weights[i]) .* abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
