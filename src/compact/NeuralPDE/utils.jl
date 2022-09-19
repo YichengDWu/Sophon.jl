@@ -73,9 +73,9 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eqs;
         acum = [0; accumulate(+, map(length, init_params))]
         sep = [(acum[i] + 1):acum[i + 1] for i in 1:(length(acum) - 1)]
 
-        for i in eachindex(depvars)
-            push!(expr_θ, :($θ.$(depvars[i])))
-            push!(expr_phi, :(phi[$i]))
+        for u in depvars
+            push!(expr_θ, :($θ.$(u)))
+            push!(expr_phi, :(phi.$(u)))
         end
 
         vars_θ = Expr(:(=), NeuralPDE.build_expr(:tuple, θ_nums), NeuralPDE.build_expr(:tuple, expr_θ))

@@ -184,28 +184,35 @@ rng = Random.default_rng()
         end
     end
 
-    @testset "containers" begin @testset "Sophon.ChainState" begin
-        x = rand(Float32, 3, 6)
-        @testset "named tuple" begin
-            layers = (a=Dense(3, 4), b=Dense(4, 5))
-            cs = Sophon.ChainState(; a=Dense(3, 4), b=Dense(4, 5))
-            ps = Lux.initialparameters(rng, cs)
-            y = cs(x, ps)
-            @test size(y) == (5, 6)
+    @testset "containers" begin
+        @testset "Sophon.ChainState" begin
+            x = rand(Float32, 3, 6)
+            @testset "named tuple" begin
+                layers = (a=Dense(3, 4), b=Dense(4, 5))
+                cs = Sophon.ChainState(; a=Dense(3, 4), b=Dense(4, 5))
+                ps = Lux.initialparameters(rng, cs)
+                y = cs(x, ps)
+                @test size(y) == (5, 6)
 
-            @test_nowarn gradient(p -> sum(cs(x, p)), ps)
+                @test_nowarn gradient(p -> sum(cs(x, p)), ps)
 
-            st = Lux.initialstates(rng, layers)
-            @test_nowarn Sophon.ChainState(ps, st)
+                st = Lux.initialstates(rng, layers)
+                @test_nowarn Sophon.ChainState(ps, st)
 
-            @test_nowarn Sophon.ChainState(layers...)
+                @test_nowarn Sophon.ChainState(layers...)
+            end
+            @testset "single model" begin
+                model = Sophon.ChainState(BACON(3, 4, 8, 1; num_layers=2, hidden_dims=5))
+                ps = Lux.initialparameters(rng, model)
+
+                y = model(x, ps)
+                @test_nowarn gradient(p -> sum(model(x, p)), ps)
+            end
         end
-        @testset "single model" begin
-            model = Sophon.ChainState(BACON(3, 4, 8, 1; num_layers=2, hidden_dims=5))
-            ps = Lux.initialparameters(rng, model)
-
-            y = model(x, ps)
-            @test_nowarn gradient(p -> sum(model(x, p)), ps)
+        @testset "PINN" begin
+            chain = Chain(Dense(3, 4), Dense(4, 5))
+            @test_nowarn PINN(chain)
+            @test_nowarn PINN(u = chain, p = chain)
         end
-    end end
+    end
 end end
