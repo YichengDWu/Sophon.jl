@@ -34,7 +34,7 @@ bcs = [u(x,0) ~ u_analytic(x,0)]
 We will use [`BACON`](@ref) to impose the boundary conditions. To this end, we simply set `period` to be one.
 
 ```@example convection
-chain = BACON(2,1,7,1; hidden_dims = 32, num_layers=3)
+chain = BACON(2, 1, 8, 1; hidden_dims = 32, num_layers=4)
 ```
 
 !!! note
