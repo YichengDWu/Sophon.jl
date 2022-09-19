@@ -6,13 +6,13 @@
   - `chain`: `AbstractExplicitLayer` or a named tuple of `AbstractExplicitLayer`s.
   - `device_type`: `Array{T}` or `CuArray{T}`, or any other array types.
 """
-struct PINN{T, PHI, P, K}
+struct PINN{T, PHI, P}
     phi::PHI
     init_params::P
 end
 
 function PINN(; device_type::Type=Array{Float64}, kwargs...)
-    return PINN(kwargs; device_type=device_type)
+    return PINN((; kwargs...); device_type=device_type)
 end
 
 function PINN(chain::NamedTuple; device_type::Type=Array{Float64})
@@ -24,7 +24,7 @@ function PINN(chain::NamedTuple; device_type::Type=Array{Float64})
     init_params = ComponentArray(initialparameters(Random.default_rng(), phi))
     init_params = adapt(device_type, init_params)
 
-    return PINN{device_type, typeof(phi), typeof(init_params)}(phi, init_params, kwargs)
+    return PINN{device_type, typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
 function PINN(chain::AbstractExplicitLayer; device_type::Type=Array{Float64})
@@ -34,7 +34,7 @@ function PINN(chain::AbstractExplicitLayer; device_type::Type=Array{Float64})
     init_params = ComponentArray(initialparameters(Random.default_rng(), phi))
     init_params = adapt(device_type, init_params)
 
-    return PINN{device_type, typeof(phi), typeof(init_params)}(phi, init_params, kwargs)
+    return PINN{device_type, typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
 """
