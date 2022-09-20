@@ -37,7 +37,7 @@ bcs = [u(0) ~ 0, u(1) ~ 0]
 
 chain = Siren(1, 32, 32, 32, 32, 1)
 pinn = PINN(chain)
-sampler = QuisaRandomSampler(poisson, 100, 1) 
+sampler = QuasiRandomSampler(poisson, 100, 1) 
 strategy = NonAdaptiveTraining(1 , 50)
 
 prob = Sophon.discretize(poisson, pinn, sampler, strategy)

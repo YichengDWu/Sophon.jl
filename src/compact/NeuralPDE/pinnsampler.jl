@@ -1,13 +1,13 @@
 abstract type PINNSampler{T, N1, N2} end
 
 """
-    QuisaRandomSampler(pde::NeuralPDE.PDESystem, pde_points, bcs_points=pde_points;
+    QuasiRandomSampler(pde::NeuralPDE.PDESystem, pde_points, bcs_points=pde_points;
                        sampling_alg=LatinHypercubeSample())
 
 Sampler to generate the datasets for PDE and boundary conditions using a quisa-random sampling algorithm.
 It momerizes the domain of the PDE and the boundary conditions, and you can call `sample` on it to generate the datasets.
 """
-struct QuisaRandomSampler{T, N1, N2, S} <: PINNSampler{T, N1, N2}
+struct QuasiRandomSampler{T, N1, N2, S} <: PINNSampler{T, N1, N2}
     pde_points::NTuple{N1, Int}
     bcs_points::NTuple{N2, Int}
     pde_bounds::Any
@@ -15,7 +15,7 @@ struct QuisaRandomSampler{T, N1, N2, S} <: PINNSampler{T, N1, N2}
     sampling_alg::S
 end
 
-function QuisaRandomSampler(pde::NeuralPDE.PDESystem, pde_points, bcs_points=pde_points;
+function QuasiRandomSampler(pde::NeuralPDE.PDESystem, pde_points, bcs_points=pde_points;
                             device_type::Type=Array{Float64},
                             sampling_alg=LatinHypercubeSample())
     (; eqs, bcs, domain, ivs, dvs) = pde
@@ -30,14 +30,14 @@ function QuisaRandomSampler(pde::NeuralPDE.PDESystem, pde_points, bcs_points=pde
     bcs_points = length(bcs_points) == 1 ? ntuple(_ -> first(bcs_points), N2) :
                  Tuple(bcs_points)
 
-    return QuisaRandomSampler{device_type, N1, N2, typeof(sampling_alg)}(pde_points,
+    return QuasiRandomSampler{device_type, N1, N2, typeof(sampling_alg)}(pde_points,
                                                                          bcs_points,
                                                                          pde_bounds,
                                                                          bcs_bounds,
                                                                          sampling_alg)
 end
 
-function sample(pinnsampler::QuisaRandomSampler{device_type}) where {device_type}
+function sample(pinnsampler::QuasiRandomSampler{device_type}) where {device_type}
     eltypeθ = eltype(device_type)
     device = parameterless_type(device_type)
     (; pde_points, bcs_points, pde_bounds, bcs_bounds, sampling_alg) = pinnsampler
