@@ -23,8 +23,8 @@ function get_pde_and_bcs_loss_function(strategy::NonAdaptiveTraining{P, B},
     N1 = length(datafree_pde_loss_function)
     N2 = length(datafree_bc_loss_function)
 
-    pde_weights = P <: Number ? ntuple(_ -> first(pde_weights), N1) : Tuple(pde_points)
-    bcs_weights = B <: Number ? ntuple(_ -> first(bcs_weights), N2) : Tuple(bcs_points)
+    pde_weights = P <: Number ? ntuple(_ -> first(pde_weights), N1) : Tuple(pde_weights)
+    bcs_weights = B <: Number ? ntuple(_ -> first(bcs_weights), N2) : Tuple(bcs_weights)
 
     f = get_pde_and_bcs_loss_function((pde_weights..., bcs_weights...),
                                       (datafree_pde_loss_function...,
