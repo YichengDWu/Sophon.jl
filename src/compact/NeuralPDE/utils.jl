@@ -251,7 +251,7 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                 dim_l = length(dict_interior_indvars)
 
                 var_ = is_integral ? :(derivative) : :($(Expr(:$, :derivative)))
-                εs = [NeuralPDE.get_ε(dim_l, d, eltypeθ) for d in 1:dim_l]
+                εs = [NeuralPDE.get_ε(dim_l, d, Float64) for d in 1:dim_l]
                 undv = [dict_interior_indvars[d_p] for d_p in derivative_variables]
                 εs_dnv = [εs[d] for d in undv]
 
@@ -366,4 +366,34 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
         end
     end
     return ex
+end
+
+function numeric_derivative(phi, u, x, εs, order, θ)
+    _epsilon = one(Float64) / cbrt(eps(Float64))
+    _type = parameterless_type(ComponentArrays.getdata(θ))
+
+    ε = εs[order]
+    ε = adapt(_type, ε)
+    x = adapt(_type, x)
+
+    if order > 4 || any(x -> x != εs[1], εs)
+        return (numeric_derivative(phi, u, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ)
+                .-
+                numeric_derivative(phi, u, x .- ε, @view(εs[1:(end - 1)]), order - 1, θ)) .*
+               _epsilon ./ 2
+    elseif order == 4
+        return (u(x .+ 2 .* ε, θ, phi) .- 4 .* u(x .+ ε, θ, phi)
+                .+
+                6 .* u(x, θ, phi)
+                .-
+                4 .* u(x .- ε, θ, phi) .+ u(x .- 2 .* ε, θ, phi)) .* _epsilon^4
+    elseif order == 3
+        return (u(x .+ 2 .* ε, θ, phi) .- 2 .* u(x .+ ε, θ, phi) .+ 2 .* u(x .- ε, θ, phi)
+                -
+                u(x .- 2 .* ε, θ, phi)) .* _epsilon^3 ./ 2
+    elseif order == 2
+        return (u(x .+ ε, θ, phi) .+ u(x .- ε, θ, phi) .- 2 .* u(x, θ, phi)) .* _epsilon^2
+    elseif order == 1
+        return (u(x .+ ε, θ, phi) .- u(x .- ε, θ, phi)) .* _epsilon ./ 2
+    end
 end

@@ -2,6 +2,7 @@ abstract type PINNSampler{T, N1, N2} end
 
 """
     QuasiRandomSampler(pde::NeuralPDE.PDESystem, pde_points, bcs_points=pde_points;
+                       device_type::Type=Array{Float64}
                        sampling_alg=LatinHypercubeSample())
 
 Sampler to generate the datasets for PDE and boundary conditions using a quisa-random sampling algorithm.
@@ -39,7 +40,6 @@ end
 
 function sample(pinnsampler::QuasiRandomSampler{device_type}) where {device_type}
     eltypeθ = eltype(device_type)
-    device = parameterless_type(device_type)
     (; pde_points, bcs_points, pde_bounds, bcs_bounds, sampling_alg) = pinnsampler
 
     # generate_quasi_random_point does not respect data type

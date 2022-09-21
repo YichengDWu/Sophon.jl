@@ -8,11 +8,9 @@ Fixed weights for the loss functions.
 struct NonAdaptiveTraining{P, B} <: AbstractTrainingAlg
     pde_weights::P
     bcs_weights::B
-end
-
-function NonAdaptiveTraining(pde_weights=1, bcs_weights=pde_weights)
-    return NonAdaptiveTraining{typeof(pde_weights), typeof(bcs_weights)}(pde_weights,
-                                                                         bcs_weights)
+    function NonAdaptiveTraining(pde_weights=1, bcs_weights=pde_weights)
+        return new{typeof(pde_weights), typeof(bcs_weights)}(pde_weights, bcs_weights)
+    end
 end
 
 function get_pde_and_bcs_loss_function(strategy::NonAdaptiveTraining{P, B},
@@ -40,5 +38,5 @@ function get_pde_and_bcs_loss_function(weights::NTuple{N},
         ex = :(mean($(weights[i]) .* abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
     end
     loss_f = :((θ, p) -> $ex)
-    return eval(loss_f)
+    return NeuralPDE.@RuntimeGeneratedFunction(loss_f)
 end

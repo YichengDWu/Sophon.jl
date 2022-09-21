@@ -27,7 +27,7 @@ a1 = 1
 a2 = 4
 k = 1
 
-q(x,y) = -(a1*π)^2 * sin(a1*π*x) * sin(a2*π*y) - (a2*π)^2 * sin(a1*π*x) * sin(a2*π*y) + k^2 * sin(a1*π*x) * sin(a2*π*y)
+q(x,y) = -(a1*π)^2 * sinpi(a1*x) * sinpi(a2*y) - (a2*π)^2 * sinpi(a1*x) * sinpi(a2*y) + k^2 * sinpi(a1*x) * sinpi(a2*y)
 eq = Dxx(u(x,y)) + Dyy(u(x,y)) + k^2 * u(x,y) ~ q(x,y)
 domains = [x ∈ Interval(-1,1), y ∈ Interval(-1,1)]
 bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
@@ -35,8 +35,8 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 @named helmholtz = PDESystem(eq, bcs, domains, [x,y], [u(x,y)])
 
 chain = BACON(2, 1, 5, 2; hidden_dims = 32, num_layers=5)
-pinn = PINN(chain; device_type = Array{Float32}) # use device_type = CuArray{Float32} to enable GPU
-sampler = QuasiRandomSampler(helmholtz, 300, 100; device_type = Array{Float32}) # use device_type = CuArray{Float32} to enable GPU
+pinn = PINN(chain; device_type = Array{Float64}) # use device_type = CuArray{Float64} to enable GPU
+sampler = QuasiRandomSampler(helmholtz, 300, 100; device_type = Array{Float64}) # use device_type = CuArray{Float64} to enable GPU
 strategy = NonAdaptiveTraining()
 
 prob = Sophon.discretize(helmholtz, pinn, sampler, strategy) 
