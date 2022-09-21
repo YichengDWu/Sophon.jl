@@ -116,7 +116,7 @@ function (f::FourierFeature{NTuple{N, Pair{S, T}}})(x::AbstractArray, ps,
 end
 
 @doc raw"""
-    DiscreteFourierFeature(in_dims::Int, out_dims::Int, N::Int, period::Real)
+    DiscreteFourierFeature(in_dims::Int, out_dims::Int, N::Int, period::Real; cache::Bool=false)
 
 The discrete Fourier filter proposed in [lindell2021bacon](@cite). For a periodic function
 with period ``P``, the Fourier series in amplitude-phase form is
@@ -130,8 +130,12 @@ The output is guaranteed to be periodic.
   - `out_dims`: Number of the output dimensions.
   - `N`: ``N`` in the formula.
   - `period`: ``P`` in the formula.
+
+## Keyword Arguments
+  - `cache`: If `true`, the Fourier features are cahed. Useful when the input is deterministic.
+  call `empty!(memoize_cache(Sophon.cached_sinWx))` and `empty!(memoize_cache(Sophon.cached_cosWx))` to clear the cache.
 """
-struct DiscreteFourierFeature{P, F} <: AbstractExplicitLayer
+struct DiscreteFourierFeature{cache, P, F} <: AbstractExplicitLayer
     in_dims::Int
     out_dims::Int
     period::P
@@ -142,20 +146,17 @@ function Base.show(io::IO, f::DiscreteFourierFeature)
     return print(io, "DiscreteFourierFeature($(f.in_dims) => $(f.out_dims))")
 end
 
-function DiscreteFourierFeature(in_dims::Int, out_dims::Int, N::Int, period::Real)
-    return DiscreteFourierFeature{typeof(period), typeof(N)}(in_dims, out_dims, period, N)
+function DiscreteFourierFeature(in_dims::Int, out_dims::Int, N::Int, period::Real;
+                                cache::Bool=false)
+    return DiscreteFourierFeature{cache, typeof(period), typeof(N)}(in_dims, out_dims,
+                                                                    period, N)
 end
 
-function DiscreteFourierFeature(ch::Pair{<:Int, <:Int}, N::Int, period::Real)
-    return DiscreteFourierFeature(first(ch), last(ch), N, period)
+function DiscreteFourierFeature(ch::Pair{<:Int, <:Int}, N::Int, period::Real;
+                                cache::Bool=false)
+    return DiscreteFourierFeature(first(ch), last(ch), N, period; cache=cache)
 end
 
-function initialstates(rng::AbstractRNG, m::DiscreteFourierFeature{<:Int})
-    s = 2 / m.period
-    s = s ≈ round(s) ? Int(s) : Float32(s)
-    weight = rand(rng, 0:(m.N), m.out_dims, m.in_dims)
-    return (; weight=weight, fundamental_freq=s)
-end
 function initialstates(rng::AbstractRNG, m::DiscreteFourierFeature)
     s = 2π / m.period
     s = s ≈ round(s) ? Int(s) : Float32(s)
@@ -163,10 +164,6 @@ function initialstates(rng::AbstractRNG, m::DiscreteFourierFeature)
     return (; weight=weight, fundamental_freq=s)
 end
 
-function initialparameters(rng::AbstractRNG, m::DiscreteFourierFeature{<:Int})
-    bias = init_uniform(rng, m.out_dims, 1)
-    return (; bias=bias)
-end
 function initialparameters(rng::AbstractRNG, m::DiscreteFourierFeature)
     bias = init_uniform(rng, m.out_dims, 1; scale=1.0f0π)
     return (; bias=bias)
@@ -178,21 +175,25 @@ end
 
 statelength(b::DiscreteFourierFeature) = b.out_dims * b.in_dims
 
-@inline function (b::DiscreteFourierFeature{<:Int})(x::AbstractVector, ps, st::NamedTuple)
-    return sinpi.(st.weight * x .* st.fundamental_freq .+ vec(ps.bias)), st
-end
-@inline function (b::DiscreteFourierFeature)(x::AbstractVector, ps, st::NamedTuple)
+function (b::DiscreteFourierFeature{false})(x::AbstractVector, ps, st::NamedTuple)
     return sin.(st.weight * x .* st.fundamental_freq .+ vec(ps.bias)), st
 end
 
-@inline function (d::DiscreteFourierFeature{<:Int})(x::AbstractMatrix, ps, st::NamedTuple)
-    return sinpi.(st.weight * x .* st.fundamental_freq .+ ps.bias), st
+function (b::DiscreteFourierFeature{true})(x::AbstractVector, ps, st::NamedTuple)
+    W = st.weight .* st.fundamental_freq
+    b = vec(ps.bias)
+    return cached_sinWx(W, x) .* cos.(b) .+ cached_cosWx(W, x) .* sin.(b), st
 end
 
-@inline function (d::DiscreteFourierFeature)(x::AbstractMatrix, ps, st::NamedTuple)
+function (d::DiscreteFourierFeature{false})(x::AbstractMatrix, ps, st::NamedTuple)
     return sin.(st.weight * x .* st.fundamental_freq .+ ps.bias), st
 end
 
+function (d::DiscreteFourierFeature{true})(x::AbstractMatrix, ps, st::NamedTuple)
+    W = st.weight .* st.fundamental_freq
+    b = ps.bias
+    return cached_sinWx(W, x) .* cos.(b) .+ cached_cosWx(W, x) .* sin.(b), st
+end
 """
     Sine(in_dims::Int, out_dims::Int; omega::Real)
 

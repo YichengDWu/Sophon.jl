@@ -14,6 +14,7 @@ using SciMLBase, NeuralPDE, ComponentArrays
 using SciMLBase: parameterless_type
 using StatsBase, QuasiMonteCarlo
 using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
+using Memoize, LRUCache
 
 NeuralPDE.RuntimeGeneratedFunctions.init(@__MODULE__)
 

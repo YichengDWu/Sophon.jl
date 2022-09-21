@@ -394,20 +394,20 @@ end
     BACON(in_dims::Int, out_dims::Int, N::Int, period::Real; hidden_dims::Int, num_layers::Int)
 
 Band-limited Coordinate Networks (BACON) from [lindell2021bacon](@cite). Similar to [`FourierFilterNet`](@ref) but the
-frequcies are dicrete and nontrainable.
+frequcies are dicrete and nontrainable. See [`DiscreteFourierFilter`](@ref) for more details.
 
 Tips: It is recommended to set `period` to be `1,2,π` or `2π` for better performance.
 """
 function BACON(in_dims::Int, out_dims::Int, N::Int, period::Real; hidden_dims::Int,
-               num_layers::Int)
+               num_layers::Int, cache::Bool=false)
     names = ntuple(i -> Symbol("filter_$i"), num_layers)
     Ns = ntuple(_ -> N ÷ num_layers, num_layers)
     if N % num_layers != 0
         Ns = (Ns[1:(end - 1)]..., Ns[end] + N % num_layers)
     end
 
-    layers = ntuple(i -> DiscreteFourierFeature(in_dims, hidden_dims, Ns[i], period),
-                    num_layers)
+    layers = ntuple(i -> DiscreteFourierFeature(in_dims, hidden_dims, Ns[i], period;
+                                                cache=cache), num_layers)
     nt = NamedTuple{names}(layers)
     filters = BranchLayer{typeof(nt)}(nt)
 

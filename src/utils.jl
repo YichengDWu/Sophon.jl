@@ -89,3 +89,67 @@ end
 end
 
 ChainRulesCore.@non_differentiable init_normal(::Any...)
+
+@memoize LRU{Tuple{AbstractArray,AbstractArray},AbstractArray}(maxsize=1000) function cached_sinWx(W, x)
+    return sin.(W * x)
+end
+
+@memoize LRU{Tuple{AbstractArray,AbstractArray},AbstractArray}(maxsize=1000) function cached_sinpiWx(W, x)
+    return sinpi.(W * x)
+end
+
+@memoize LRU{Tuple{AbstractArray,AbstractArray},AbstractArray}(maxsize=1000) function cached_cosWx(W, x)
+    return cos.(W * x)
+end
+
+@memoize LRU{Tuple{AbstractArray,AbstractArray},AbstractArray}(maxsize=1000) function cached_cospiWx(W, x)
+    return cospi.(W * x)
+end
+
+function ChainRulesCore.rrule(::typeof(cached_sinWx), W::AbstractMatrix,
+                              x::AbstractVecOrMat)
+    y = cached_sinWx(W, x)
+    function cached_sinWx_pullback(ȳ)
+        f̄ = NoTangent()
+        W̄ = @thunk((ȳ .* cached_cosWx(W, x))*x')
+        x̄ = W' * (cached_cosWx(W, x) .* ȳ)
+        return f̄, W̄, x̄
+    end
+    return y, cached_sinWx_pullback
+end
+
+function ChainRulesCore.rrule(::typeof(cached_sinpiWx), W::AbstractMatrix,
+                              x::AbstractVecOrMat)
+    y = cached_sinpiWx(W, x)
+    function cached_sinWx_pullback(ȳ)
+        f̄ = NoTangent()
+        W̄ = @thunk((ȳ .* π .* cached_cospiWx(W, x))*x')
+        x̄ = W' * (π .* cached_cospiWx(W, x) .* ȳ)
+        return f̄, W̄, x̄
+    end
+    return y, cached_sinWx_pullback
+end
+
+function ChainRulesCore.rrule(::typeof(cached_cosWx), W::AbstractMatrix,
+                              x::AbstractVecOrMat)
+    y = cached_cosWx(W, x)
+    function cached_cosWx_pullback(ȳ)
+        f̄ = NoTangent()
+        W̄ = @thunk((ȳ .* -cached_sinWx(W, x))*x')
+        x̄ = W' * (-cached_sinWx(W, x) .* ȳ)
+        return f̄, W̄, x̄
+    end
+    return y, cached_cosWx_pullback
+end
+
+function ChainRulesCore.rrule(::typeof(cached_cospiWx), W::AbstractMatrix,
+                              x::AbstractVecOrMat)
+    y = cached_cospiWx(W, x)
+    function cached_cospiWx_pullback(ȳ)
+        f̄ = NoTangent()
+        W̄ = @thunk((ȳ .* π .* -cached_sinpiWx(W, x))*x')
+        x̄ = W' * (π .* -cached_sinpiWx(W, x) .* ȳ)
+        return f̄, W̄, x̄
+    end
+    return y, cached_cospiWx_pullback
+end
