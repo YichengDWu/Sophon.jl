@@ -414,5 +414,5 @@ function pair(eq, depvars, dict_depvar_input)
             depvar => dict_depvar_input[depvar]
         end
     end
-    Dict{Symbol,Any}(filter(p -> p !== nothing, pair_))
+    Dict(filter(p -> p !== nothing, pair_))
 end
