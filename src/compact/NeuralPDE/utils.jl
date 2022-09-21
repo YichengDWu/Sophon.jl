@@ -27,22 +27,33 @@ function get_l2_loss_function(loss_function, dataset)
 end
 
 @inline null_additional_loss(phi, θ) = 0
-
-function build_symbolic_loss_function(pinnrep::NamedTuple, eqs;
+"""
+:((cord, θ, phi, derivative, u)->begin
+          #= ... =#
+          #= ... =#
+          begin
+              (θ_depvar_1, θ_depvar_2) = (θ.depvar_1, θ.depvar_2)
+              (phi_depvar_1, phi_depvar_2) = (phi.depvar_1, phi.depvar_2)
+              let (x, y) = (cord[1], cord[2])
+                  [(+)(derivative(phi_depvar_1, u, [x, y], [[ε, 0.0]], 1, θ_depvar_1), (*)(4, derivative(phi_depvar_1, u, [x, y], [[0.0, ε]], 1, θ_depvar_2))) - 0,
+                   (+)(derivative(phi_depvar_2, u, [x, y], [[ε, 0.0]], 1, θ_depvar_2), (*)(9, derivative(phi_depvar_2, u, [x, y], [[0.0, ε]], 1, θ_depvar_1))) - 0]
+              end
+          end
+      end)
+"""
+function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
                                       eq_params=SciMLBase.NullParameters(),
                                       param_estim=false, default_p=nothing,
                                       bc_indvars=pinnrep.indvars, integrand=nothing,
                                       dict_transformation_vars=nothing,
                                       transformation_vars=nothing,
                                       integrating_depvars=pinnrep.depvars)
-    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, init_params, strategy, eq_params, param_estim, default_p) = pinnrep
-
-    eltypeθ = eltype(pinnrep.init_params)
+    (;  depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, init_params, strategy, eq_params, param_estim, default_p) = pinnrep
 
     if integrand isa Nothing
-        loss_function = parse_equation(pinnrep, eqs)
-        this_eq_pair = NeuralPDE.pair(eqs, depvars, dict_depvars, dict_depvar_input)
-        this_eq_indvars = unique(vcat(values(this_eq_pair)...))
+        loss_function, pos, values = parse_equation(pinnrep, eq)
+        this_eq_pair = pair(eq, depvars, dict_depvar_input)
+        this_eq_indvars = unique(vcat([getindex(this_eq_pair, v) for v in keys(this_eq_pair)]...))
     else
         this_eq_pair = Dict(map(intvars -> dict_depvars[intvars] => dict_depvar_input[intvars],
                                 integrating_depvars))
@@ -54,30 +65,26 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eqs;
     vars = :(cord, $θ, phi, derivative, integral, u, p)
     ex = Expr(:block)
     if multioutput
-        θ_nums = Symbol[]
-        phi_nums = Symbol[]
+        θs = Symbol[]
+        phis = Symbol[]
         for v in depvars
-            num = dict_depvars[v]
-            push!(θ_nums, :($(Symbol(:($θ), num))))
-            push!(phi_nums, :($(Symbol(:phi, num))))
+            push!(θs, :($(Symbol(:($θ), :_, v))))
+            push!(phis, :($(Symbol(:phi, :_, v))))
         end
 
         expr_θ = Expr[]
         expr_phi = Expr[]
-
-        acum = [0; accumulate(+, map(length, init_params))]
-        sep = [(acum[i] + 1):acum[i + 1] for i in 1:(length(acum) - 1)]
 
         for u in depvars
             push!(expr_θ, :($θ.$(u)))
             push!(expr_phi, :(phi.$(u)))
         end
 
-        vars_θ = Expr(:(=), NeuralPDE.build_expr(:tuple, θ_nums),
+        vars_θ = Expr(:(=), NeuralPDE.build_expr(:tuple, θs),
                       NeuralPDE.build_expr(:tuple, expr_θ))
         push!(ex.args, vars_θ)
 
-        vars_phi = Expr(:(=), NeuralPDE.build_expr(:tuple, phi_nums),
+        vars_phi = Expr(:(=), NeuralPDE.build_expr(:tuple, phis),
                         NeuralPDE.build_expr(:tuple, expr_phi))
         push!(ex.args, vars_phi)
     end
@@ -95,11 +102,21 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eqs;
     end
 
     eq_pair_expr = Expr[]
-    for i in keys(this_eq_pair)
-        push!(eq_pair_expr, :($(Symbol(:cord, :($i))) = vcat($(this_eq_pair[i]...))))
+    if pos isa Int
+        v = first(keys(this_eq_pair))
+        ivars_l = convert(Vector{Any}, deepcopy(this_eq_pair[v]))
+        ivars_r = convert(Vector{Any}, deepcopy(this_eq_pair[v]))
+        ivars_l[pos] = :(zero(cord[[1], :]) .+ $(values[1]))
+        ivars_r[pos] = :(zero(cord[[1], :]) .+ $(values[2]))
+        push!(eq_pair_expr, :($(Symbol(:cord, :_, :($v), :_l)) = vcat($(ivars_l...))))
+        push!(eq_pair_expr, :($(Symbol(:cord, :_, :($v), :_r)) = vcat($(ivars_r...))))
+    else
+        for v in keys(this_eq_pair)
+            push!(eq_pair_expr, :($(Symbol(:cord, :_, :($v))) = vcat($(this_eq_pair[v]...))))
+        end
     end
     vcat_expr = Expr(:block, :($(eq_pair_expr...)))
-    vcat_expr_loss_functions = Expr(:block, vcat_expr, loss_function) # TODO rename
+    vcat_expr_loss_functions = Expr(:block, vcat_expr, loss_function)
 
     if strategy isa QuadratureTraining
         indvars_ex = get_indvars_ex(bc_indvars)
@@ -192,11 +209,29 @@ end
 function parse_equation(pinnrep::NamedTuple, eq)
     eq_lhs = isequal(expand_derivatives(eq.lhs), 0) ? eq.lhs : expand_derivatives(eq.lhs)
     eq_rhs = isequal(expand_derivatives(eq.rhs), 0) ? eq.rhs : expand_derivatives(eq.rhs)
-    left_expr = transform_expression(pinnrep, toexpr(eq_lhs))
-    right_expr = transform_expression(pinnrep, toexpr(eq_rhs))
-    left_expr = NeuralPDE._dot_(left_expr)
-    right_expr = NeuralPDE._dot_(right_expr)
-    return loss_func = :($left_expr .- $right_expr)
+    left_expr = toexpr(eq_lhs)
+    right_expr = toexpr(eq_rhs)
+
+    tran_left_expr = transform_expression(pinnrep, toexpr(eq_lhs))
+    tran_right_expr = transform_expression(pinnrep, toexpr(eq_rhs))
+    dot_left_expr = NeuralPDE._dot_(tran_left_expr)
+    dot_right_expr = NeuralPDE._dot_(tran_right_expr)
+
+    if left_expr isa Expr && right_expr isa Expr && toexpr(eq_lhs).args[1] === right_expr.args[1]
+        pos = findfirst((left_expr.args[2:end] .!== right_expr.args[2:end])) # Assume the pericity is defined on n-1 hyperplanes with one depvar
+        values = (left_expr.args[pos+1], right_expr.args[pos+1])
+
+        dot_left_expr, dot_right_expr = parse_periodic_condition(dot_left_expr, dot_right_expr)
+        return loss_function = :($dot_left_expr .- $dot_right_expr), pos, values
+    else
+        return loss_function = :($dot_left_expr .- $dot_right_expr), nothing, nothing
+    end
+end
+
+function parse_periodic_condition(left_expr, right_expr)
+    left_expr.args[2] = Symbol(left_expr.args[2], :_l)
+    right_expr.args[2] = Symbol(right_expr.args[2], :_r)
+    return left_expr, right_expr
 end
 
 function transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
@@ -212,7 +247,7 @@ end
 function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                dict_transformation_vars=nothing,
                                transformation_vars=nothing)
-    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput, strategy, phi, derivative, integral, init_params) = pinnrep
+    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput, phi, derivative, init_params) = pinnrep
     flat_init_params = init_params
     eltypeθ = eltype(flat_init_params)
 
@@ -225,13 +260,13 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                 indvars = _args[2:end]
                 var_ = is_integral ? :(u) : :($(Expr(:$, :u)))
                 ex.args = if !multioutput
-                    [var_, Symbol(:cord, num_depvar), :($θ), :phi]
+                    [var_, Symbol(:cord, :_, e), :($θ), :phi]
                 else
                     [
                         var_,
-                        Symbol(:cord, num_depvar),
-                        Symbol(:($θ), num_depvar),
-                        Symbol(:phi, num_depvar),
+                        Symbol(:cord, :_, e),
+                        Symbol(:($θ), :_, e),
+                        Symbol(:phi, :_, e),
                     ]
                 end
                 break
@@ -256,16 +291,16 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                 εs_dnv = [εs[d] for d in undv]
 
                 ex.args = if !multioutput
-                    [var_, :phi, :u, Symbol(:cord, num_depvar), εs_dnv, order, :($θ)]
+                    [var_, :phi, :u, Symbol(:cord, :_, depvar), εs_dnv, order, :($θ)]
                 else
                     [
                         var_,
-                        Symbol(:phi, num_depvar),
+                        Symbol(:phi, :_, depvar),
                         :u,
-                        Symbol(:cord, num_depvar),
+                        Symbol(:cord, :_, depvar),
                         εs_dnv,
                         order,
-                        Symbol(:($θ), num_depvar),
+                        Symbol(:($θ), :_, depvar),
                     ]
                 end
                 break
@@ -366,4 +401,18 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
         end
     end
     return ex
+end
+
+
+"""
+Finds which dependent variables are being used in an equation.
+"""
+function pair(eq, depvars, dict_depvar_input)
+    expr = NeuralPDE.toexpr(eq)
+    pair_ = map(depvars) do depvar
+        if !isempty(NeuralPDE.find_thing_in_expr(expr, depvar))
+            depvar => dict_depvar_input[depvar]
+        end
+    end
+    Dict{Symbol,Any}(filter(p -> p !== nothing, pair_))
 end
