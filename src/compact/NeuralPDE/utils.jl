@@ -425,6 +425,7 @@ function get_ε(dim, der_num, eltypeθ, order)
 end
 
 function numeric_derivative(phi, u, x, εs, order, θ)
+    eltypeθ = eltype(θ)
     _epsilon = eltypeθ(inv(^(eps(eltypeθ), 1/(2+order))))
     _type = parameterless_type(ComponentArrays.getdata(θ))
 
