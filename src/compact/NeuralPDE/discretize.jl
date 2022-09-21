@@ -5,7 +5,6 @@ function get_datafree_pinn_loss_function(pde_system::PDESystem, pinn::PINN,
                                          derivative=NeuralPDE.numeric_derivative)
     (; eqs, bcs, domain, ps, defaults, indvars, depvars) = pde_system
     (; phi, init_params) = pinn
-    (; pde_weights, bcs_weights) = strategy
 
     default_p = ps == SciMLBase.NullParameters() ? nothing : [defaults[ep] for ep in ps]
 
