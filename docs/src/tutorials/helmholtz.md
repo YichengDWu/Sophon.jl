@@ -35,8 +35,8 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 @named helmholtz = PDESystem(eq, bcs, domains, [x,y], [u(x,y)])
 
 chain = BACON(2, 1, 5, 2; hidden_dims = 32, num_layers=5)
-pinn = PINN(chain; device_type = Array{Float32}) # use device_type = CuArray{Float32} to enable GPU
-sampler = QuasiRandomSampler(helmholtz, 300, 100; device_type = Array{Float32}) # use device_type = CuArray{Float32} to enable GPU
+pinn = PINN(chain; device_type = Array{Float64}) # use device_type = CuArray{Float64} to enable GPU
+sampler = QuasiRandomSampler(helmholtz, 300, 100; device_type = Array{Float64}) # use device_type = CuArray{Float64} to enable GPU
 strategy = NonAdaptiveTraining()
 
 prob = Sophon.discretize(helmholtz, pinn, sampler, strategy) 
