@@ -40,5 +40,5 @@ function get_pde_and_bcs_loss_function(weights::NTuple{N},
         ex = :(mean($(weights[i]) .* abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
     end
     loss_f = :((θ, p) -> $ex)
-    return eval(loss_f)
+    return NeuralPDE.@RuntimeGeneratedFunction(loss_f)
 end
