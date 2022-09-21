@@ -42,16 +42,17 @@ function sample(pinnsampler::QuasiRandomSampler{device_type}) where {device_type
     device = parameterless_type(device_type)
     (; pde_points, bcs_points, pde_bounds, bcs_bounds, sampling_alg) = pinnsampler
 
+    # generate_quasi_random_point does not respect data type
     pde_datasets = [NeuralPDE.generate_quasi_random_points(points, bound, eltypeθ,
                                                            sampling_alg)
                     for (points, bound) in zip(pde_points, pde_bounds)]
-    pde_datasets = [adapt(device, pde_dataset) for pde_dataset in pde_datasets]
+    pde_datasets = [adapt(device_type, pde_dataset) for pde_dataset in pde_datasets]
 
     boundary_datasets = [NeuralPDE.generate_quasi_random_points(points, bound, eltypeθ,
                                                                 sampling_alg)
                          for (points, bound) in zip(bcs_points, bcs_bounds)]
 
-    boundary_datasets = [adapt(device, boundary_dataset)
+    boundary_datasets = [adapt(device_type, boundary_dataset)
                          for boundary_dataset in boundary_datasets]
 
     return pde_datasets, boundary_datasets
