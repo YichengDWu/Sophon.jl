@@ -418,14 +418,14 @@ function pair(eq, depvars, dict_depvar_input)
 end
 
 function get_ε(dim, der_num, eltypeθ, order)
-    epsilon = ^(eps(), 1/(2+order))
+    epsilon = eltypeθ(^(eps(eltypeθ), 1/(2+order)))
     ε = zeros(eltypeθ, dim)
     ε[der_num] = epsilon
     ε
 end
 
 function numeric_derivative(phi, u, x, εs, order, θ)
-    _epsilon = inv(^(eps(), 1/(2+order)))
+    _epsilon = eltypeθ(inv(^(eps(eltypeθ), 1/(2+order))))
     _type = parameterless_type(ComponentArrays.getdata(θ))
 
     ε = εs[order]
