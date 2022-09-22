@@ -1,4 +1,4 @@
-abstract type PINNSampler{T, N1, N2} end
+abstract type PINNSampler{T} end
 
 """
     sample(pde::PDESystem, sampler::PINNSampler, strategy=nothing)
@@ -15,7 +15,7 @@ function sample(::PDESystem, ::PINNSampler, ::AbstractTrainingAlg) end
 Sampler to generate the datasets for PDE and boundary conditions using a quisa-random sampling algorithm.
 It momerizes the domain of the PDE and the boundary conditions, and you can call `sample` on it to generate the datasets.
 """
-struct QuasiRandomSampler{T, P, B, S} <: PINNSampler{T, N1, N2}
+struct QuasiRandomSampler{T, P, B, S} <: PINNSampler{T}
     pde_points::P
     bcs_points::B
     sampling_alg::S
