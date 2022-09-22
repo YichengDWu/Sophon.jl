@@ -59,6 +59,7 @@ display(fig)
 
 ## Related Libraries
 
+- [NeuralPDE](https://github.com/SciML/NeuralPDE.jl)
 - [PaddleScience](https://github.com/PaddlePaddle/PaddleScience)
 - [MindScience](https://gitee.com/mindspore/mindscience)
 - [Modulus](https://docs.nvidia.com/deeplearning/modulus/index.html#)
