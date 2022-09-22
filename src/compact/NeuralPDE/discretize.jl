@@ -73,7 +73,7 @@ function discretize(pde_system::PDESystem, pinn::PINN{T}, sampler::PINNSampler{S
     if parameterless_type(S) != parameterless_type(T)
         throw(ArgumentError("The device type of the sampler and the type of the neural network must be the same. Got $(S) and $(T)"))
     end
-    pde_datasets, boundary_datasets = sample(sampler)
+    pde_datasets, boundary_datasets = sample(pde_system, sampler, strategy)
     loss_function = get_datafree_pinn_loss_function(pde_system, pinn, strategy;
                                                     additional_loss=additional_loss,
                                                     derivative=derivative)

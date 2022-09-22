@@ -41,7 +41,7 @@ chain = BACON(2, 1, 8, 1; hidden_dims = 32, num_layers=4)
     For demonstration purposes, the model is also periodic in time
 
 ```@example convection
-sampler = QuasiRandomSampler(convection, 500, 100) # data points
+sampler = QuasiRandomSampler(500, 100) # data points
 strategy = NonAdaptiveTraining(1 , 500) # weights
 pinn = PINN(chain)
 
