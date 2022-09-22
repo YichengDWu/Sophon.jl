@@ -5,7 +5,7 @@ abstract type PINNSampler{T} end
 
 Sample the datasets for the PDEs and boundary conditions using the given sampler.
 """
-function sample(::PDESystem, ::PINNSampler, ::AbstractTrainingAlg) end
+function sample end
 
 """
     QuasiRandomSampler(pde_points, bcs_points=pde_points;
