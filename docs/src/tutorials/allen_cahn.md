@@ -33,22 +33,25 @@ strategy = NonAdaptiveTraining(1, (50, 1))
 prob = Sophon.discretize(allen, pinn, sampler, strategy)
 ```
 
-We solve the equation in the first stage 
+We solve the equation sequentially in time.
+
 ```@example allen
-res = Optimization.solve(prob, LBFGS(); maxiters=2000)
-```
-and then the rest three stages
-```@example allen
-for tmax in 0.5:0.25:1.0
-    allen.domain[2] = t ∈ 0.0..tmax
-    data = Sophon.sample(allen, sampler, strategy)
-    prob = remake(prob; u0=res.u, p=data)
+function train()
     @time res = Optimization.solve(prob, LBFGS(); maxiters=2000)
+
+    for tmax in [0.5, 0.75, 1.0]
+        allen.domain[2] = t ∈ 0.0..tmax
+        data = Sophon.sample(allen, sampler, strategy)
+        prob = remake(prob; u0=res.u, p=data)
+        @time res = Optimization.solve(prob, LBFGS(); maxiters=2000)
+    end
 end
+
+train()
 ```
 
 Let's plot the result.
-```@example
+```@example allen
 using CairoMakie
 
 phi = pinn.phi
