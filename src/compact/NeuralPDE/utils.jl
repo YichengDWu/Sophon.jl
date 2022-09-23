@@ -35,18 +35,25 @@ end
 
 @inline null_additional_loss(phi, θ) = 0
 """
-:((cord, θ, phi, derivative, u)->begin
-#= ... =#
-#= ... =#
-begin
-(θ_depvar_1, θ_depvar_2) = (θ.depvar_1, θ.depvar_2)
-(phi_depvar_1, phi_depvar_2) = (phi.depvar_1, phi.depvar_2)
-let (x, y) = (cord[1], cord[2])
-[(+)(derivative(phi_depvar_1, u, [x, y], [[ε, 0.0]], 1, θ_depvar_1), (*)(4, derivative(phi_depvar_1, u, [x, y], [[0.0, ε]], 1, θ_depvar_2))) - 0,
-(+)(derivative(phi_depvar_2, u, [x, y], [[ε, 0.0]], 1, θ_depvar_2), (*)(9, derivative(phi_depvar_2, u, [x, y], [[0.0, ε]], 1, θ_depvar_1))) - 0]
-end
-end
-end)
+```julia
+:((cord, θ, phi, derivative, u) -> begin
+  #= ... =#
+  #= ... =#
+  begin
+      (θ_depvar_1, θ_depvar_2) = (θ.depvar_1, θ.depvar_2)
+      (phi_depvar_1, phi_depvar_2) = (phi.depvar_1, phi.depvar_2)
+      let (x, y) = (cord[1], cord[2])
+          [
+              (+)(derivative(phi_depvar_1, u, [x, y], [[ε, 0.0]], 1, θ_depvar_1),
+                  (*)(4, derivative(phi_depvar_1, u, [x, y], [[0.0, ε]], 1, θ_depvar_2))) -
+              0,
+              (+)(derivative(phi_depvar_2, u, [x, y], [[ε, 0.0]], 1, θ_depvar_2),
+                  (*)(9, derivative(phi_depvar_2, u, [x, y], [[0.0, ε]], 1, θ_depvar_1))) -
+              0,
+          ]
+      end
+  end end)
+```
 """
 function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
                                       eq_params=SciMLBase.NullParameters(),
