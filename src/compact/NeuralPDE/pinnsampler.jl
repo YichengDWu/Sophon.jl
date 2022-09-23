@@ -51,5 +51,5 @@ function sample(pde::PDESystem, sampler::QuasiRandomSampler{device_type},
     boundary_datasets = [adapt(device_type, boundary_dataset)
                          for boundary_dataset in boundary_datasets]
 
-    return pde_datasets, boundary_datasets
+    return [pde_datasets; boundary_datasets]
 end

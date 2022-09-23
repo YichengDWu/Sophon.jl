@@ -36,17 +36,17 @@ end
 @inline null_additional_loss(phi, θ) = 0
 """
 :((cord, θ, phi, derivative, u)->begin
-          #= ... =#
-          #= ... =#
-          begin
-              (θ_depvar_1, θ_depvar_2) = (θ.depvar_1, θ.depvar_2)
-              (phi_depvar_1, phi_depvar_2) = (phi.depvar_1, phi.depvar_2)
-              let (x, y) = (cord[1], cord[2])
-                  [(+)(derivative(phi_depvar_1, u, [x, y], [[ε, 0.0]], 1, θ_depvar_1), (*)(4, derivative(phi_depvar_1, u, [x, y], [[0.0, ε]], 1, θ_depvar_2))) - 0,
-                   (+)(derivative(phi_depvar_2, u, [x, y], [[ε, 0.0]], 1, θ_depvar_2), (*)(9, derivative(phi_depvar_2, u, [x, y], [[0.0, ε]], 1, θ_depvar_1))) - 0]
-              end
-          end
-      end)
+#= ... =#
+#= ... =#
+begin
+(θ_depvar_1, θ_depvar_2) = (θ.depvar_1, θ.depvar_2)
+(phi_depvar_1, phi_depvar_2) = (phi.depvar_1, phi.depvar_2)
+let (x, y) = (cord[1], cord[2])
+[(+)(derivative(phi_depvar_1, u, [x, y], [[ε, 0.0]], 1, θ_depvar_1), (*)(4, derivative(phi_depvar_1, u, [x, y], [[0.0, ε]], 1, θ_depvar_2))) - 0,
+(+)(derivative(phi_depvar_2, u, [x, y], [[ε, 0.0]], 1, θ_depvar_2), (*)(9, derivative(phi_depvar_2, u, [x, y], [[0.0, ε]], 1, θ_depvar_1))) - 0]
+end
+end
+end)
 """
 function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
                                       eq_params=SciMLBase.NullParameters(),
@@ -55,12 +55,13 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
                                       dict_transformation_vars=nothing,
                                       transformation_vars=nothing,
                                       integrating_depvars=pinnrep.depvars)
-    (;  depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, init_params, strategy, eq_params, param_estim, default_p) = pinnrep
+    (; depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, init_params, strategy, eq_params, param_estim, default_p) = pinnrep
 
     if integrand isa Nothing
         loss_function, pos, values = parse_equation(pinnrep, eq)
         this_eq_pair = pair(eq, depvars, dict_depvar_input)
-        this_eq_indvars = unique(vcat([getindex(this_eq_pair, v) for v in keys(this_eq_pair)]...))
+        this_eq_indvars = unique(vcat([getindex(this_eq_pair, v)
+                                       for v in keys(this_eq_pair)]...))
     else
         this_eq_pair = Dict(map(intvars -> dict_depvars[intvars] => dict_depvar_input[intvars],
                                 integrating_depvars))
@@ -119,7 +120,8 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
         push!(eq_pair_expr, :($(Symbol(:cord, :_, :($v), :_r)) = vcat($(ivars_r...))))
     else
         for v in keys(this_eq_pair)
-            push!(eq_pair_expr, :($(Symbol(:cord, :_, :($v))) = vcat($(this_eq_pair[v]...))))
+            push!(eq_pair_expr,
+                  :($(Symbol(:cord, :_, :($v))) = vcat($(this_eq_pair[v]...))))
         end
     end
     vcat_expr = Expr(:block, :($(eq_pair_expr...)))
@@ -224,11 +226,14 @@ function parse_equation(pinnrep::NamedTuple, eq)
     dot_left_expr = NeuralPDE._dot_(tran_left_expr)
     dot_right_expr = NeuralPDE._dot_(tran_right_expr)
 
-    if left_expr isa Expr && right_expr isa Expr && toexpr(eq_lhs).args[1] === right_expr.args[1]
+    if left_expr isa Expr &&
+       right_expr isa Expr &&
+       toexpr(eq_lhs).args[1] === right_expr.args[1]
         pos = findfirst((left_expr.args[2:end] .!== right_expr.args[2:end])) # Assume the pericity is defined on n-1 hyperplanes with one depvar
-        values = (left_expr.args[pos+1], right_expr.args[pos+1])
+        values = (left_expr.args[pos + 1], right_expr.args[pos + 1])
 
-        dot_left_expr, dot_right_expr = parse_periodic_condition(dot_left_expr, dot_right_expr)
+        dot_left_expr, dot_right_expr = parse_periodic_condition(dot_left_expr,
+                                                                 dot_right_expr)
         return loss_function = :($dot_left_expr .- $dot_right_expr), pos, values
     else
         return loss_function = :($dot_left_expr .- $dot_right_expr), nothing, nothing
@@ -269,12 +274,7 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                 ex.args = if !multioutput
                     [var_, Symbol(:cord, :_, e), :($θ), :phi]
                 else
-                    [
-                        var_,
-                        Symbol(:cord, :_, e),
-                        Symbol(:($θ), :_, e),
-                        Symbol(:phi, :_, e),
-                    ]
+                    [var_, Symbol(:cord, :_, e), Symbol(:($θ), :_, e), Symbol(:phi, :_, e)]
                 end
                 break
             elseif e isa ModelingToolkit.Differential
@@ -410,7 +410,6 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
     return ex
 end
 
-
 """
 Finds which dependent variables are being used in an equation.
 """
@@ -421,14 +420,14 @@ function pair(eq, depvars, dict_depvar_input)
             depvar => dict_depvar_input[depvar]
         end
     end
-    Dict(filter(p -> p !== nothing, pair_))
+    return Dict(filter(p -> p !== nothing, pair_))
 end
 
 function get_ε(dim, der_num, eltypeθ, order)
     epsilon = ^(eps(eltypeθ), one(eltypeθ) / (2 + order))
     ε = zeros(eltypeθ, dim)
     ε[der_num] = epsilon
-    ε
+    return ε
 end
 
 function numeric_derivative(phi, u, x, εs, order, θ)
@@ -441,19 +440,14 @@ function numeric_derivative(phi, u, x, εs, order, θ)
     x = adapt(_type, x)
 
     if order > 4 || any(x -> x != εs[1], εs)
-        return (numeric_derivative(phi, u, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ)
-                .-
+        return (numeric_derivative(phi, u, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ) .-
                 numeric_derivative(phi, u, x .- ε, @view(εs[1:(end - 1)]), order - 1, θ)) .*
                _epsilon ./ 2
     elseif order == 4
-        return (u(x .+ 2 .* ε, θ, phi) .- 4 .* u(x .+ ε, θ, phi)
-                .+
-                6 .* u(x, θ, phi)
-                .-
+        return (u(x .+ 2 .* ε, θ, phi) .- 4 .* u(x .+ ε, θ, phi) .+ 6 .* u(x, θ, phi) .-
                 4 .* u(x .- ε, θ, phi) .+ u(x .- 2 .* ε, θ, phi)) .* _epsilon^4
     elseif order == 3
-        return (u(x .+ 2 .* ε, θ, phi) .- 2 .* u(x .+ ε, θ, phi) .+ 2 .* u(x .- ε, θ, phi)
-                -
+        return (u(x .+ 2 .* ε, θ, phi) .- 2 .* u(x .+ ε, θ, phi) .+ 2 .* u(x .- ε, θ, phi) -
                 u(x .- 2 .* ε, θ, phi)) .* _epsilon^3 ./ 2
     elseif order == 2
         return (u(x .+ ε, θ, phi) .+ u(x .- ε, θ, phi) .- 2 .* u(x, θ, phi)) .* _epsilon^2

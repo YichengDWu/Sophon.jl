@@ -50,11 +50,11 @@ end
 Let's plot the result.
 ```@example
 using CairoMakie
+
 phi = pinn.phi
 xs, ts = [infimum(d.domain):0.01:supremum(d.domain) for d in allen.domain]
 axis = (xlabel="t", ylabel="x", title="Prediction")
 u_pred = [sum(pinn.phi([x, t], res.u)) for x in xs, t in ts]
-
 fig, ax, hm = heatmap(ts, xs, u_pred', axis=axis)
 
 save("allen.png", fig); nothing # hide
