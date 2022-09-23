@@ -21,6 +21,13 @@ function get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars)
     return pde_bounds, bcs_bounds
 end
 
+function get_bounds(pde::PDESystem)
+    (; eqs, bcs, domain, ivs, dvs) = pde
+    _, _, dict_indvars, dict_depvars, _ = NeuralPDE.get_vars(ivs, dvs)
+    bounds = get_bounds(domain, eqs, bcs, Float64, dict_indvars, dict_depvars)
+    return bounds
+end
+
 function get_l2_loss_function(loss_function, dataset)
     loss(θ) = mean(abs2, loss_function(dataset, θ))
     return loss
