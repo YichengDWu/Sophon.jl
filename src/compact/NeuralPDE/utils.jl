@@ -161,7 +161,7 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars)
                                                       eq_params=eq_params,
                                                       param_estim=param_estim,
                                                       default_p=default_p)
-    u = NeuralPDE.get_u()
+    u(cord, θ, phi) = phi(cord, θ)
     _loss_function = NeuralPDE.NeuralPDE.@RuntimeGeneratedFunction(expr_loss_function)
     loss_function = (cord, θ) -> begin _loss_function(cord, θ, phi, derivative, integral, u,
                                                       default_p) end
