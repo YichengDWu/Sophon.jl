@@ -12,7 +12,7 @@ Consider the following 1D-convection equation with periodic boundary conditions.
 First we define the PDE.
 
 ```@example convection
-using ModelingToolkit, Lux, Random, Sophon, IntervalSets, CairoMakie
+using ModelingToolkit, Sophon, IntervalSets, CairoMakie
 using Optimization, OptimizationOptimJL, OptimizationOptimisers
 
 @parameters x, t
