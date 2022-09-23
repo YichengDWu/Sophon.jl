@@ -43,7 +43,7 @@ for tmax in 0.5:0.25:1.0
     allen.domain[2] = t ∈ 0.0..tmax
     data = Sophon.sample(allen, sampler, strategy)
     prob = remake(prob; u0=res.u, p=data)
-    @time res = Optimization.solve(prob, LBFGS(); callback=callback, maxiters=2000)
+    @time res = Optimization.solve(prob, LBFGS(); maxiters=2000)
 end
 ```
 
