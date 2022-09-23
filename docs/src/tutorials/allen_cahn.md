@@ -45,9 +45,10 @@ function train(allen, prob, sampler, strategy)
         prob = remake(prob; u0=res.u, p=data)
         @time res = Optimization.solve(prob, LBFGS(); maxiters=2000)
     end
+    return res
 end
 
-train(allen, prob, sampler, strategy)
+res = train(allen, prob, sampler, strategy)
 ```
 
 Let's plot the result.
