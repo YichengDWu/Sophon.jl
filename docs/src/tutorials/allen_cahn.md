@@ -36,7 +36,7 @@ prob = Sophon.discretize(allen, pinn, sampler, strategy)
 We solve the equation sequentially in time.
 
 ```@example allen
-function train()
+function train(allen, prob, sampler, strategy)
     @time res = Optimization.solve(prob, LBFGS(); maxiters=2000)
 
     for tmax in [0.5, 0.75, 1.0]
@@ -47,7 +47,7 @@ function train()
     end
 end
 
-train()
+train(allen, prob, sampler, strategy)
 ```
 
 Let's plot the result.
