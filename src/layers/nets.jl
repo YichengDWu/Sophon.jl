@@ -77,7 +77,7 @@ attention_connection(z, u, v) = (1 .- z) .* u .+ z .* v
     FourierAttention(in_dims::Int, out_dims::Int, activation::Function, frequencies;
                      hidden_dims::Int=512, num_layers::Int=6, modes::NTuple)
 
-A model that combines [`FourierFeatures`](@ref) and [`PINNAttention`](@ref).
+A model that combines [`FourierFeature`](@ref) and [`PINNAttention`](@ref).
 
 ```
 x → [FourierFeature(x); x] → PINNAttention
@@ -86,11 +86,11 @@ x → [FourierFeature(x); x] → PINNAttention
 ## Arguments
 
   - `in_dims`: The input dimension.
-    
+
       + `out_dims`: The output dimension.
       + `activation`: The activation function.
-      + `std`: See [`FourierFeatures`](@ref).
-      + `frequencies`: See [`FourierFeatures`](@ref).
+      + `std`: See [`FourierFeature`](@ref).
+      + `frequencies`: See [`FourierFeature`](@ref).
 
 ## Keyword Arguments
 
