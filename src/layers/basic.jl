@@ -304,3 +304,26 @@ statelength(s::Scalar) = 0
 @inline function (s::Scalar)(x::AbstractArray, ps, st::NamedTuple)
     return ps.scalar
 end
+
+"""
+    SplitFunction(indices...)
+Split the input along the first demision according to indices.
+"""
+struct SplitFunction{F} <: AbstractExplicitLayer
+    indices::F
+end
+
+function SplitFunction(indices...)
+    indices = map(indices) do i
+        i isa Int ?  UnitRange(i, i) : i
+    end
+    return SplitFunction{typeof(indices)}(indices)
+end
+
+function (sf::SplitFunction)(x::AbstractVector, ps, st::NamedTuple)
+    return map(i -> view(x, i), sf.indices), st
+end
+
+function (sf::SplitFunction)(x::AbstractMatrix, ps, st::NamedTuple)
+    return map(i -> view(x,i,:), sf.indices), st
+end
