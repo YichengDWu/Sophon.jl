@@ -94,15 +94,15 @@ rng = Random.default_rng()
             x = rand(3, 5)
             sf = SplitFunction(1:2, 3)
             y, st = sf(x, (;), (;))
-            @test y[1] == view(x[1:2, :])
-            @test y[2] == view(x[3, :])
+            @test y[1] == view(x, 1:2, :)
+            @test y[2] == view(x, 3:3, :)
 
             x2 = rand(5)
             sf2 = SplitFunction(1:2, 3:4, 5)
             y2, st2 = sf2(x2, (;), (;))
-            @test y2[1] == view(x2[1:2])
-            @test y2[2] == view(x2[3:4])
-            @test y2[3] == view(x2[5:5])
+            @test y2[1] == view(x2, 1:2)
+            @test y2[2] == view(x2, 3:4)
+            @test y2[3] == view(x2, 5:5)
         end
     end
     @testset "Nets" begin
