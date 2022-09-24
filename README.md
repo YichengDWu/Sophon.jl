@@ -6,7 +6,9 @@
 [![Coverage](https://codecov.io/gh/YichengDWu/Sophon.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/YichengDWu/Sophon.jl)
 [![DOI](https://zenodo.org/badge/521846679.svg)](https://zenodo.org/badge/latestdoi/521846679)
 
-`Sophon.jl` provides specialized neural networks and neural operators for Physics-informed machine learning.
+`Sophon.jl` provides specialized neural networks and neural operators for Physics-informed machine learning. 
+
+Use the [documentation](https://yichengdwu.github.io/Sophon.jl/dev/) to explore the features.
 
 Please star this repo if you find it useful.
 
