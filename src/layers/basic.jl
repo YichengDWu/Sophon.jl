@@ -271,7 +271,7 @@ function Base.show(io::IO, rbf::RBF)
 end
 
 """
-    Scalar(connection::Function)
+    ScalarLayer(connection::Function)
 
 Return connection(scalar, x)
 """
@@ -279,7 +279,7 @@ struct Scalar{F} <: AbstractExplicitLayer
     connection::F
 end
 
-Scalar(connection::Function) = Scalar{typeof(connection)}(connection)
+ScalarLayer(connection::Function) = Scalar{typeof(connection)}(connection)
 
 initialparameters(rng::AbstractRNG, s::Scalar) = (; scalar=0.0f0)
 parameterlength(s::Scalar) = 1
