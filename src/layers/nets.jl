@@ -5,7 +5,7 @@
 
 The output dimesion of `H_net` and the input dimension of `fusion_layers` must be the same.
 For the second and the third constructor, `Dense` layers is used for `H_net`, `U_net`, and `V_net`.
-Note that the first constructer does not contain the output layer.
+Note that the first constructer does **not** contain the output layer, but the second one does.
 
 ```
                  x → U_net → u                           u
@@ -72,8 +72,12 @@ end
 attention_connection(z, u, v) = (1 .- z) .* u .+ z .* v
 
 """
-    FourierAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
+    FourierAttention(in_dims::Int, out_dims::Int, activation::Function, std;
                      hidden_dims::Int=512, num_layers::Int=6, modes::NTuple)
+    FourierAttention(in_dims::Int, out_dims::Int, activation::Function, frequencies;
+                     hidden_dims::Int=512, num_layers::Int=6, modes::NTuple)
+
+A model that combines [`FourierFeatures`](@ref) and [`PINNAttention`](@ref).
 
 ```
 x → [FourierFeature(x); x] → PINNAttention
@@ -82,18 +86,21 @@ x → [FourierFeature(x); x] → PINNAttention
 ## Arguments
 
   - `in_dims`: The input dimension.
+    
+      + `out_dims`: The output dimension.
+      + `activation`: The activation function.
+      + `std`: See [`FourierFeatures`](@ref).
+      + `frequencies`: See [`FourierFeatures`](@ref).
 
 ## Keyword Arguments
 
-  - `modes`: A tuple of pairs of random frequencies and the number of samples.
   - `hidden_dim`: The hidden dimension of each hidden layer.
   - `num_layers`: The number of hidden layers.
 
 ## Examples
 
 ```julia
-julia> FourierAttention(3, 1, sin; hidden_dims=10, num_layers=3,
-                        modes=(1 => 10, 10 => 10, 50 => 10))
+julia> FourierAttention(3, 1, sin, (1 => 10, 10 => 10, 50 => 10); hidden_dims=10, num_layers=3)
 Chain(
     layer_1 = SkipConnection(
         FourierFeature(3 => 60),
@@ -104,16 +111,17 @@ Chain(
         U_net = Dense(63 => 10, sin),   # 640 parameters
         V_net = Dense(63 => 10, sin),   # 640 parameters
         fusion = TriplewiseFusion(
-            layers = (layer_1 = Dense(10 => 10, sin), layer_2 = Dense(10 => 10, sin), layer_3 = Dense(10 => 10, sin), layer_4 = Dense(10 => 1)),  # 341 parameters
+            layers = (layer_1 = Dense(10 => 10, sin), layer_2 = Dense(10 => 10, sin), layer_3 = Dense(10 => 10, sin), layer_4 = Dense(10 => 10, sin)),  # 440 parameters
         ),
     ),
-)         # Total: 2_261 parameters,
-          #        plus 90 states, summarysize 176 bytes.
+    layer_3 = Dense(10 => 1),           # 11 parameters
+)         # Total: 2_371 parameters,
+          #        plus 90 states, summarysize 192 bytes
 ```
 """
-function FourierAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
-                          hidden_dims::Int=512, num_layers::Int=6, modes::NTuple)
-    fourierfeature = FourierFeature(in_dims, modes)
+function FourierAttention(in_dims::Int, out_dims::Int, activation::Function, freq;
+                          hidden_dims::Int=512, num_layers::Int=6)
+    fourierfeature = FourierFeature(in_dims, freq)
     encoder = SkipConnection(fourierfeature, vcat)
     attention_layers = PINNAttention(fourierfeature.out_dims + in_dims, out_dims,
                                      activation; hidden_dims=hidden_dims,
