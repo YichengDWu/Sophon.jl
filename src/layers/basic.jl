@@ -275,15 +275,32 @@ end
 
 Return connection(scalar, x)
 """
-struct Scalar{F} <: AbstractExplicitLayer
+struct ScalarLayer{F} <: AbstractExplicitLayer
     connection::F
 end
 
-ScalarLayer(connection::Function) = Scalar{typeof(connection)}(connection)
+ScalarLayer(connection::Function) = ScalarLayer{typeof(connection)}(connection)
+
+initialparameters(rng::AbstractRNG, s::ScalarLayer) = (; scalar=0.0f0)
+parameterlength(s::ScalarLayer) = 1
+
+@inline function (s::ScalarLayer)(x::AbstractArray, ps, st::NamedTuple)
+    return s.connection(ps.scalar, x), st
+end
+
+"""
+    Scalar()
+
+A conatiner for scalar parameter. This is useful for the case that you want to dummy layer
+that returns the scalar parameter for any input.
+"""
+struct Scalar <: AbstractExplicitLayer end
+
 
 initialparameters(rng::AbstractRNG, s::Scalar) = (; scalar=0.0f0)
 parameterlength(s::Scalar) = 1
+statelength(s::Scalar) = 0
 
 @inline function (s::Scalar)(x::AbstractArray, ps, st::NamedTuple)
-    return s.connection(ps.scalar, x), st
+    return ps.scalar
 end
