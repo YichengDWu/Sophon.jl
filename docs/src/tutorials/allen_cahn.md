@@ -1,7 +1,7 @@
 # Allen-Cahn equation with Sequential Trainning
 
 In this tutorial we are going to solve the Allen-Cahn equation with periodic boundary condition from ``t=0`` to ``t=1``. The traning process is split into four stages, namely 
-``t\in [0,0.25]``, ``t\in [0.25,0.5]``, ``t\in [0.5,0.75]`` and ``t\in [0.75, 1.0]``.
+``t\in [0,0.25]``, ``t\in [0.0,0.5]``, ``t\in [0.0,0.75]`` and ``t\in [0.0, 1.0]``.
 
 ```@example allen
 using ModelingToolkit, IntervalSets
