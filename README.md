@@ -22,7 +22,7 @@ julia>] add Sophon
 Simply replace primitive fully connected neural nets with those defined in this pacakge!
 
 ```julia
-using ModelingToolkit, IntervalSets, Lux, Sophon
+using ModelingToolkit, IntervalSets, Sophon
 using Optimization, OptimizationOptimisers, OptimizationOptimJL
 using CairoMakie
 
