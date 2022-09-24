@@ -37,7 +37,8 @@ include("layers/operators.jl")
 export GPUComponentArray64, GPUComponentArray
 export Scheduler, QuasiRandom
 export gaussian, quadratic, laplacian, expsin, multiquadratic
-export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature
+export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature,
+       Scalar, ScalarLayer
 export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON
 export DeepONet
 export PINN, symbolic_discretize, discretize, get_optimization_problem, QuasiRandomSampler,
