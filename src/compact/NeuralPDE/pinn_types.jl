@@ -1,6 +1,8 @@
 """
     PINN(chain; device_type::Type=Array{Float64})
 
+A container for a neural network, its states and its initial parameters.
+
 ## Arguments
 
   - `chain`: `AbstractExplicitLayer` or a named tuple of `AbstractExplicitLayer`s.
