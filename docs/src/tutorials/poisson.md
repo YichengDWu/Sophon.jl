@@ -7,7 +7,7 @@ u(x)=\sin (2 \pi x)+0.1 \sin (50 \pi x)
 ```
 
 ```@example poisson
-using ModelingToolkit, IntervalSets, Lux, Sophon
+using ModelingToolkit, IntervalSets, Sophon
 using Optimization, OptimizationOptimisers, OptimizationOptimJL
 using CairoMakie
 
