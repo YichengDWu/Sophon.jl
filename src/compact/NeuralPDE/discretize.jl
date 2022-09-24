@@ -56,9 +56,8 @@ function get_datafree_pinn_loss_function(pde_system::PDESystem, pinn::PINN,
                                                                                        bc_indvars,
                                                                                        bc_integration_vars)])
 
-    pde_and_bcs_loss_function = scalarize(strategy,
-                                                              datafree_pde_loss_functions,
-                                                              datafree_bc_loss_functions)
+    pde_and_bcs_loss_function = scalarize(strategy, datafree_pde_loss_functions,
+                                          datafree_bc_loss_functions)
 
     function full_loss_function(θ, p)
         return pde_and_bcs_loss_function(θ, p) + additional_loss(phi, θ)
