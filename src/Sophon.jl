@@ -10,8 +10,8 @@ import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, Tria
                             Sin, SinDecay2, SinExp, CosAnneal, Sequence, Loop, Interpolator,
                             Shifted, ComposedSchedule, Constant
 using ParameterSchedulers: AbstractSchedule
-using SciMLBase, NeuralPDE, ComponentArrays
-using SciMLBase: parameterless_type
+using NeuralPDE, ComponentArrays
+import SciMLBase: parameterless_type, __solve, build_solution, NullParameters
 using StatsBase, QuasiMonteCarlo
 using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
 
