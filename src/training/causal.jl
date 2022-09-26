@@ -1,5 +1,5 @@
 """
-    CausalTraining(points; epsilon, bcs_points=points, sampling_alg=LatinHypercubeSample())
+    CausalTraining(points; epsilon, bcs_points=points, sampling_alg=SobolSample())
 
 ## Keyword arguments
 
@@ -24,7 +24,7 @@ mutable struct CausalTraining <: NeuralPDE.AbstractTrainingStrategy
 end
 
 function CausalTraining(points; epsilon, bc_loss_weights, init_points=points,
-                        bc_points=points, sampling_alg=LatinHypercubeSample())
+                        bc_points=points, sampling_alg=SobolSample())
     epsilon = epsilon isa Real ? Constant(Float64(epsilon)) : epsilon
     return CausalTraining(points, init_points, bc_points, epsilon, sampling_alg, false,
                           Array{Float64}(undef, 1, 1), bc_loss_weights)
