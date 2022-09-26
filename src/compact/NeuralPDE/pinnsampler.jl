@@ -10,7 +10,7 @@ function sample end
 """
     QuasiRandomSampler(pde_points, bcs_points=pde_points;
                        device_type::Type=Array{Float64}
-                       sampling_alg=LatinHypercubeSample())
+                       sampling_alg=SobolSample())
 
 Sampler to generate the datasets for PDE and boundary conditions using a quisa-random sampling algorithm.
 It momerizes the domain of the PDE and the boundary conditions, and you can call `sample` on it to generate the datasets.
@@ -23,7 +23,7 @@ end
 
 function QuasiRandomSampler(pde_points, bcs_points=pde_points;
                             device_type::Type=Array{Float64},
-                            sampling_alg=LatinHypercubeSample())
+                            sampling_alg=SobolSample())
     return QuasiRandomSampler{device_type, typeof(pde_points), typeof(bcs_points),
                               typeof(sampling_alg)}(pde_points, bcs_points, sampling_alg)
 end
