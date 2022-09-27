@@ -14,7 +14,7 @@ struct RADTraining <: NeuralPDE.AbstractTrainingStrategy
 end
 
 function RADTraining(points; resample_at=1, k=1.0, c=k / 100,
-                     sampling_alg=LatinHypercubeSample(), bcs_points=points,
+                     sampling_alg=SobolSample(), bcs_points=points,
                      refinement=true)
     sampling_strategy = QuasiRandomTraining(points; bcs_points=bcs_points,
                                             sampling_alg=sampling_alg)
