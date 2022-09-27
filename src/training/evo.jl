@@ -1,5 +1,5 @@
 @doc raw"""
-    EvoTraining(points; sampling_alg=SobolSample(), bcs_points=points, ϵ = 100, η = 1e-3,
+    EvoTraining(points; sampling_alg=LatinHypercubeSample(), bcs_points=points, ϵ = 100, η = 1e-3,
     Δ = 0.1)
 ```math
 \beta_{i+1}=\beta_{i}+\eta e^{-\epsilon \mathcal{L}_{r}^{g}(\theta)}
@@ -25,7 +25,7 @@ struct EvoTraining <: NeuralPDE.AbstractTrainingStrategy
     λ::Float64
 end
 
-function EvoTraining(points; sampling_alg=SobolSample(), bcs_points=points, ϵ=1.0,
+function EvoTraining(points; sampling_alg=LatinHypercubeSample(), bcs_points=points, ϵ=1.0,
                      η=1e-3, Δ=0.1, λ=1.0)
     sampling_strategy = QuasiRandomTraining(points; bcs_points=bcs_points,
                                             sampling_alg=sampling_alg)
