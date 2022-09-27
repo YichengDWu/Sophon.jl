@@ -50,7 +50,7 @@ xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 u = [sum(phi.u(([x,t]), ps.u)) for x in xs, t in ts]
 v = [sum(phi.v(([x,t]), ps.v)) for x in xs, t in ts]
 
-ψ= [sum(phi.u(([x,t]), ps_cpu.u))^2+sum(phi.v(([x,t]), ps.v))^2 for x in xs, t in ts]
+ψ= [sum(phi.u(([x,t]), ps.u))^2+sum(phi.v(([x,t]), ps.v))^2 for x in xs, t in ts]
 
 axis = (xlabel="x", ylabel="t", title="u")
 fig, ax1, hm1 = CairoMakie.heatmap(xs, ts, u, axis=axis)
