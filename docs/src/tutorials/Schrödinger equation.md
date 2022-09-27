@@ -10,7 +10,7 @@ $v_t-\frac{1}{2} u_{x x}-\left(u^2+v^2\right) u=0$
 
 
 
-```@exampler Schrödinger
+```@example Schrödinger
 using ModelingToolkit, IntervalSets, Sophon, CairoMakie
 using Optimization, OptimizationOptimJL, OptimizationOptimisers
 
@@ -30,7 +30,7 @@ domains = [t ∈ Interval(-30.0, 30.0),
 @named NLSE = PDESystem(eqs, bcs, domains, [x,t], [u(x,t),v(x,t)])
 ```
 
-```@exampler Schrödinger
+```@example Schrödinger
 pinn = PINN(u=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3),
             v=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3))
             
@@ -41,7 +41,7 @@ prob = Sophon.discretize(NLSE, pinn, sampler, strategy)
 @time res = Optimization.solve(prob, LBFGS(); maxiters=2000)
 ```
 
-```@exampler Schrödinger
+```@example Schrödinger
 phi = pinn.phi
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 
@@ -60,7 +60,7 @@ fig
 ```
 ![](https://upload-images.jianshu.io/upload_images/17163699-8f3dd890bf850a8e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-```@exampler Schrödinger
+```@example Schrödinger
 axis = (xlabel="x", ylabel="t", title="ψ")
 fig, ax1, hm1 = CairoMakie.heatmap(xs, ts, ψ, axis=axis)
 Colorbar(fig[:, end+1], hm1)
