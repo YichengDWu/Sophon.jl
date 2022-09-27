@@ -10,7 +10,7 @@ $v_t-\frac{1}{2} u_{x x}-\left(u^2+v^2\right) u=0$
 
 
 
-```julia
+```@exampler Schrödinger
 using ModelingToolkit, IntervalSets, Sophon, Lux, CUDA, CairoMakie
 using Optimization, OptimizationOptimJL, OptimizationOptimisers
 
@@ -29,10 +29,8 @@ domains = [t ∈ Interval(-30.0, 30.0),
 
 @named NLSE = PDESystem(eqs, bcs, domains, [x,t], [u(x,t),v(x,t)])
 ```
-![](https://upload-images.jianshu.io/upload_images/17163699-6bd09219eae35ebf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-
-```julia
+```@exampler Schrödinger
 pinn = PINN(u=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3),v=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3))
 sampler = QuasiRandomSampler(200, 5)
 strategy = NonAdaptiveTraining(1,0)
@@ -40,10 +38,8 @@ strategy = NonAdaptiveTraining(1,0)
 prob = Sophon.discretize(NLSE, pinn, sampler, strategy)
 @time res = Optimization.solve(prob, LBFGS(); maxiters=2000)
 ```
-![](https://upload-images.jianshu.io/upload_images/17163699-a4e6aa78b84f7de7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-
-```julia
+```@exampler Schrödinger
 phi = pinn.phi
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 
@@ -62,7 +58,7 @@ fig
 ```
 ![](https://upload-images.jianshu.io/upload_images/17163699-8f3dd890bf850a8e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-```julia
+```@exampler Schrödinger
 axis = (xlabel="x", ylabel="t", title="ψ")
 fig, ax1, hm1 = CairoMakie.heatmap(xs, ts, ψ, axis=axis)
 Colorbar(fig[:, end+1], hm1)
