@@ -11,7 +11,7 @@ $v_t-\frac{1}{2} u_{x x}-\left(u^2+v^2\right) u=0$
 
 
 ```@exampler Schrödinger
-using ModelingToolkit, IntervalSets, Sophon, Lux, CUDA, CairoMakie
+using ModelingToolkit, IntervalSets, Sophon, CairoMakie
 using Optimization, OptimizationOptimJL, OptimizationOptimisers
 
 @parameters x,t
@@ -31,7 +31,9 @@ domains = [t ∈ Interval(-30.0, 30.0),
 ```
 
 ```@exampler Schrödinger
-pinn = PINN(u=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3),v=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3))
+pinn = PINN(u=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3),
+            v=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3))
+            
 sampler = QuasiRandomSampler(200, 5)
 strategy = NonAdaptiveTraining(1,0)
 
