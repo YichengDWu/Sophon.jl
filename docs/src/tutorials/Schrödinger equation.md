@@ -43,15 +43,14 @@ prob = Sophon.discretize(NLSE, pinn, sampler, strategy)
 
 ```@example Schrödinger
 phi = pinn.phi
+ps = res.u
+
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 
-phi_cpu = cpu(phi)
-ps_cpu = cpu(res.u)
+u = [sum(phi.u(([x,t]), ps.u)) for x in xs, t in ts]
+v = [sum(phi.v(([x,t]), ps.v)) for x in xs, t in ts]
 
-u = [sum(phi_cpu.u(([x,t]), ps_cpu.u)) for x in xs, t in ts]
-v = [sum(phi_cpu.v(([x,t]), ps_cpu.v)) for x in xs, t in ts]
-
-ψ= [sum(phi_cpu.u(([x,t]), ps_cpu.u))^2+sum(phi_cpu.v(([x,t]), ps_cpu.v))^2 for x in xs, t in ts]
+ψ= [sum(phi.u(([x,t]), ps_cpu.u))^2+sum(phi.v(([x,t]), ps.v))^2 for x in xs, t in ts]
 
 axis = (xlabel="x", ylabel="t", title="u")
 fig, ax1, hm1 = CairoMakie.heatmap(xs, ts, u, axis=axis)
