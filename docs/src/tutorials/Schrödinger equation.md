@@ -1,0 +1,71 @@
+# Schrödinger equation
+
+$\mathrm{i} \partial_t \psi=-\frac{1}{2} \sigma \partial_{x x} \psi-\beta|\psi|^2 \psi$
+
+Letting $\sigma=\beta=1, \psi=u+v i$,Schrödinger equation can be transformed to the following 2 equations:
+
+$u_t+\frac{1}{2} v_{x x}+\left(u^2+v^2\right) v=0$
+
+$v_t-\frac{1}{2} u_{x x}-\left(u^2+v^2\right) u=0$
+
+
+
+```julia
+using ModelingToolkit, IntervalSets, Sophon, Lux, CUDA, CairoMakie
+using Optimization, OptimizationOptimJL, OptimizationOptimisers
+
+@parameters x,t
+@variables u(..),v(..)
+Dt = Differential(t)
+Dxx = Differential(x)^2
+
+eqs=[0 ~ Dt(u(x,t))+1/2*Dxx(v(x,t))+((v(x,t))^2+(u(x,t))^2)*v(x,t),
+     0 ~ Dt(v(x,t))-1/2*Dxx(u(x,t))-((v(x,t))^2+(u(x,t))^2)*u(x,t)]
+
+bcs = [u(0.0, t)~u(1.0, t)]
+
+domains = [t ∈ Interval(-30.0, 30.0),
+           x ∈ Interval(-30.0, 30.0)]
+
+@named NLSE = PDESystem(eqs, bcs, domains, [x,t], [u(x,t),v(x,t)])
+```
+![](https://upload-images.jianshu.io/upload_images/17163699-6bd09219eae35ebf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+```julia
+pinn = PINN(u=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3),v=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3))
+sampler = QuasiRandomSampler(200, 5)
+strategy = NonAdaptiveTraining(1,0)
+
+prob = Sophon.discretize(NLSE, pinn, sampler, strategy)
+@time res = Optimization.solve(prob, LBFGS(); maxiters=2000)
+```
+![](https://upload-images.jianshu.io/upload_images/17163699-a4e6aa78b84f7de7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+```julia
+phi = pinn.phi
+xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
+
+phi_cpu = cpu(phi)
+ps_cpu = cpu(res.u)
+
+u = [sum(phi_cpu.u(([x,t]), ps_cpu.u)) for x in xs, t in ts]
+v = [sum(phi_cpu.v(([x,t]), ps_cpu.v)) for x in xs, t in ts]
+
+ψ= [sum(phi_cpu.u(([x,t]), ps_cpu.u))^2+sum(phi_cpu.v(([x,t]), ps_cpu.v))^2 for x in xs, t in ts]
+
+axis = (xlabel="x", ylabel="t", title="u")
+fig, ax1, hm1 = CairoMakie.heatmap(xs, ts, u, axis=axis)
+ax2, hm2= CairoMakie.heatmap(fig[1, end+1], xs, ts, v, axis= merge(axis, (;title = "v")))
+fig
+```
+![](https://upload-images.jianshu.io/upload_images/17163699-8f3dd890bf850a8e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+```julia
+axis = (xlabel="x", ylabel="t", title="ψ")
+fig, ax1, hm1 = CairoMakie.heatmap(xs, ts, ψ, axis=axis)
+Colorbar(fig[:, end+1], hm1)
+fig
+```
+![](https://upload-images.jianshu.io/upload_images/17163699-f3b6c02988a6abd0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
