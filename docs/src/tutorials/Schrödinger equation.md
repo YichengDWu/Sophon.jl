@@ -22,10 +22,10 @@ Dxx = Differential(x)^2
 eqs=[0 ~ Dt(u(x,t))+1/2*Dxx(v(x,t))+((v(x,t))^2+(u(x,t))^2)*v(x,t),
      0 ~ Dt(v(x,t))-1/2*Dxx(u(x,t))-((v(x,t))^2+(u(x,t))^2)*u(x,t)]
 
-bcs = [u(x, 0.0) ~ 2sech(x), v(x,0.0) ~ 0.0]
+bcs = [u(x, 0.0) ~ 2sech(x/5), v(x,0.0) ~ 0.0]
 
 domains = [t ∈ Interval(-0.0, pi/2),
-           x ∈ Interval(-5.0, 5.0)]
+           x ∈ Interval(-1.0, 1.0)]
 
 @named pde_system = PDESystem(eqs, bcs, domains, [x,t], [u(x,t),v(x,t)])
 ```
