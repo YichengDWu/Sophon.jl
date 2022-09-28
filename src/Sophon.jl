@@ -15,6 +15,8 @@ import SciMLBase: parameterless_type, __solve, build_solution, NullParameters
 using StatsBase, QuasiMonteCarlo
 using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
 import QuasiMonteCarlo
+import Sobol
+using Memoize, LRUCache
 
 NeuralPDE.RuntimeGeneratedFunctions.init(@__MODULE__)
 
