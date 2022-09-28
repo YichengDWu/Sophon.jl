@@ -39,13 +39,11 @@ function sample(pde::PDESystem, sampler::QuasiRandomSampler{device_type},
     bcs_points = length(bcs_points) == 1 ?
                  ntuple(_ -> first(bcs_points), length(bcs_bounds)) : Tuple(bcs_points)
 
-    pde_datasets = [NeuralPDE.generate_quasi_random_points(points, bound, eltypeθ,
-                                                           sampling_alg)
+    pde_datasets = [QuasiMonteCarlo.sample(points, bound[1], bound[2], sampling_alg)
                     for (points, bound) in zip(pde_points, pde_bounds)]
     pde_datasets = [adapt(device_type, pde_dataset) for pde_dataset in pde_datasets]
 
-    boundary_datasets = [NeuralPDE.generate_quasi_random_points(points, bound, eltypeθ,
-                                                                sampling_alg)
+    boundary_datasets = [QuasiMonteCarlo.sample(points, bound[1], bound[2], sampling_alg)
                          for (points, bound) in zip(bcs_points, bcs_bounds)]
 
     boundary_datasets = [adapt(device_type, boundary_dataset)
