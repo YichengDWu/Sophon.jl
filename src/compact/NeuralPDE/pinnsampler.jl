@@ -81,7 +81,7 @@ function sobolsample(n::Int, lb, ub)
     return reduce(hcat, [next!(s) for i in 1:n])
 end
 
-@memoize LRU{Tuple{AbstractVector, AbstractVector}, Sobol.SobolSeq}(maxsize=100) function cached_sobolseq(lb,ub)
+@memoize LRU{Tuple{Vector, Vector}, Any}(maxsize=100) function cached_sobolseq(lb,ub)
     s = Sobol.SobolSeq(lb, ub)
     s = Sobol.skip(s, 1000)
     return s
