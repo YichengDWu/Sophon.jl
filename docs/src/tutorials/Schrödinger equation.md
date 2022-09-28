@@ -22,12 +22,12 @@ Dxx = Differential(x)^2
 eqs=[0 ~ Dt(u(x,t))+1/2*Dxx(v(x,t))+((v(x,t))^2+(u(x,t))^2)*v(x,t),
      0 ~ Dt(v(x,t))-1/2*Dxx(u(x,t))-((v(x,t))^2+(u(x,t))^2)*u(x,t)]
 
-bcs = [u(0.0, t)~u(1.0, t)]
+bcs = [u(x, 0.0) ~ 2sech(x))]
 
-domains = [t ∈ Interval(-30.0, 30.0),
-           x ∈ Interval(-30.0, 30.0)]
+domains = [t ∈ Interval(-0.0, pi/2),
+           x ∈ Interval(-5.0, 5.0)]
 
-@named NLSE = PDESystem(eqs, bcs, domains, [x,t], [u(x,t),v(x,t)])
+@named pde_system = PDESystem(eqs, bcs, domains, [x,t], [u(x,t),v(x,t)])
 ```
 
 ```@example Schrödinger
@@ -37,7 +37,7 @@ pinn = PINN(u=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3),
 sampler = QuasiRandomSampler(200, 5)
 strategy = NonAdaptiveTraining(1,0)
 
-prob = Sophon.discretize(NLSE, pinn, sampler, strategy)
+prob = Sophon.discretize(pde_system, pinn, sampler, strategy)
 @time res = Optimization.solve(prob, LBFGS(); maxiters=2000)
 ```
 
@@ -45,12 +45,12 @@ prob = Sophon.discretize(NLSE, pinn, sampler, strategy)
 phi = pinn.phi
 ps = res.u
 
-xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
+xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in pde_system.domain]
 
 u = [sum(phi.u(([x,t]), ps.u)) for x in xs, t in ts]
 v = [sum(phi.v(([x,t]), ps.v)) for x in xs, t in ts]
 
-ψ= [sum(phi.u(([x,t]), ps.u))^2+sum(phi.v(([x,t]), ps.v))^2 for x in xs, t in ts]
+ψ= [first(phi.u(([x,t]), ps.u))^2+first(phi.v(([x,t]), ps.v))^2 for x in xs, t in ts]
 
 axis = (xlabel="x", ylabel="t", title="u")
 fig, ax1, hm1 = CairoMakie.heatmap(xs, ts, u, axis=axis)
