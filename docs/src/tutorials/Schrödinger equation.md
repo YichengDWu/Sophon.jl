@@ -31,8 +31,8 @@ domains = [t ∈ Interval(-0.0, pi/2),
 ```
 
 ```@example Schrödinger
-pinn = PINN(u=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3),
-            v=FullyConnected(2,1,tanh; hidden_dims=2,num_layers=3))
+pinn = PINN(u=FullyConnected(2,1,tanh; hidden_dims=16,num_layers=3),
+            v=FullyConnected(2,1,tanh; hidden_dims=16,num_layers=3))
             
 sampler = QuasiRandomSampler(500, 100)
 strategy = NonAdaptiveTraining(1, 10)
