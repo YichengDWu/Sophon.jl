@@ -12,7 +12,7 @@ function get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars)
 
     bound_args = NeuralPDE.get_argument(bcs, dict_indvars, dict_depvars)
     bcs_bounds = map(bound_args) do bound_arg
-        bds = mapreduce(s -> get(dict_span, s, fill(s, length(bound_arg))), hcat, bound_arg)
+        bds = mapreduce(s -> get(dict_span, s, fill(s, 2)), hcat, bound_arg)
         bds = eltypeθ.(bds)
         bds[1, :], bds[2, :]
     end
