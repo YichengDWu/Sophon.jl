@@ -14,7 +14,7 @@ Fourier Feature Network.
 \phi^{(i)}(x)=\left[\sin \left(2 \pi W^{(i)} x\right) ; \cos 2 \pi W^{(i)} x\right],\ W^{(i)} \sim \mathcal{N}\left(0, \sigma^{(i)}\right),\ i\in 1, \dots, D
 ```
 
-  - `frequencies`: A tuple of frequencies `(f1,f2,...,fn)`.
+  - `frequencies`: A tuple of frequencies ``(f1,f2,...,fn)``.
 
 ```math
 \phi^{(i)}(x)=\left[\sin \left(2 \pi f_i x\right) ; \cos 2 \pi f_i x\right]
