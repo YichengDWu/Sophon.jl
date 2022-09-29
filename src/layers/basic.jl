@@ -31,10 +31,6 @@ Fourier Feature Network.
 
   - `AbstractArray` with `size(y, 1) == sum(last(modes) * 2)`.
 
-# States
-
-  - The weight `W` in case 1, otherwise `NamedTuple()`.
-
 # Examples
 
 ```julia
