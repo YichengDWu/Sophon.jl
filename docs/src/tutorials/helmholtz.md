@@ -67,7 +67,7 @@ ax2, hm2= heatmap(fig[1, end+1], xs, ys, u_pred, axis= merge(axis, (;title = "Pr
 Colorbar(fig[:, end+1], hm2)
 ax3, hm3 = heatmap(fig[1, end+1], xs, ys, abs.(u_pred-u_real), axis= merge(axis, (;title = "Absolute Error")))
 Colorbar(fig[:, end+1], hm3)
-
+fig
 save("helmholtz.png", fig); nothing # hide
 ```
 ![](helmholtz.png)
