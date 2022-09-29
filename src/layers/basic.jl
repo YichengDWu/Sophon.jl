@@ -29,7 +29,7 @@ Fourier Feature Network.
 
 # Returns
 
-  - ``[\phi^{(1)}, \phi^{(2)}, ... ,\phi^{(D)}] with `size(y, 1) == sum(last(modes) * 2)`.
+  - ``[\phi^{(1)}, \phi^{(2)}, ... ,\phi^{(D)}]`` with `size(y, 1) == sum(last(modes) * 2)`.
 
 # Examples
 
