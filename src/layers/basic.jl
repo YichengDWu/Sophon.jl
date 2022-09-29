@@ -19,10 +19,13 @@ Fourier Feature Network.
 ```math
 \phi^{(i)}(x)=\left[\sin \left(2 \pi f_i x\right) ; \cos 2 \pi f_i x\right]
 ```
+# Parameters
+  
+  If `std` is used, then parameters are `W`s in the formula.
 
 # Inputs
 
-  - `x`: `AbstractArray`` with `size(x, 1) == in_dims`.
+  - `x`: `AbstractArray` with `size(x, 1) == in_dims`.
 
 # Returns
 
