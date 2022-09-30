@@ -53,7 +53,7 @@ res = train(allen, prob, sampler, strategy)
 
 Let's plot the result.
 ```@example allen
-using CairoMakie
+using GLMakie
 
 phi = pinn.phi
 xs, ts = [infimum(d.domain):0.01:supremum(d.domain) for d in allen.domain]

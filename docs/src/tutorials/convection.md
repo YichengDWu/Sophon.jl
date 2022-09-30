@@ -12,7 +12,7 @@ Consider the following 1D-convection equation with periodic boundary conditions.
 First we define the PDE.
 
 ```@example convection
-using ModelingToolkit, Sophon, IntervalSets, CairoMakie
+using ModelingToolkit, Sophon, IntervalSets, GLMakie
 using Optimization, OptimizationOptimJL, OptimizationOptimisers
 
 @parameters x, t
@@ -58,10 +58,10 @@ phi = pinn.phi
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 u_pred = [sum(phi([x,t],res.u)) for x in xs, t in ts]
 u_real = u_analytic.(xs,ts')
-fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
+fig, ax, hm = GLMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
 ax2, hm2 = heatmap(fig[1,end+1], ts,xs, abs.(u_pred' .- u_real'), axis = (xlabel="t", ylabel="x", title="Absolute error"))
 Colorbar(fig[:, end+1], hm2)
-fig
+display(fig)
 save("convection.png", fig); nothing # hide
 ```
 ![](convection.png)
@@ -71,7 +71,6 @@ We can verify that our model is indeed, periodic.
 ```@example convection
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain)*2 for d in domains]
 u_pred = [sum(phi([x,t],res.u)) for x in xs, t in ts]
-fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
-save("convection2.png", fig); nothing # hide
+fig, ax, hm = GLMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
+display(fig)
 ```
-![](convection2.png)
