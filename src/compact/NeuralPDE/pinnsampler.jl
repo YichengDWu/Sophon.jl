@@ -77,12 +77,12 @@ function sample(pde::PDESystem, sampler::QuasiRandomSampler{device_type, P, B, S
 end
 
 function sobolsample(n::Int, lb, ub)
-    s = cached_sobolseq(lb, ub)
+    s = cached_sobolseq(n, lb, ub)
     return reduce(hcat, [Sobol.next!(s) for i in 1:n])
 end
 
-@memoize LRU{Tuple{Vector, Vector}, Any}(maxsize=100) function cached_sobolseq(lb,ub)
+@memoize LRU{Tuple{Int, Vector, Vector}, Any}(maxsize=100) function cached_sobolseq(n, lb, ub)
     s = Sobol.SobolSeq(lb, ub)
-    s = Sobol.skip(s, 1000)
+    s = Sobol.skip(s, n)
     return s
 end
