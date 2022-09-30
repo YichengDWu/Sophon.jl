@@ -17,7 +17,7 @@ using Optimization, OptimizationOptimJL, OptimizationOptimisers
 @parameters x,t
 @variables u(..), v(..)
 Dₜ = Differential(t)
-Dₓ² = Differential(x)^
+Dₓ² = Differential(x)^2
 
 eqs=[Dₜ(u(x,t)) ~ -Dₓ²(v(x,t))/2 - ((v(x,t))^2 + (u(x,t))^2) * v(x,t),
      Dₜ(v(x,t)) ~  Dₓ²(u(x,t))/2 + ((v(x,t))^2 + (u(x,t))^2) * u(x,t)]
