@@ -128,7 +128,8 @@ rng = Random.default_rng()
             @test size(y) == (1, 5)
         end
         @testset "FourierAttention" begin
-            fa = FourierAttention(2, 4, relu, (1 => 2, 10 => 3); hidden_dims=10, num_layers=3)
+            fa = FourierAttention(2, 4, relu, (1 => 2, 10 => 3); hidden_dims=10,
+                                  num_layers=3)
             x = rand(Float32, 2, 5)
             ps, st = Lux.setup(rng, fa)
             y, st = fa(x, ps, st)

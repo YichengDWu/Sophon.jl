@@ -13,11 +13,13 @@ struct PINN{T, PHI, P}
     init_params::P
 end
 
-function PINN(rng::AbstractRNG = Random.default_rng(); device_type::Type=Array{Float64}, kwargs...)
+function PINN(rng::AbstractRNG=Random.default_rng(); device_type::Type=Array{Float64},
+              kwargs...)
     return PINN((; kwargs...), rng; device_type=device_type)
 end
 
-function PINN(chain::NamedTuple, rng::AbstractRNG = Random.default_rng(); device_type::Type=Array{Float64})
+function PINN(chain::NamedTuple, rng::AbstractRNG=Random.default_rng();
+              device_type::Type=Array{Float64})
     phi = map(m -> ChainState(m, rng), chain)
     phi = map(phi) do ϕ
         return Lux.@set! ϕ.state = adapt(device_type, ϕ.state)
@@ -29,7 +31,8 @@ function PINN(chain::NamedTuple, rng::AbstractRNG = Random.default_rng(); device
     return PINN{device_type, typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
-function PINN(chain::AbstractExplicitLayer, rng::AbstractRNG = Random.default_rng(); device_type::Type=Array{Float64})
+function PINN(chain::AbstractExplicitLayer, rng::AbstractRNG=Random.default_rng();
+              device_type::Type=Array{Float64})
     phi = ChainState(chain, rng)
     Lux.@set! phi.state = adapt(device_type, phi.state)
 

@@ -22,8 +22,7 @@ struct QuasiRandomSampler{T, P, B, S} <: PINNSampler{T}
 end
 
 function QuasiRandomSampler(pde_points, bcs_points=pde_points;
-                            device_type::Type=Array{Float64},
-                            sampling_alg=SobolSample())
+                            device_type::Type=Array{Float64}, sampling_alg=SobolSample())
     return QuasiRandomSampler{device_type, typeof(pde_points), typeof(bcs_points),
                               typeof(sampling_alg)}(pde_points, bcs_points, sampling_alg)
 end
@@ -57,12 +56,12 @@ function sample(pde::PDESystem, sampler::QuasiRandomSampler{device_type, P, B, S
     (; pde_points, bcs_points) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
-    @assert length(pde_points) == 1  "Sobol sampling only supports same number of points for all equations"
+    @assert length(pde_points)==1 "Sobol sampling only supports same number of points for all equations"
 
     bcs_points = length(bcs_points) == 1 ?
                  ntuple(_ -> first(bcs_points), length(bcs_bounds)) : Tuple(bcs_points)
 
-    @assert all(pde_bounds .== first(pde_bounds)) "Sobol sampling only supports same domain for all equations"
+    @assert all(map(pb -> pb == first(pde_bounds), pde_bounds)) "Sobol sampling only supports same domain for all equations"
 
     pde_dataset = sobolsample(first(pde_points), first(pde_bounds)[1], first(pde_bounds)[2])
     pde_datasets = fill(pde_dataset, length(pde_bounds))
@@ -81,7 +80,8 @@ function sobolsample(n::Int, lb, ub)
     return reduce(hcat, [Sobol.next!(s) for i in 1:n])
 end
 
-@memoize LRU{Tuple{Int, Vector, Vector}, Any}(maxsize=100) function cached_sobolseq(n, lb, ub)
+@memoize LRU{Tuple{Int, Vector, Vector}, Any}(maxsize=100) function cached_sobolseq(n, lb,
+                                                                                    ub)
     s = Sobol.SobolSeq(lb, ub)
     s = Sobol.skip(s, n)
     return s
