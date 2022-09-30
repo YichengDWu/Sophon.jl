@@ -57,13 +57,13 @@ predict(x,t) = first(phi(gpu([x,t]),res.u))
 u_real = u_analytic.(xs,ts')
 u_pred = predict.(xs,ts')
 
-using CairoMakie
+using GLMakie
 axis = (xlabel="x", ylabel="t", title="Analytical Solution")
-fig, ax1, hm1 = CairoMakie.heatmap(xs, ts, u_real, axis=axis)
+fig, ax1, hm1 = GLMakie.heatmap(xs, ts, u_real, axis=axis)
 Colorbar(fig[:, end+1], hm1)
-ax2, hm2= CairoMakie.heatmap(fig[1, end+1], xs, ts, u_pred, axis= merge(axis, (;title = "Prediction")))
+ax2, hm2= GLMakie.heatmap(fig[1, end+1], xs, ts, u_pred, axis= merge(axis, (;title = "Prediction")))
 Colorbar(fig[:, end+1], hm2)
-ax3, hm3 = CairoMakie.heatmap(fig[1, end+1], xs, ts, u_pred-u_real, axis= merge(axis, (;title = "Error")))
+ax3, hm3 = GLMakie.heatmap(fig[1, end+1], xs, ts, u_pred-u_real, axis= merge(axis, (;title = "Error")))
 Colorbar(fig[:, end+1], hm3)
 
 fig
@@ -85,13 +85,13 @@ u_analytic(x,t) = sin(x)*(sin(t)+cos(t))
 predict(x,t) = first(phi([x,t],res.u))
 u_real = u_analytic.(xs,ts')
 u_pred = predict.(xs,ts')
-using CairoMakie
+using GLMakie
 axis = (xlabel="x", ylabel="t", title="Analytical Solution")
-fig, ax1, hm1 = CairoMakie.heatmap(xs, ts, u_real, axis=axis)
+fig, ax1, hm1 = GLMakie.heatmap(xs, ts, u_real, axis=axis)
 Colorbar(fig[:, end+1], hm1)
-ax2, hm2= CairoMakie.heatmap(fig[1, end+1], xs, ts, u_pred, axis= merge(axis, (;title = "Prediction")))
+ax2, hm2= GLMakie.heatmap(fig[1, end+1], xs, ts, u_pred, axis= merge(axis, (;title = "Prediction")))
 Colorbar(fig[:, end+1], hm2)
-ax3, hm3 = CairoMakie.heatmap(fig[1, end+1], xs, ts, u_pred-u_real, axis= merge(axis, (;title = "Error")))
+ax3, hm3 = GLMakie.heatmap(fig[1, end+1], xs, ts, u_pred-u_real, axis= merge(axis, (;title = "Error")))
 Colorbar(fig[:, end+1], hm3)
 
 fig
