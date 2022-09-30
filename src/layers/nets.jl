@@ -86,7 +86,7 @@ x → [FourierFeature(x); x] → PINNAttention
 ## Arguments
 
   - `in_dims`: The input dimension.
-
+    
       + `out_dims`: The output dimension.
       + `activation`: The activation function.
       + `std`: See [`FourierFeature`](@ref).

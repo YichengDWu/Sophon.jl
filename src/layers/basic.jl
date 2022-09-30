@@ -295,7 +295,6 @@ that returns the scalar parameter for any input.
 """
 struct Scalar <: AbstractExplicitLayer end
 
-
 initialparameters(rng::AbstractRNG, s::Scalar) = (; scalar=0.0f0)
 parameterlength(s::Scalar) = 1
 statelength(s::Scalar) = 0
@@ -306,6 +305,7 @@ end
 
 """
     SplitFunction(indices...)
+
 Split the input along the first demision according to indices.
 """
 struct SplitFunction{F} <: AbstractExplicitLayer
@@ -314,7 +314,7 @@ end
 
 function SplitFunction(indices...)
     indices = map(indices) do i
-        i isa Int ?  UnitRange(i, i) : i
+        return i isa Int ? UnitRange(i, i) : i
     end
     return SplitFunction{typeof(indices)}(indices)
 end
@@ -324,5 +324,5 @@ function (sf::SplitFunction)(x::AbstractVector, ps, st::NamedTuple)
 end
 
 function (sf::SplitFunction)(x::AbstractMatrix, ps, st::NamedTuple)
-    return map(i -> view(x,i,:), sf.indices), st
+    return map(i -> view(x, i, :), sf.indices), st
 end
