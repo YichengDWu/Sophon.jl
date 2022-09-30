@@ -54,18 +54,18 @@ end
 
 function sample(pde::PDESystem, sampler::QuasiRandomSampler{device_type, P, B, SobolSample},
                 strategy) where {device_type, P, B}
-    eltypeθ = eltype(device_type)
     (; pde_points, bcs_points) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
-    pde_points = length(pde_points) == 1 ?
-                 ntuple(_ -> first(pde_points), length(pde_bounds)) : Tuple(pde_points)
+    @assert length(pde_points) == 1  "Sobol sampling only supports same number of points for all equations"
+
     bcs_points = length(bcs_points) == 1 ?
                  ntuple(_ -> first(bcs_points), length(bcs_bounds)) : Tuple(bcs_points)
 
-    pde_datasets = [sobolsample(points, bound[1], bound[2])
-                    for (points, bound) in zip(pde_points, pde_bounds)]
-    pde_datasets = [adapt(device_type, pde_dataset) for pde_dataset in pde_datasets]
+    @assert all(pde_bounds .== first(pde_bounds)) "Sobol sampling only supports same domain for all equations"
+
+    pde_dataset = sobolsample(first(pde_points), first(pde_bounds)[1], first(pde_bounds)[2])
+    pde_datasets = fill(pde_dataset, length(pde_bounds))
 
     boundary_datasets = [sobolsample(points, bound[1], bound[2])
                          for (points, bound) in zip(bcs_points, bcs_bounds)]
