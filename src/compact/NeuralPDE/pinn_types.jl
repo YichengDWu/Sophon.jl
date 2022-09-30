@@ -17,23 +17,23 @@ function PINN(; device_type::Type=Array{Float64}, kwargs...)
     return PINN((; kwargs...); device_type=device_type)
 end
 
-function PINN(chain::NamedTuple; device_type::Type=Array{Float64})
-    phi = map(ChainState, chain)
+function PINN(chain::NamedTuple; rng::AbstractRNG = Random.default_rng(), device_type::Type=Array{Float64})
+    phi = map(m -> ChainState(m, rng), chain)
     phi = map(phi) do ϕ
         return Lux.@set! ϕ.state = adapt(device_type, ϕ.state)
     end
 
-    init_params = ComponentArray(initialparameters(Random.default_rng(), phi))
+    init_params = ComponentArray(initialparameters(rng, phi))
     init_params = adapt(device_type, init_params)
 
     return PINN{device_type, typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
-function PINN(chain::AbstractExplicitLayer; device_type::Type=Array{Float64})
-    phi = ChainState(chain)
+function PINN(chain::AbstractExplicitLayer; rng::AbstractRNG = Random.default_rng(), device_type::Type=Array{Float64})
+    phi = ChainState(chain, rng)
     Lux.@set! phi.state = adapt(device_type, phi.state)
 
-    init_params = ComponentArray(initialparameters(Random.default_rng(), phi))
+    init_params = ComponentArray(initialparameters(rng, phi))
     init_params = adapt(device_type, init_params)
 
     return PINN{device_type, typeof(phi), typeof(init_params)}(phi, init_params)
