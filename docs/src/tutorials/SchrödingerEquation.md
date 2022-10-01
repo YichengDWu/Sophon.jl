@@ -68,7 +68,7 @@ xs, ts= [infimum(d.domain):0.01:supremum(d.domain) for d in pde_system.domain]
 
 u = [sum(phi.u(([x,t]), ps.u)) for x in xs, t in ts]
 v = [sum(phi.v(([x,t]), ps.v)) for x in xs, t in ts]
-ψ= [sqrt(first(phi.u(([x,t]), ps.u))^2+first(phi.v(([x,t]), ps.v))^2) for x in xs, t in ts]
+ψ = [sqrt(first(phi.u(([x,t]), ps.u))^2+first(phi.v(([x,t]), ps.v))^2) for x in xs, t in ts]
 
 axis = (xlabel="t", ylabel="x", title="u")
 fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, u', axis=axis)
@@ -87,3 +87,20 @@ save("phi.png", fig); nothing # hide
 ```
 ![](phi.png)
 
+## Customize Sampling 
+
+Bascially any sampling method is supportted.
+
+```@example Schrödinger
+using StatsBase
+
+data = vec([[x, t] for x in xs, t in ts])
+wv = vec(ψ.^2)
+new_data = wsample(data, wv, 1000)
+new_data = reduce(hcat, new_data)
+
+prob.p[1] = new_data
+prob.p[2] = new_data
+prob = remake(prob; u0 = res.u)
+res = Optimization.solve(prob, lbfgs; maxiters=1000)
+```
