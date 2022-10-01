@@ -1,5 +1,5 @@
 """
-    PINN(chain; device_type::Type=Array{Float64})
+    PINN(chain, rng::AbstractRNG=Random.default_rng(); device_type::Type=Array{Float64})
 
 A container for a neural network, its states and its initial parameters.
 
