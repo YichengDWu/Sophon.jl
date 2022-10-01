@@ -59,7 +59,7 @@ phi_cpu = cpu(phi)
 ps_cpu = cpu(res.u)
 u_pred = [sum(phi_cpu(([x,y]), ps_cpu)) for x in xs, y in ys]
 
-using GLMakie
+using CairoMakie
 axis = (xlabel="x", ylabel="y", title="Analytical Solution")
 fig, ax1, hm1 = heatmap(xs, ys, u_real, axis=axis)
 Colorbar(fig[:, end+1], hm1)
