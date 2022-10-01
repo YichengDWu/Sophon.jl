@@ -11,8 +11,8 @@ $u_t+\frac{1}{2} v_{x x}+\left(u^2+v^2\right) v=0$
 $v_t-\frac{1}{2} u_{x x}-\left(u^2+v^2\right) u=0$
 
 ```@example Schrödinger
-using ModelingToolkit, IntervalSets, Sophon, CairoMakie
-using Optimization, OptimizationOptimJL, OptimizationOptimisers
+using ModelingToolkit, IntervalSets, Sophon, GLMakie
+using Optimization, OptimizationOptimJL
 
 @parameters x,t
 @variables u(..), v(..)
