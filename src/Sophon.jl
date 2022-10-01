@@ -37,14 +37,13 @@ include("compact/NeuralPDE/pinnsampler.jl")
 include("compact/NeuralPDE/discretize.jl")
 include("layers/operators.jl")
 
-export GPUComponentArray64, GPUComponentArray
 export Scheduler, QuasiRandom
 export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature,
        Scalar, ScalarLayer, SplitFunction
 export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON
 export DeepONet
-export PINN, symbolic_discretize, discretize, get_optimization_problem, QuasiRandomSampler,
-       NonAdaptiveTraining, get_optimization_problem
+export PINN, symbolic_discretize, discretize, QuasiRandomSampler,
+       NonAdaptiveTraining, AdaptiveTraining
 
 end

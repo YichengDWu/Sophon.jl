@@ -462,3 +462,29 @@ function numeric_derivative(phi, u, x, εs, order, θ)
         error("This shouldn't happen!")
     end
 end
+
+function numeric_derivative(phi, x, θ, dim::Int, order::Int)
+    ε = ChainRulesCore.@ignore_derivatives get_ε(size(x, 1), dim, eltype(θ), order)
+    _type = parameterless_type(ComponentArrays.getdata(θ))
+    _epsilon = inv(first(ε[ε .!= zero(ε)]))
+
+    ε = adapt(_type, ε)
+
+    if order == 4
+        return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ)
+                .+
+                6 .* phi(x, θ)
+                .-
+                4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* _epsilon^4
+    elseif order == 3
+        return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ, phi) .+ 2 .* phi(x .- ε, θ)
+                -
+                phi(x .- 2 .* ε, θ)) .* _epsilon^3 ./ 2
+    elseif order == 2
+        return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* _epsilon^2
+    elseif order == 1
+        return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* _epsilon ./ 2
+    else
+        error("The order $order is not supported!")
+    end
+end
