@@ -290,7 +290,7 @@ end
 """
     Scalar()
 
-A conatiner for scalar parameter. This is useful for the case that you want to dummy layer
+A conatiner for scalar parameter. This is useful for the case that you want a dummy layer
 that returns the scalar parameter for any input.
 """
 struct Scalar <: AbstractExplicitLayer end
