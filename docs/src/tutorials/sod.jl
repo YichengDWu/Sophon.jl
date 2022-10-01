@@ -31,7 +31,7 @@ eqs = [
     Dₜ(E(t,x)) + Dₓ(u(t, x) * (E(t,x) + p(t, x))) ~ 0.0
 ]
 
-t_min, t_max = 0.0, 0.15
+t_min, t_max = 0.0, 0.2
 x_min, x_max = 0.0, 1.0
 domains = [t ∈ Interval(t_min, t_max),
            x ∈ Interval(x_min, x_max)]
