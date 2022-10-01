@@ -74,11 +74,16 @@ axis = (xlabel="t", ylabel="x", title="u")
 fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, u', axis=axis)
 ax2, hm2= CairoMakie.heatmap(fig[1, end+1], ts, xs, v', axis= merge(axis, (; title="v")))
 display(fig)
+save("uv.png", fig); nothing # hide
 ```
+![](uv.png)
 
 ```@example Schrödinger
 axis = (xlabel="t", ylabel="x", title="ψ")
 fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, ψ', axis=axis)
 Colorbar(fig[:, end+1], hm1)
 display(fig)
+save("phi.png", fig); nothing # hide
 ```
+![](phi.png)
+
