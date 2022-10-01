@@ -34,8 +34,8 @@ domains = [x ∈ Interval(-5.0, 5.0),
 ```
 
 ```@example Schrödinger
-pinn = PINN(u=FullyConnected(2,1,tanh; hidden_dims=16,num_layers=3),
-            v=FullyConnected(2,1,tanh; hidden_dims=16,num_layers=3))
+pinn = PINN(u=FullyConnected(2,1,tanh; hidden_dims=16,num_layers=4),
+            v=FullyConnected(2,1,tanh; hidden_dims=16,num_layers=4))
             
 sampler = QuasiRandomSampler(2000, (500,500,20,20))
 strategy = NonAdaptiveTraining(1,(5,5,1,1))
@@ -96,11 +96,16 @@ using StatsBase
 
 data = vec([[x, t] for x in xs, t in ts])
 wv = vec(ψ.^2)
-new_data = wsample(data, wv, 1000)
+new_data = wsample(data, wv, 2000)
 new_data = reduce(hcat, new_data)
+fig, ax = scatter(new_data[2,:], new_data[1,:])
+save("data.png", fig); nothing # hide
+```
+![](data.png)
 
+```@example Schrödinger
 prob.p[1] = new_data
 prob.p[2] = new_data
 prob = remake(prob; u0 = res.u)
-res = Optimization.solve(prob, lbfgs; maxiters=1000)
+# res = Optimization.solve(prob, lbfgs; maxiters=1000)
 ```
