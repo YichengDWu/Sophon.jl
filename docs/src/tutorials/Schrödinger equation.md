@@ -41,7 +41,23 @@ sampler = QuasiRandomSampler(2000, (500,500,20,20))
 strategy = NonAdaptiveTraining(1,(10,10,1,1))
 
 prob = Sophon.discretize(pde_system, pinn, sampler, strategy)
-@time res = Optimization.solve(prob, LBFGS(); maxiters=2000)
+```
+Now we train the neural nets and resample data while training.
+
+```@example Schrödinger
+function train(pde_system, prob, sampler, strategy, resample_period = 200, n=20)
+     lbfgs = LBFGS()
+     res = Optimization.solve(prob, lbfgs; maxiters=2000)
+     
+     for i in 1:n
+         data = Sophon.sample(pde_system, sampler, strategy)
+         prob = remake(prob; u0=res.u, p=data)
+         res = Optimization.solve(prob, lbfgs; maxiters=resample_period)
+     end
+     return res
+end
+
+res = train(pde_system, prob, sampler, strategy)
 ```
 
 ```@example Schrödinger
@@ -55,14 +71,14 @@ v = [sum(phi.v(([x,t]), ps.v)) for x in xs, t in ts]
 ψ= [sqrt(first(phi.u(([x,t]), ps.u))^2+first(phi.v(([x,t]), ps.v))^2) for x in xs, t in ts]
 
 axis = (xlabel="x", ylabel="t", title="u")
-fig, ax1, hm1 = CairoMakie.heatmap(xs, ts, u, axis=axis)
-ax2, hm2= CairoMakie.heatmap(fig[1, end+1], xs, ts, v, axis= merge(axis, (; title="v")))
+fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, u', axis=axis)
+ax2, hm2= CairoMakie.heatmap(fig[1, end+1], ts, xs, v', axis= merge(axis, (; title="v")))
 fig
 ```
 
 ```@example Schrödinger
 axis = (xlabel="x", ylabel="t", title="ψ")
-fig, ax1, hm1 = CairoMakie.heatmap(xs, ts, ψ, axis=axis)
+fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, ψ', axis=axis)
 Colorbar(fig[:, end+1], hm1)
 fig
 ```
