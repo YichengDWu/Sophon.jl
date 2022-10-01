@@ -13,7 +13,7 @@ struct NonAdaptiveTraining{P, B} <: AbstractTrainingAlg
     end
 end
 
-function scalarize(strategy::NonAdaptiveTraining{P, B}, datafree_pde_loss_function,
+function scalarize(strategy::NonAdaptiveTraining{P, B},  phi, datafree_pde_loss_function,
                    datafree_bc_loss_function) where {P, B}
     (; pde_weights, bcs_weights) = strategy
 
@@ -29,10 +29,68 @@ function scalarize(strategy::NonAdaptiveTraining{P, B}, datafree_pde_loss_functi
     return f
 end
 
-function scalarize(weights::NTuple{N}, datafree_loss_function::Tuple) where {N}
+function scalarize(weights::NTuple{N, <:Real}, datafree_loss_function::Tuple) where {N}
     ex = :(mean($(weights[1]) .* abs2.($(datafree_loss_function[1])(p[1], θ))))
     for i in 2:N
         ex = :(mean($(weights[i]) .* abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
+    end
+    loss_f = :((θ, p) -> $ex)
+    return NeuralPDE.@RuntimeGeneratedFunction(loss_f)
+end
+
+"""
+    AdaptiveTraining(pde_weights, bcs_weights)
+
+Adaptive weights for the loss functions. Here `pde_weights` and `bcs_weights` are
+functions that take in `(phi, θ, data)` and return the point-wise weights. Note that `bcs_weights` can be
+real numbers but they will be converted to functions that return the same numbers.
+"""
+struct AdaptiveTraining{P,B} <: AbstractTrainingAlg
+    pde_weights::P
+    bcs_weights::B
+end
+
+function AdaptiveTraining(pde_weights::Function, bcs_weights::Real)
+    _bcs_weights = (phi, θ, p) -> bcs_weights
+    return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights, _bcs_weights)
+end
+
+function AdaptiveTraining(pde_weights::Function, bcs_weights::NTuple{N, <:Real}) where {N}
+    _bcs_weights = map(w -> (phi, θ, p) -> w, bcs_weights)
+    return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights, _bcs_weights)
+end
+
+function AdaptiveTraining(pde_weights::Tuple{Vararg{<:Function}}, bcs_weights::Int)
+    _bcs_weights = (phi, θ, p) -> bcs_weights
+    return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights, _bcs_weights)
+end
+
+function AdaptiveTraining(pde_weights::Tuple{Vararg{<:Function}}, bcs_weights::NTuple{N, <:Real}) where {N}
+    _bcs_weights = map(w -> (phi, θ, p) -> w, bcs_weights)
+    return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights, _bcs_weights)
+end
+
+function scalarize(strategy::AdaptiveTraining, phi, datafree_pde_loss_function,
+                   datafree_bc_loss_function)
+    (; pde_weights, bcs_weights) = strategy
+
+    N1 = length(datafree_pde_loss_function)
+    N2 = length(datafree_bc_loss_function)
+
+    pde_weights = length(pde_weights) == 1 ? ntuple(_ -> first(pde_weights), N1) : pde_weights
+    bcs_weights = length(bcs_weights) == 1 ? ntuple(_ -> first(bcs_weights), N2) : bcs_weights
+
+    f = scalarize(phi, (pde_weights..., bcs_weights...),
+                  (datafree_pde_loss_function..., datafree_bc_loss_function...))
+
+    return f
+end
+
+function scalarize(phi, weights::Tuple{Vararg{<:Function}}, datafree_loss_function::Tuple)
+    N = length(datafree_loss_function)
+    ex = :(mean($(weights[1])(phi, θ, p[1]) .* abs2.($(datafree_loss_function[1])(p[1], θ))))
+    for i in 2:N
+        ex = :(mean($(weights[i])(phi, θ, p[$i]) .* abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
     end
     loss_f = :((θ, p) -> $ex)
     return NeuralPDE.@RuntimeGeneratedFunction(loss_f)
