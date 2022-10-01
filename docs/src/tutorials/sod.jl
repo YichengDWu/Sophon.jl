@@ -31,16 +31,16 @@ eqs = [
     Dₜ(E(t,x)) + Dₓ(u(t, x) * (E(t,x) + p(t, x))) ~ 0.0
 ]
 
-t_min, t_max = 0.0, 0.2
+t_min, t_max = 0.0, 0.15
 x_min, x_max = 0.0, 1.0
 domains = [t ∈ Interval(t_min, t_max),
            x ∈ Interval(x_min, x_max)]
 
 @named pde_system = PDESystem(eqs, bcs, domains, [t, x], [u(t, x), ρ(t, x), p(t, x)])
 
-pinn = PINN(u = FullyConnected(2, 1, tanh; num_layers = 3, hidden_dims = 16),
-            ρ = FullyConnected(2, 1, tanh; num_layers = 3, hidden_dims = 16),
-            p = FullyConnected(2, 1, tanh; num_layers = 3, hidden_dims = 16))
+pinn = PINN(u = FullyConnected(2, 1, tanh; num_layers = 4, hidden_dims = 16),
+            ρ = FullyConnected(2, 1, tanh; num_layers = 4, hidden_dims = 16),
+            p = FullyConnected(2, 1, tanh; num_layers = 4, hidden_dims = 16))
 
 sampler = QuasiRandomSampler(1000, 100)
 
@@ -60,6 +60,12 @@ callback = function (p, l)
 end
 
 res = Optimization.solve(prob, LBFGS(); maxiters=2000, callback = callback)
+
+for _ in 1:10
+    data = Sophon.sample(pde_system, sampler, strategy)
+    prob = remake(prob; u0=res.u, p = data)
+    res = Optimization.solve(prob, LBFGS(); maxiters=2000, callback = callback)
+end
 
 θ = res.u
 phi = pinn.phi
