@@ -70,15 +70,15 @@ u = [sum(phi.u(([x,t]), ps.u)) for x in xs, t in ts]
 v = [sum(phi.v(([x,t]), ps.v)) for x in xs, t in ts]
 ψ= [sqrt(first(phi.u(([x,t]), ps.u))^2+first(phi.v(([x,t]), ps.v))^2) for x in xs, t in ts]
 
-axis = (xlabel="x", ylabel="t", title="u")
+axis = (xlabel="t", ylabel="x", title="u")
 fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, u', axis=axis)
 ax2, hm2= CairoMakie.heatmap(fig[1, end+1], ts, xs, v', axis= merge(axis, (; title="v")))
-fig
+display(fig)
 ```
 
 ```@example Schrödinger
-axis = (xlabel="x", ylabel="t", title="ψ")
+axis = (xlabel="t", ylabel="x", title="ψ")
 fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, ψ', axis=axis)
 Colorbar(fig[:, end+1], hm1)
-fig
+display(fig)
 ```
