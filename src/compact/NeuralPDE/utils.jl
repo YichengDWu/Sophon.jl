@@ -471,14 +471,10 @@ function numeric_derivative(phi, x, θ, dim::Int, order::Int)
     ε = adapt(_type, ε)
 
     if order == 4
-        return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ)
-                .+
-                6 .* phi(x, θ)
-                .-
+        return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
                 4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* _epsilon^4
     elseif order == 3
-        return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ, phi) .+ 2 .* phi(x .- ε, θ)
-                -
+        return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ, phi) .+ 2 .* phi(x .- ε, θ) -
                 phi(x .- 2 .* ε, θ)) .* _epsilon^3 ./ 2
     elseif order == 2
         return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* _epsilon^2
