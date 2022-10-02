@@ -20,7 +20,7 @@ Fourier Feature Network.
 \phi^{(i)}(x)=\left[\sin \left(2 \pi f_i x\right) ; \cos 2 \pi f_i x\right]
 ```
 # Parameters
-  
+
   If `std` is used, then parameters are `W`s in the formula.
 
 # Inputs
@@ -295,12 +295,12 @@ that returns the scalar parameter for any input.
 """
 struct Scalar <: AbstractExplicitLayer end
 
-initialparameters(rng::AbstractRNG, s::Scalar) = (; scalar=0.0f0)
+initialparameters(rng::AbstractRNG, s::Scalar) = (; scalar= [0.0f0;;])
 parameterlength(s::Scalar) = 1
 statelength(s::Scalar) = 0
 
 @inline function (s::Scalar)(x::AbstractArray, ps, st::NamedTuple)
-    return ps.scalar
+    return ps.scalar, st
 end
 
 """
