@@ -280,7 +280,7 @@ end
 
 ScalarLayer(connection::Function) = ScalarLayer{typeof(connection)}(connection)
 
-initialparameters(rng::AbstractRNG, s::ScalarLayer) = (; scalar=0.0f0)
+initialparameters(rng::AbstractRNG, s::ScalarLayer) = (; scalar=[0.0f0;;])
 parameterlength(s::ScalarLayer) = 1
 
 @inline function (s::ScalarLayer)(x::AbstractArray, ps, st::NamedTuple)
@@ -288,19 +288,19 @@ parameterlength(s::ScalarLayer) = 1
 end
 
 """
-    Scalar()
+    ConstantFunction()
 
 A conatiner for scalar parameter. This is useful for the case that you want a dummy layer
 that returns the scalar parameter for any input.
 """
-struct Scalar <: AbstractExplicitLayer end
+struct ConstantFunction <: AbstractExplicitLayer end
 
-initialparameters(rng::AbstractRNG, s::Scalar) = (; scalar= [0.0f0;;])
-parameterlength(s::Scalar) = 1
-statelength(s::Scalar) = 0
+initialparameters(rng::AbstractRNG, s::ConstantFunction) = (; constant = [0.0f0;;])
+parameterlength(s::ConstantFunction) = 1
+statelength(s::ConstantFunction) = 0
 
-@inline function (s::Scalar)(x::AbstractArray, ps, st::NamedTuple)
-    return ps.scalar, st
+@inline function (s::ConstantFunction)(x::AbstractArray, ps, st::NamedTuple)
+    return ps.constant, st
 end
 
 """
