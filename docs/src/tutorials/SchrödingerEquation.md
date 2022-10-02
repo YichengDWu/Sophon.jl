@@ -4,7 +4,7 @@ The nonlinear Shrödinger equation is given by
 
 $\mathrm{i} \partial_t \psi=-\frac{1}{2} \sigma \partial_{x x} \psi-\beta|\psi|^2 \psi$
 
-Let $\sigma=\beta=1, \psi=u+v i$, the equation can be transformed to a system of partial differential equations
+Let $\sigma=\beta=1, \psi=u+v i$, the equation can be transformed into a system of partial differential equations
 
 $u_t+\frac{1}{2} v_{x x}+\left(u^2+v^2\right) v=0$
 
