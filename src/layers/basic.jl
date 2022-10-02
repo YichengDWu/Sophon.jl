@@ -295,7 +295,7 @@ that returns the scalar parameter for any input.
 """
 struct ConstantFunction <: AbstractExplicitLayer end
 
-initialparameters(rng::AbstractRNG, s::ConstantFunction) = (; constant = [0.0f0;;])
+initialparameters(rng::AbstractRNG, s::ConstantFunction) = (; constant=[0.0f0;;])
 parameterlength(s::ConstantFunction) = 1
 statelength(s::ConstantFunction) = 0
 

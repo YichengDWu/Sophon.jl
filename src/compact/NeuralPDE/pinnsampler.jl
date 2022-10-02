@@ -13,7 +13,7 @@ function sample end
                        sampling_alg=SobolSample())
 
 Sampler to generate the datasets for PDE and boundary conditions using a quisa-random sampling algorithm.
-You can call `sample(pde, sampler, strategy)` on it to generate all the datasets. See [QuasiMonteCarlo.jl](https://github.com/SciML/QuasiMonteCarlo.jl) 
+You can call `sample(pde, sampler, strategy)` on it to generate all the datasets. See [QuasiMonteCarlo.jl](https://github.com/SciML/QuasiMonteCarlo.jl)
 for available sampling algorithms.
 """
 struct QuasiRandomSampler{T, P, B, S} <: PINNSampler{T}

@@ -234,9 +234,9 @@ rng = Random.default_rng()
     end
 
     @testset "TrainingStrategy" begin
-        @test_nowarn AdaptiveTraining((θ,p)->p, 2)
-        @test_nowarn AdaptiveTraining((θ,p)->p,(3,4,5))
-        @test_nowarn AdaptiveTraining((θ,p)->p, 5)
-        @test_nowarn AdaptiveTraining(((θ,p)->p, (θ,p)->θ),(3,4,5))
+        @test_nowarn AdaptiveTraining((θ, p) -> p, 2)
+        @test_nowarn AdaptiveTraining((θ, p) -> p, (3, 4, 5))
+        @test_nowarn AdaptiveTraining((θ, p) -> p, 5)
+        @test_nowarn AdaptiveTraining(((θ, p) -> p, (θ, p) -> θ), (3, 4, 5))
     end
 end end
