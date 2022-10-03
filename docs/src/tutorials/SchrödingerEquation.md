@@ -46,13 +46,13 @@ Now we train the neural nets and resample data while training.
 
 ```@example Schrödinger
 function train(pde_system, prob, sampler, strategy, resample_period = 200, n=20)
-     lbfgs = LBFGS()
-     res = Optimization.solve(prob, lbfgs; maxiters=2000)
+     bfgs = BFGS()
+     res = Optimization.solve(prob, bfgs; maxiters=2000)
      
      for i in 1:n
          data = Sophon.sample(pde_system, sampler, strategy)
          prob = remake(prob; u0=res.u, p=data)
-         res = Optimization.solve(prob, lbfgs; maxiters=resample_period)
+         res = Optimization.solve(prob, bfgs; maxiters=resample_period)
      end
      return res
 end
