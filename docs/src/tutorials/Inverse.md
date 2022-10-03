@@ -89,9 +89,9 @@ strategy = NonAdaptiveTraining(1,0)
 t_data = t_
 u_data = u_ 
 function additional_loss(phi, θ)
-    return sum(abs2, phi.u(t_data, θ.u).-u_data)/length(t_data)
+    return sum(abs2, vcat(phi.x(t_data, θ.x), phi.y(t_data, θ.y), phi.z(t_data, θ.z)).-u_data)/length(t_data)
 end
-prob = Sophon.discretize(pde_system, pinn, sampler, strategy)#, additional_loss=additional_loss
+prob = Sophon.discretize(pde_system, pinn, sampler, strategy, additional_loss=additional_loss)
 
 callback = function (p,l)
     println("Current loss is: $l")
