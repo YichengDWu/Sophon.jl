@@ -107,5 +107,5 @@ save("data.png", fig); nothing # hide
 prob.p[1] = new_data
 prob.p[2] = new_data
 prob = remake(prob; u0 = res.u)
-# res = Optimization.solve(prob, lbfgs; maxiters=1000)
+# res = Optimization.solve(prob, bfgs; maxiters=1000)
 ```
