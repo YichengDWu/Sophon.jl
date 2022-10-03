@@ -88,7 +88,7 @@ end
 
 ```julia
 #Parameters of inversion
-print(res.u.σ_.constant, res.u.ρ.constant, res.u.β.constant)
+print(res.u.σ.constant, res.u.ρ.constant, res.u.β.constant)
 ```
 
 ```julia
