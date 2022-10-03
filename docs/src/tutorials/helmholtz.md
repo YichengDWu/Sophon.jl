@@ -55,7 +55,7 @@ xs, ys= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 u_analytic(x,y) = sinpi(a1*x)*sinpi(a2*y)
 u_real = [u_analytic(x,y) for x in xs, y in ys]
 
-phi_cpu = cpu(phi)
+phi_cpu = cpu(phi) # in case you are using GPU
 ps_cpu = cpu(res.u)
 u_pred = [sum(phi_cpu(([x,y]), ps_cpu)) for x in xs, y in ys]
 
