@@ -37,13 +37,14 @@ We solve the equation sequentially in time.
 
 ```@example allen
 function train(allen, prob, sampler, strategy)
-    res = Optimization.solve(prob, LBFGS(); maxiters=2000)
+    bfgs = BFGS()
+    res = Optimization.solve(prob, bfgs; maxiters=2000)
 
     for tmax in [0.5, 0.75, 1.0]
         allen.domain[2] = t ∈ 0.0..tmax
         data = Sophon.sample(allen, sampler, strategy)
         prob = remake(prob; u0=res.u, p=data)
-        res = Optimization.solve(prob, LBFGS(); maxiters=2000)
+        res = Optimization.solve(prob, bfgs; maxiters=2000)
     end
     return res
 end
