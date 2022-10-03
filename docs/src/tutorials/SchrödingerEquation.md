@@ -38,7 +38,7 @@ pinn = PINN(u=FullyConnected(2,1,tanh; hidden_dims=16,num_layers=4),
             v=FullyConnected(2,1,tanh; hidden_dims=16,num_layers=4))
             
 sampler = QuasiRandomSampler(2000, (500,500,20,20))
-strategy = NonAdaptiveTraining(1,(5,5,1,1))
+strategy = NonAdaptiveTraining(1,(10,10,1,1))
 
 prob = Sophon.discretize(pde_system, pinn, sampler, strategy)
 ```
