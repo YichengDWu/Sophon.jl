@@ -69,7 +69,7 @@ pinn = PINN(x = FullyConnected((1,16,16,16,1), tanh),
             σ = ConstantFunction(),
             ρ = ConstantFunction(),
             β = ConstantFunction())
-sampler = QuasiRandomSampler(2000, 500)
+sampler = QuasiRandomSampler(100, 1)
 strategy = NonAdaptiveTraining(1,0)
 
 t_data = t_
