@@ -264,9 +264,8 @@ end
 function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                dict_transformation_vars=nothing,
                                transformation_vars=nothing)
-    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput, phi, derivative, init_params) = pinnrep
-    flat_init_params = init_params
-    eltypeθ = eltype(flat_init_params)
+    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput, phi, derivative, fdtype) = pinnrep
+    fdtype = fdtype
 
     _args = ex.args
     for (i, e) in enumerate(_args)
@@ -298,7 +297,7 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                 dim_l = length(dict_interior_indvars)
 
                 var_ = is_integral ? :(derivative) : :($(Expr(:$, :derivative)))
-                εs = [get_ε(dim_l, d, eltypeθ, order) for d in 1:dim_l]
+                εs = [get_ε(dim_l, d, fdtype, order) for d in 1:dim_l]
                 undv = [dict_interior_indvars[d_p] for d_p in derivative_variables]
                 εs_dnv = [εs[d] for d in undv]
 
@@ -343,7 +342,7 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                                                                                          dict_depvar_input,
                                                                                                          dict_depvars,
                                                                                                          integrating_variable,
-                                                                                                         eltypeθ)
+                                                                                                         fdtype)
 
                 num_depvar = map(int_depvar -> dict_depvars[int_depvar],
                                  integrating_depvars)
@@ -428,9 +427,9 @@ function pair(eq, depvars, dict_depvar_input)
     return Dict(filter(p -> p !== nothing, pair_))
 end
 
-function get_ε(dim, der_num, eltypeθ, order)
-    epsilon = ^(eps(eltypeθ), one(eltypeθ) / (2 + order))
-    ε = zeros(eltypeθ, dim)
+function get_ε(dim, der_num, fdtype, order)
+    epsilon = ^(eps(fdtype), one(fdtype) / (2 + order))
+    ε = zeros(fdtype, dim)
     ε[der_num] = epsilon
     return ε
 end

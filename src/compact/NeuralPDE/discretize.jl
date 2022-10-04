@@ -29,7 +29,7 @@ function get_datafree_pinn_loss_function(pde_system::PDESystem, pinn::PINN,
     pinnrep = (; eqs, bcs, domain, ps, defaults, default_p, additional_loss, depvars,
                indvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput,
                init_params, phi, derivative, strategy, pde_indvars, bc_indvars,
-               pde_integration_vars, bc_integration_vars,
+               pde_integration_vars, bc_integration_vars, fdtype = Float64,
                eq_params=SciMLBase.NullParameters(), param_estim=false)
     integral = get_numeric_integral(pinnrep)
     pinnrep = merge(pinnrep, (; integral))
@@ -65,14 +65,12 @@ function get_datafree_pinn_loss_function(pde_system::PDESystem, pinn::PINN,
     return full_loss_function
 end
 
-function discretize(pde_system::PDESystem, pinn::PINN{T}, sampler::PINNSampler{S},
+function discretize(pde_system::PDESystem, pinn::PINN, sampler::PINNSampler,
                     strategy::AbstractTrainingAlg;
                     additional_loss=Sophon.null_additional_loss,
                     derivative=numeric_derivative) where {T, S}
-    if parameterless_type(S) != parameterless_type(T)
-        throw(ArgumentError("The device type of the sampler and the type of the neural network must be the same. Got $(S) and $(T)"))
-    end
     datasets = sample(pde_system, sampler, strategy)
+    datasets = pinn.init_params isa AbstractGPUComponentVector ? adapt(CuArray, datasets) : datasets
     loss_function = get_datafree_pinn_loss_function(pde_system, pinn, strategy;
                                                     additional_loss=additional_loss,
                                                     derivative=derivative)

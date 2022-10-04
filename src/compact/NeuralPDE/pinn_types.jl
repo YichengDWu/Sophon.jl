@@ -1,45 +1,35 @@
 """
-    PINN(chain, rng::AbstractRNG=Random.default_rng(); device_type::Type=Array{Float64})
+    PINN(chain, rng::AbstractRNG=Random.default_rng())
 
-A container for a neural network, its states and its initial parameters.
+A container for a neural network, its states and its initial parameters. Call `gpu` and `cpu` to move the neural network to the GPU and CPU respectively.
+The default element type of the neural network is `Float32`.
 
 ## Arguments
 
   - `chain`: `AbstractExplicitLayer` or a named tuple of `AbstractExplicitLayer`s.
-  - `device_type`: `Array{T}` or `CuArray{T}`, or any other array types.
+  - `rng`: `AbstractRNG` to use for initialising the neural network.
 """
-struct PINN{T, PHI, P}
+struct PINN{PHI, P}
     phi::PHI
     init_params::P
 end
 
-function PINN(rng::AbstractRNG=Random.default_rng(); device_type::Type=Array{Float64},
-              kwargs...)
-    return PINN((; kwargs...), rng; device_type=device_type)
+function PINN(rng::AbstractRNG=Random.default_rng(); kwargs...)
+    return PINN((; kwargs...), rng)
 end
 
-function PINN(chain::NamedTuple, rng::AbstractRNG=Random.default_rng();
-              device_type::Type=Array{Float64})
+function PINN(chain::NamedTuple, rng::AbstractRNG=Random.default_rng())
     phi = map(m -> ChainState(m, rng), chain)
-    phi = map(phi) do ϕ
-        return Lux.@set! ϕ.state = adapt(device_type, ϕ.state)
-    end
-
     init_params = ComponentArray(initialparameters(rng, phi))
-    init_params = adapt(device_type, init_params)
 
-    return PINN{device_type, typeof(phi), typeof(init_params)}(phi, init_params)
+    return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
-function PINN(chain::AbstractExplicitLayer, rng::AbstractRNG=Random.default_rng();
-              device_type::Type=Array{Float64})
+function PINN(chain::AbstractExplicitLayer, rng::AbstractRNG=Random.default_rng())
     phi = ChainState(chain, rng)
-    Lux.@set! phi.state = adapt(device_type, phi.state)
-
     init_params = ComponentArray(initialparameters(rng, phi))
-    init_params = adapt(device_type, init_params)
 
-    return PINN{device_type, typeof(phi), typeof(init_params)}(phi, init_params)
+    return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
 """
@@ -90,10 +80,36 @@ end
 const NTofChainState{names} = NamedTuple{names, <:Tuple{Vararg{ChainState}}}
 
 # construct a new ChainState
-function Lux.cpu(c::ChainState)
-    return ChainState(c.model, cpu(c.state))
+function Lux.cpu(cs::ChainState)
+    Lux.@set! cs.state = cpu(cs.state)
+    return cs
 end
 
-function Lux.gpu(c::ChainState)
-    return ChainState(c.model, gpu(c.state))
+function Lux.gpu(cs::ChainState)
+    Lux.@set! cs.state = adapt(CuArray, cs.state)
+    return cs
+end
+
+function Lux.cpu(cs::NamedTuple{names, <:Tuple{Vararg{ChainState}}}) where {names}
+    return map(cs) do c
+        return cpu(c)
+    end
+end
+
+function Lux.gpu(cs::NamedTuple{names, <:Tuple{Vararg{ChainState}}}) where {names}
+    return map(cs) do c
+        return gpu(c)
+    end
+end
+
+function Lux.gpu(pinn::PINN)
+    Lux.@set! pinn.phi = gpu(pinn.phi)
+    Lux.@set! pinn.init_params = adapt(CuArray, pinn.init_params)
+    return pinn
+end
+
+function Lux.cpu(pinn::PINN)
+    Lux.@set! pinn.phi = cpu(pinn.phi)
+    Lux.@set! pinn.init_params = cpu(pinn.init_params)
+    return pinn
 end
