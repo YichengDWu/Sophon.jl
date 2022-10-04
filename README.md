@@ -10,7 +10,7 @@
 
 Use the [documentation](https://yichengdwu.github.io/Sophon.jl/dev/) to explore the features.
 
-Please star this repo if you find it useful.
+Please star this repository if you find it useful.
 
 ## Installation
 
