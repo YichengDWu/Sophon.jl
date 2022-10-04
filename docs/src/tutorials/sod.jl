@@ -57,7 +57,7 @@ res = Optimization.solve(prob, LBFGS(); maxiters=2000, callback=callback)
 for _ in 1:10
     data = Sophon.sample(pde_system, sampler, strategy)
     prob = remake(prob; u0=res.u, p=data)
-    res = Optimization.solve(prob, LBFGS(); maxiters=2000, callback=callback)
+    res = Optimization.solve(prob, BFGS(); maxiters=2000, callback=callback)
 end
 
 θ = res.u
