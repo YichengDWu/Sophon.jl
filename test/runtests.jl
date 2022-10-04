@@ -1,4 +1,4 @@
-using Sophon, Random, Lux, NNlib, Zygote, ComponentArrays
+using Sophon, Random, Lux, NNlib, Zygote
 using Test
 
 rng = Random.default_rng()
