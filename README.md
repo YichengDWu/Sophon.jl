@@ -23,7 +23,7 @@ Simply replace primitive fully connected neural nets with those defined in this 
 
 ```julia
 using ModelingToolkit, IntervalSets, Sophon
-using Optimization, OptimizationOptimisers, OptimizationOptimJL
+using Optimization, OptimizationOptimJL
 using CairoMakie
 
 @parameters x
