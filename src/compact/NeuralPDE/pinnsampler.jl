@@ -44,7 +44,7 @@ function sample(pde::PDESystem, sampler::QuasiRandomSampler, strategy, eltype_ =
                                                 sampling_alg) .|> eltype_
                          for (points, bound) in zip(bcs_points, bcs_bounds)]
 
-    return (pde_datasets..., boundary_datasets...)
+    return [pde_datasets;; boundary_datasets]
 end
 
 function sample(pde::PDESystem, sampler::QuasiRandomSampler{P, B, SobolSample},
@@ -65,7 +65,7 @@ function sample(pde::PDESystem, sampler::QuasiRandomSampler{P, B, SobolSample},
     boundary_datasets = [sobolsample(points, bound[1], bound[2]) .|> eltype_
                          for (points, bound) in zip(bcs_points, bcs_bounds)]
 
-    return (pde_datasets..., boundary_datasets...)
+    return [pde_datasets;; boundary_datasets]
 end
 
 function sobolsample(n::Int, lb, ub)
