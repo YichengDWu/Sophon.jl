@@ -13,7 +13,7 @@ function sample end
 
 Sampler to generate the datasets for PDE and boundary conditions using a quisa-random sampling algorithm.
 You can call `sample(pde, sampler, strategy)` on it to generate all the datasets. See [QuasiMonteCarlo.jl](https://github.com/SciML/QuasiMonteCarlo.jl)
-for available sampling algorithms. The default element type of the sampled data is `Float32`. The initial
+for available sampling algorithms. The default element type of the sampled data is `Float64`. The initial
 sampled data lives on GPU if [`PINN`](@ref) is. You will need manually move the data to GPU if you want to resample.
 """
 struct QuasiRandomSampler{P, B, S} <: PINNSampler
@@ -28,7 +28,7 @@ function QuasiRandomSampler(pde_points, bcs_points=pde_points; sampling_alg=Sobo
                                                                                             sampling_alg)
 end
 
-function sample(pde::PDESystem, sampler::QuasiRandomSampler, strategy, eltype_ = Float32) where {device_type}
+function sample(pde::PDESystem, sampler::QuasiRandomSampler, strategy, eltype_ = Float64)
     (; pde_points, bcs_points, sampling_alg) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
@@ -48,7 +48,7 @@ function sample(pde::PDESystem, sampler::QuasiRandomSampler, strategy, eltype_ =
 end
 
 function sample(pde::PDESystem, sampler::QuasiRandomSampler{P, B, SobolSample},
-                strategy, eltype_ = Float32) where {P, B}
+                strategy, eltype_ = Float64) where {P, B}
     (; pde_points, bcs_points) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
