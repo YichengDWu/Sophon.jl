@@ -28,7 +28,7 @@ function QuasiRandomSampler(pde_points, bcs_points=pde_points; sampling_alg=Sobo
                                                                                             sampling_alg)
 end
 
-function sample(pde::PDESystem, sampler::QuasiRandomSampler, strategy, eltype_ = Float64)
+function sample(pde::PDESystem, sampler::QuasiRandomSampler, strategy)
     (; pde_points, bcs_points, sampling_alg) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
@@ -37,18 +37,18 @@ function sample(pde::PDESystem, sampler::QuasiRandomSampler, strategy, eltype_ =
     bcs_points = length(bcs_points) == 1 ?
                  ntuple(_ -> first(bcs_points), length(bcs_bounds)) : Tuple(bcs_points)
 
-    pde_datasets = [QuasiMonteCarlo.sample(points, bound[1], bound[2], sampling_alg) .|>
-    eltype_ for (points, bound) in zip(pde_points, pde_bounds)]
+    pde_datasets = [QuasiMonteCarlo.sample(points, bound[1], bound[2], sampling_alg)
+                    for (points, bound) in zip(pde_points, pde_bounds)]
 
     boundary_datasets = [QuasiMonteCarlo.sample(points, bound[1], bound[2],
-                                                sampling_alg) .|> eltype_
+                                                sampling_alg) 
                          for (points, bound) in zip(bcs_points, bcs_bounds)]
 
     return [pde_datasets; boundary_datasets]
 end
 
 function sample(pde::PDESystem, sampler::QuasiRandomSampler{P, B, SobolSample},
-                strategy, eltype_ = Float64) where {P, B}
+                strategy) where {P, B}
     (; pde_points, bcs_points) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
@@ -59,10 +59,10 @@ function sample(pde::PDESystem, sampler::QuasiRandomSampler{P, B, SobolSample},
 
     @assert all(map(pb -> pb == first(pde_bounds), pde_bounds)) "Sobol sampling only supports same domain for all equations"
 
-    pde_dataset = sobolsample(first(pde_points), first(pde_bounds)[1], first(pde_bounds)[2]) .|> eltype_
+    pde_dataset = sobolsample(first(pde_points), first(pde_bounds)[1], first(pde_bounds)[2])
     pde_datasets = fill(pde_dataset, length(pde_bounds))
 
-    boundary_datasets = [sobolsample(points, bound[1], bound[2]) .|> eltype_
+    boundary_datasets = [sobolsample(points, bound[1], bound[2])
                          for (points, bound) in zip(bcs_points, bcs_bounds)]
 
     return [pde_datasets; boundary_datasets]
