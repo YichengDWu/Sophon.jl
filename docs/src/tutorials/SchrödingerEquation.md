@@ -45,7 +45,7 @@ prob = Sophon.discretize(pde_system, pinn, sampler, strategy)
 Now we train the neural nets and resample data while training.
 
 ```@example Schrödinger
-function train(pde_system, prob, sampler, strategy, resample_period = 200, n=20)
+function train(pde_system, prob, sampler, strategy, resample_period = 500, n=10)
      bfgs = BFGS()
      res = Optimization.solve(prob, bfgs; maxiters=2000)
      
