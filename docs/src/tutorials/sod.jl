@@ -46,8 +46,7 @@ strategy = AdaptiveTraining(pde_weights, 10)
 
 prob = Sophon.discretize(pde_system, pinn, sampler, strategy)
 
-# Residuals are shown
-callback = function (p, l)
+function callback(p, l)
     println("loss: ", l)
     return false
 end
