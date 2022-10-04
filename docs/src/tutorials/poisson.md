@@ -8,7 +8,7 @@ u(x)=\sin (2 \pi x)+0.1 \sin (50 \pi x)
 
 ```@example poisson
 using ModelingToolkit, IntervalSets, Sophon
-using Optimization, OptimizationOptimisers, OptimizationOptimJL
+using Optimization, OptimizationOptimJL
 using CairoMakie
 
 @parameters x
@@ -30,7 +30,6 @@ sampler = QuasiRandomSampler(200, 1)
 strategy = NonAdaptiveTraining(1 , 50)
 
 prob = Sophon.discretize(poisson, pinn, sampler, strategy)
-
 res = Optimization.solve(prob, BFGS(); maxiters=2000)
 
 phi = pinn.phi

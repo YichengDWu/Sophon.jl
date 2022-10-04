@@ -20,14 +20,14 @@ end
 
 function PINN(chain::NamedTuple, rng::AbstractRNG=Random.default_rng())
     phi = map(m -> ChainState(m, rng), chain)
-    init_params = ComponentArray(initialparameters(rng, phi))
+    init_params = ComponentArray(initialparameters(rng, phi)) .|> Float64
 
     return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
 function PINN(chain::AbstractExplicitLayer, rng::AbstractRNG=Random.default_rng())
     phi = ChainState(chain, rng)
-    init_params = ComponentArray(initialparameters(rng, phi))
+    init_params = ComponentArray(initialparameters(rng, phi)) .|> Float64
 
     return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
 end
