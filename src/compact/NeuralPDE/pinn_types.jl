@@ -79,7 +79,6 @@ end
 
 const NTofChainState{names} = NamedTuple{names, <:Tuple{Vararg{ChainState}}}
 
-# construct a new ChainState
 function Lux.cpu(cs::ChainState)
     Lux.@set! cs.state = cpu(cs.state)
     return cs
