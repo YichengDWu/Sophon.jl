@@ -171,14 +171,19 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars, i)
 
     args = expr_loss_function.args[1].args[1:2]
     body = quote
-        let phi = $phi, derivative = $derivative, integral = $integral, u = (cord, θ, phi) -> phi(cord, θ), p = $default_p
+        let phi = $phi,
+            derivative = $derivative,
+            integral = $integral,
+            u = (cord, θ, phi) -> phi(cord, θ),
+            p = $default_p
+
             $(expr_loss_function.args[2])
         end
     end
 
-    expr = :(function ($(Symbol(:loss_function_, i)))($(args[1]),$(args[2]))
-        $body
-    end)
+    expr = :(function ($(Symbol(:loss_function_, i)))($(args[1]), $(args[2]))
+                 return $body
+             end)
 
     return eval(expr)
 end

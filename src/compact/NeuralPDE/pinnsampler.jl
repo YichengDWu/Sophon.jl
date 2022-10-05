@@ -40,8 +40,7 @@ function sample(pde::PDESystem, sampler::QuasiRandomSampler, strategy)
     pde_datasets = [QuasiMonteCarlo.sample(points, bound[1], bound[2], sampling_alg)
                     for (points, bound) in zip(pde_points, pde_bounds)]
 
-    boundary_datasets = [QuasiMonteCarlo.sample(points, bound[1], bound[2],
-                                                sampling_alg) 
+    boundary_datasets = [QuasiMonteCarlo.sample(points, bound[1], bound[2], sampling_alg)
                          for (points, bound) in zip(bcs_points, bcs_bounds)]
 
     return [pde_datasets; boundary_datasets]

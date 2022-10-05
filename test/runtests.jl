@@ -47,7 +47,8 @@ rng = Random.default_rng()
 
                 fc4 = FullyConnected((2, 4, 5, 6), sin; outermost=false)
                 @test fc4.layers[end].activation == sin
-                fc5 = FullyConnected(2, 4, sin; hidden_dims=4, num_layers=4, outermost=false)
+                fc5 = FullyConnected(2, 4, sin; hidden_dims=4, num_layers=4,
+                                     outermost=false)
                 @test fc5.layers[end].activation == sin
             end
             @testset "Sine" begin
@@ -111,7 +112,7 @@ rng = Random.default_rng()
                 x = rand(Float32, 3, 5)
                 layers = Chain(Dense(4, 4, relu), Dense(4, 4, relu), Dense(4, 4, relu))
                 m = PINNAttention(Dense(3, 4, relu), Dense(3, 4, relu), Dense(3, 4, relu),
-                                layers)
+                                  layers)
                 ps, st = Lux.setup(rng, m)
                 y, st = m(x, ps, st)
                 @test size(y) == (4, 5)
@@ -130,7 +131,7 @@ rng = Random.default_rng()
             end
             @testset "FourierAttention" begin
                 fa = FourierAttention(2, 4, relu, (1 => 2, 10 => 3); hidden_dims=10,
-                                    num_layers=3)
+                                      num_layers=3)
                 x = rand(Float32, 2, 5)
                 ps, st = Lux.setup(rng, fa)
                 y, st = fa(x, ps, st)
@@ -192,7 +193,7 @@ rng = Random.default_rng()
                 branch_sizes = (2, 5, 6)
                 trunk_sizes = (1, 6, 4, 4)
                 model = DeepONet(branch_sizes, relu, trunk_sizes, tanh,
-                                (last(branch_sizes) * size(x, 2), last(trunk_sizes)))
+                                 (last(branch_sizes) * size(x, 2), last(trunk_sizes)))
                 ps, st = Lux.setup(rng, model)
                 y, st = model((x, ξ), ps, st)
                 @test size(y) == (5, 10)
@@ -218,7 +219,8 @@ rng = Random.default_rng()
                     @test_nowarn Sophon.ChainState(layers...)
                 end
                 @testset "single model" begin
-                    model = Sophon.ChainState(BACON(3, 4, 8, 1; num_layers=2, hidden_dims=5))
+                    model = Sophon.ChainState(BACON(3, 4, 8, 1; num_layers=2,
+                                                    hidden_dims=5))
                     ps = Lux.initialparameters(rng, model)
 
                     y = model(x, ps)
