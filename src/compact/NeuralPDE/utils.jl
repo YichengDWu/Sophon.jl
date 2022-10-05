@@ -58,7 +58,7 @@ function build_symbolic_loss_function_body(pinnrep::NamedTuple, eq;
                                       dict_transformation_vars=nothing,
                                       transformation_vars=nothing,
                                       integrating_depvars=pinnrep.depvars)
-    (; depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, init_params, strategy, eq_params, param_estim, default_p) = pinnrep
+    (; depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, strategy, eq_params, param_estim, default_p) = pinnrep
 
     if integrand isa Nothing
         loss_function, pos, values = parse_equation(pinnrep, eq)
@@ -74,9 +74,9 @@ function build_symbolic_loss_function_body(pinnrep::NamedTuple, eq;
     end
 
     ex = Expr(:block)
-    push!(ex.args,  Expr(:(=), :phi, phi))
-    push!(ex.args,  Expr(:(=), :derivative, derivative))
-    push!(ex.args,  Expr(:(=), :integral, integral))
+    #push!(ex.args,  Expr(:(=), :phi, phi))
+   # push!(ex.args,  Expr(:(=), :derivative, derivative))
+    #push!(ex.args,  Expr(:(=), :integral, integral))
     if multioutput
         θs = Symbol[]
         phis = Symbol[]
@@ -165,13 +165,13 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars, i)
     bc_indvars = bc_indvars === nothing ? pinnrep.indvars : bc_indvars
 
     loss_function_body = build_symbolic_loss_function_body(pinnrep, eqs; bc_indvars=bc_indvars,
-                                                      eq_params=eq_params,
-                                                      param_estim=param_estim,
-                                                      default_p=default_p)
+                                                           eq_params=eq_params,
+                                                           param_estim=param_estim,
+                                                           default_p=default_p)
 
     expr = Expr(:function, Expr(:call, Symbol(:loss_function_, i), :cord, :θ), loss_function_body)
 
-    return eval(expr)
+    return NeuralPDE.@RuntimeGeneratedFunction(expr)
 end
 
 function get_numeric_integral(pinnrep::NamedTuple)
@@ -433,7 +433,7 @@ end
 function numeric_derivative(phi, x, εs, order, θ)
     ε = εs[order]
     _epsilon = inv(first(ε[ε .!= zero(ε)]))
-    ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(x), ε)
+    ε = adapt(parameterless_type(x), ε)
 
     if order > 4 || any(x -> x != εs[1], εs)
         return (numeric_derivative(phi, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ) .-
