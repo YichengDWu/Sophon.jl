@@ -14,7 +14,7 @@ Dₓ = Differential(x)
 Dₓ² = Differential(x)^2
 Dₜ = Differential(t)
 
-eq = Dₜ(u(x, t)) - 0.0001 * Dₓ²(u(x, t)) + 5 * u(x,t)^3 - 5 * u(x,t) ~ 0
+eq = Dₜ(u(x, t)) - 0.0001 * Dₓ²(u(x, t)) + 5 * u(x,t) * (abs2(u(x,t)) - 1.0) ~ 0.0
 
 domain = [x ∈ -1.0..1.0, t ∈ 0.0..0.25]
 

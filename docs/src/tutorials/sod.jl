@@ -17,7 +17,7 @@ p₀(x) = ifelse(x < 0.5, 1.0, 0.1)
 bcs = [ρ(0, x) ~ ρ₀(x), u(0, x) ~ u₀(x), p(0, x) ~ p₀(x), u(t, 0) ~ 0.0, u(t, 1) ~ 0.0]
 
 γ = 1.4
-E(t, x) = p(t, x) / (γ - 1) + 0.5 * ρ(t, x) * u(t, x) * u(t, x)
+E(t, x) = p(t, x) / (γ - 1) + 0.5 * ρ(t, x) * abs2(u(t, x))
 
 eqs = [
     Dₜ(ρ(t, x)) + Dₓ(ρ(t, x) * u(t, x)) ~ 0.0,
@@ -33,7 +33,7 @@ domains = [t ∈ Interval(t_min, t_max), x ∈ Interval(x_min, x_max)]
 
 pinn = PINN(u=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
             ρ=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
-            p=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16))
+            p=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16)) |> gpu
 
 sampler = QuasiRandomSampler(1000, 100)
 
