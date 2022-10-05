@@ -437,7 +437,7 @@ end
 function numeric_derivative(phi, u, x, εs, order, θ)
     ε = εs[order]
     _epsilon = inv(first(ε[ε .!= zero(ε)]))
-    ε = adapt(parameterless_type(x), ε)
+    ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(x), ε)
 
     if order > 4 || any(x -> x != εs[1], εs)
         return (numeric_derivative(phi, u, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ) .-
