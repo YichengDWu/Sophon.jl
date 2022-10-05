@@ -122,7 +122,7 @@ function LinearAlgebra.mul!(C::AbstractGPUComponentVecorMat,
 end
 function LinearAlgebra.mul!(C::AbstractGPUComponentVecorMat,
                             A::AbstractGPUComponentVecorMat,
-                            B::LinearAlgebra.Adjoint{<:Any, <:AbstractGPUVecOrMat}, a::Real,
+                            B::LinearAlgebra.Adjoint{<:Any, <:AbstractGPUComponentVecorMat}, a::Real,
                             b::Real)
     return GPUArrays.generic_matmatmul!(C, A, B, a, b)
 end
