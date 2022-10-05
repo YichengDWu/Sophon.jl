@@ -34,18 +34,6 @@ function get_datafree_pinn_loss_function(pde_system::PDESystem, pinn::PINN,
     integral = get_numeric_integral(pinnrep)
     pinnrep = merge(pinnrep, (; integral))
 
-    symbolic_pde_loss_functions = [build_symbolic_loss_function(pinnrep, eq;
-                                                                bc_indvars=pde_indvar)
-                                   for (eq, pde_indvar) in zip(eqs, pde_indvars,
-                                                               pde_integration_vars)]
-
-    symbolic_bc_loss_functions = [build_symbolic_loss_function(pinnrep, bc;
-                                                               bc_indvars=bc_indvar)
-                                  for (bc, bc_indvar) in zip(bcs, bc_indvars,
-                                                             bc_integration_vars)]
-
-    pinnrep = merge(pinnrep, (; symbolic_pde_loss_functions, symbolic_bc_loss_functions))
-
     datafree_pde_loss_functions = Tuple([build_loss_function(pinnrep, eq, pde_indvar)
                                          for (eq, pde_indvar, integration_indvar) in zip(eqs,
                                                                                          pde_indvars,
