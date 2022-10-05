@@ -175,7 +175,7 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars)
         integral = $integral
         u(cord, θ, phi) = phi(cord, θ)
         p = $default_p
-        $expr_loss_function.args[2]
+        $(expr_loss_function.args[2])
     end
 
     expr = :(($(args[1]),$(args[2])) -> begin $body end)
