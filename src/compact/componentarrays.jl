@@ -10,14 +10,6 @@ const AbstractGPUComponentMatrix{T, Ax} = ComponentArray{T, 2,
 const AbstractGPUComponentVecorMat{T, Ax} = Union{AbstractGPUComponentVector{T, Ax},
                                                   AbstractGPUComponentMatrix{T, Ax}}
 
-# This is a workaround and should be removed when I have a better understanding of how to do this.
-function Base.adjoint(A::ComponentArray{T, N, AA, Ax}) where {T, N,
-                                                              AA <:
-                                                              GPUArrays.AbstractGPUArray, Ax
-                                                              }
-    return adjoint(getdata(A))
-end
-
 function LinearAlgebra.mul!(C::AbstractGPUComponentVecorMat,
                             A::AbstractGPUComponentVecorMat,
                             B::AbstractGPUComponentVecorMat, a::Number, b::Number)
