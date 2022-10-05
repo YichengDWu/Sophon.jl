@@ -9,7 +9,7 @@ Dₓ = Differential(x)
 Dₓ² = Differential(x)^2
 Dₜ = Differential(t)
 
-eqs = Dₜ(u(x, t)) - 0.0001 * Dₓ²(u(x, t)) + 5 * u(x,t)^3 - 5 * u(x,t) ~ 0
+eq = Dₜ(u(x, t)) - 0.0001 * Dₓ²(u(x, t)) + 5 * u(x,t)^3 - 5 * u(x,t) ~ 0
 
 domain = [x ∈ -1.0..1.0, t ∈ 0.0..0.25]
 
@@ -28,6 +28,8 @@ prob = Sophon.discretize(allen, pinn, sampler, strategy)
 
 Zygote.gradient(p->prob.f(p, prob.p), prob.u0)
 
+
+Zygote.gradient(p->prob.f(p, cpu(prob.p)), cpu(prob.u0))
 
 
 derivative = Sophon.numeric_derivative
@@ -90,7 +92,6 @@ symbolic_pde_loss_functions = [Sophon.build_symbolic_loss_function(pinnrep, eq;
 
 ff = datafree_pde_loss_functions[1]
 ff(prob.p[1], prob.u0)
-ff(cpu(prob.u0), cpu(prob.p[1]))
 
 Zygote.gradient(p->sum(datafree_pde_loss_functions[1](prob.p[1], p)), prob.u0)[1]
 
@@ -102,5 +103,13 @@ Zygote.gradient(p->sum(datafree_bc_loss_functions[1](prob.p[2], p)), prob.u0)[1]
 Zygote.gradient(p->sum(datafree_bc_loss_functions[1](cpu(prob.p[2]), p)), cpu(prob.u0))[1]
 
 
-Zygote.gradient(θ -> sum(Sophon.numeric_derivative(phi, uu, prob.p[1], [[0.0001220703125, 0.0], [0.0001220703125, 0.0]], 2, θ)), prob.u0)[1]
+Zygote.gradient(θ -> sum(-0.0001 .* Sophon.numeric_derivative(phi, uu, prob.p[1], [[0.0001220703125, 0.0], [0.0001220703125, 0.0]], 2, θ).^3 .* Sophon.numeric_derivative(phi, uu, prob.p[1],  [[0.0, 6.055454452393343e-6]], 1, θ)), prob.u0)[1]
 Zygote.gradient(θ -> sum(Sophon.numeric_derivative(phi, uu, prob.p[1],  [[0.0, 6.055454452393343e-6]], 1, θ)), prob.u0)[1]
+
+
+loss_function(prob.p[1],  prob.u0)
+Zygote.gradient(θ -> sum(loss_function(prob.p[1],  θ)), prob.u0)[1]
+Zygote.gradient(θ -> sum(loss_function(cpu(prob.p[1]),  θ)), cpu(prob.u0))[1]
+
+
+uu(cord, θ, phi) = phi(cord, θ)

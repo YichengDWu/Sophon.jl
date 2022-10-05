@@ -169,8 +169,8 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars)
                                                       param_estim=param_estim,
                                                       default_p=default_p)
 
-    expr_loss_function.args[1].args =  expr_loss_function.args[1].args[1:2]
-    expr_loss_function.args[2] = quote
+    args = expr_loss_function.args[1].args[1:2]
+    body = quote
         phi = $phi
         derivative = $derivative
         integral = $integral
@@ -178,7 +178,9 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars)
         p = $default_p
         $expr_loss_function.args[2]
     end
-    loss_function = NeuralPDE.@RuntimeGeneratedFunction(expr_loss_function)
+
+    expr = :(($(args[1]),$(args[2])) -> begin $body end)
+    loss_function = NeuralPDE.@RuntimeGeneratedFunction(expr)
     return loss_function
 end
 
