@@ -159,7 +159,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
     return expr_loss_function = :(($vars) -> begin $ex end)
 end
 
-function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars)
+function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars, i)
     (; eq_params, param_estim, default_p, phi, derivative, integral) = pinnrep
 
     bc_indvars = bc_indvars === nothing ? pinnrep.indvars : bc_indvars
@@ -171,17 +171,16 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars)
 
     args = expr_loss_function.args[1].args[1:2]
     body = quote
-        phi = $phi
-        derivative = $derivative
-        integral = $integral
-        u(cord, θ, phi) = phi(cord, θ)
-        p = $default_p
-        $expr_loss_function.args[2]
+        let phi = $phi, derivative = $derivative, integral = $integral, u = (cord, θ, phi) -> phi(cord, θ), p = $default_p
+            $(expr_loss_function.args[2])
+        end
     end
 
-    expr = :(($(args[1]),$(args[2])) -> begin $body end)
-    loss_function = NeuralPDE.@RuntimeGeneratedFunction(expr)
-    return loss_function
+    expr = :(function ($(Symbol(:loss_function_, i)))($(args[1]),$(args[2]))
+        $body
+    end)
+
+    return eval(expr)
 end
 
 function get_numeric_integral(pinnrep::NamedTuple)
