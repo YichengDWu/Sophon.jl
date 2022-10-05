@@ -75,7 +75,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
         loss_function = integrand
     end
 
-    vars = :(cord, $θ, phi, derivative, integral, u, p)
+    vars = :(cord, $θ, phi, derivative, integral, p)
     ex = Expr(:block)
     if multioutput
         θs = Symbol[]
@@ -171,18 +171,20 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars, i)
 
     args = expr_loss_function.args[1].args[1:2]
     body = quote
-        let phi = $phi,
-            derivative = $derivative,
-            integral = $integral,
-            u = (cord, θ, phi) -> phi(cord, θ),
-            p = $default_p
+            let u = uu
+
+            # phi = $phi,
+            #derivative = $derivative,
+            #integral = $integral,
+            #u = (cord, θ, phi) -> phi(cord, θ),
+            #p = $default_p
 
             $(expr_loss_function.args[2])
-        end
+            end
     end
 
-    expr = :(function ($(Symbol(:loss_function_, i)))($(args[1]), $(args[2]))
-                 return $body
+    expr = :(($(args[1]), $(args[2]))-> begin
+    $(expr_loss_function.args[2])
              end)
 
     return eval(expr)
@@ -287,11 +289,10 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                 depvar = _args[1]
                 num_depvar = dict_depvars[depvar]
                 indvars = _args[2:end]
-                var_ = is_integral ? :(u) : :($(Expr(:$, :u)))
                 ex.args = if !multioutput
-                    [var_, Symbol(:cord, :_, e), :($θ), :phi]
+                    [:($(Expr(:$, :phi))), Symbol(:cord, :_, e), :($θ)]
                 else
-                    [var_, Symbol(:cord, :_, e), Symbol(:($θ), :_, e), Symbol(:phi, :_, e)]
+                    [:($(Expr(:$, Symbol(:phi, :_, e)))), Symbol(:cord, :_, e), Symbol(:($θ), :_, e)]
                 end
                 break
             elseif e isa ModelingToolkit.Differential
@@ -315,12 +316,11 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                 εs_dnv = [εs[d] for d in undv]
 
                 ex.args = if !multioutput
-                    [var_, :phi, :u, Symbol(:cord, :_, depvar), εs_dnv, order, :($θ)]
+                    [var_, :phi, Symbol(:cord, :_, depvar), εs_dnv, order, :($θ)]
                 else
                     [
                         var_,
                         Symbol(:phi, :_, depvar),
-                        :u,
                         Symbol(:cord, :_, depvar),
                         εs_dnv,
                         order,
@@ -447,25 +447,25 @@ function get_ε(dim, der_num, fdtype, order)
     return ε
 end
 
-function numeric_derivative(phi, u, x, εs, order, θ)
+function numeric_derivative(phi, x, εs, order, θ)
     ε = εs[order]
     _epsilon = inv(first(ε[ε .!= zero(ε)]))
     ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(x), ε)
 
     if order > 4 || any(x -> x != εs[1], εs)
-        return (numeric_derivative(phi, u, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ) .-
-                numeric_derivative(phi, u, x .- ε, @view(εs[1:(end - 1)]), order - 1, θ)) .*
+        return (numeric_derivative(phi, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ) .-
+                numeric_derivative(phi, x .- ε, @view(εs[1:(end - 1)]), order - 1, θ)) .*
                _epsilon ./ 2
     elseif order == 4
-        return (u(x .+ 2 .* ε, θ, phi) .- 4 .* u(x .+ ε, θ, phi) .+ 6 .* u(x, θ, phi) .-
-                4 .* u(x .- ε, θ, phi) .+ u(x .- 2 .* ε, θ, phi)) .* _epsilon^4
+        return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
+                4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* _epsilon^4
     elseif order == 3
-        return (u(x .+ 2 .* ε, θ, phi) .- 2 .* u(x .+ ε, θ, phi) .+ 2 .* u(x .- ε, θ, phi) -
-                u(x .- 2 .* ε, θ, phi)) .* _epsilon^3 ./ 2
+        return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ, phi) .+ 2 .* phi(x .- ε, θ) -
+                phi(x .- 2 .* ε, θ)) .* _epsilon^3 ./ 2
     elseif order == 2
-        return (u(x .+ ε, θ, phi) .+ u(x .- ε, θ, phi) .- 2 .* u(x, θ, phi)) .* _epsilon^2
+        return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* _epsilon^2
     elseif order == 1
-        return (u(x .+ ε, θ, phi) .- u(x .- ε, θ, phi)) .* _epsilon ./ 2
+        return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* _epsilon ./ 2
     else
         error("This shouldn't happen!")
     end
