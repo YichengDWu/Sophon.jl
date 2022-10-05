@@ -30,7 +30,7 @@ function get_datafree_pinn_loss_function(pde_system::PDESystem, pinn::PINN,
                indvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput,
                init_params, phi, derivative, strategy, pde_indvars, bc_indvars,
                pde_integration_vars, bc_integration_vars, fdtype = Float64,
-               eq_params=SciMLBase.NullParameters(), param_estim=false)
+               eq_params=SciMLBase.NullParameters())
     integral = get_numeric_integral(pinnrep)
     pinnrep = merge(pinnrep, (; integral))
 
