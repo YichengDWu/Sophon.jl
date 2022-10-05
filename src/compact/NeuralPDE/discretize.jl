@@ -53,6 +53,14 @@ function get_datafree_pinn_loss_function(pde_system::PDESystem, pinn::PINN,
     return full_loss_function
 end
 
+"""
+     discretize(pde_system::PDESystem, pinn::PINN, sampler::PINNSampler,
+                    strategy::AbstractTrainingAlg;
+                    additional_loss)
+
+Convert the PDESystem into an `OptimizationProblem`. You can have access to each loss function by calling
+`Sophon.pinn_loss_function_1`, `Sophon.pinn_loss_function_2`... after calling this function.
+"""
 function discretize(pde_system::PDESystem, pinn::PINN, sampler::PINNSampler,
                     strategy::AbstractTrainingAlg;
                     additional_loss=Sophon.null_additional_loss,
