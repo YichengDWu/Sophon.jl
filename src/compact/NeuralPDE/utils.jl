@@ -1,5 +1,3 @@
-θ = gensym("θ")
-
 function get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars)
     dict_span = Dict([Symbol(d.variables) => [infimum(d.domain), supremum(d.domain)]
                       for d in domains])
@@ -53,7 +51,7 @@ end
   end end)
 ```
 """
-function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
+function build_symbolic_loss_function_body(pinnrep::NamedTuple, eq;
                                       eq_params=SciMLBase.NullParameters(),
                                       param_estim=false, default_p=nothing,
                                       bc_indvars=pinnrep.indvars, integrand=nothing,
@@ -75,13 +73,15 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
         loss_function = integrand
     end
 
-    vars = :(cord, $θ, phi, derivative, integral, p)
     ex = Expr(:block)
+    push!(ex.args,  Expr(:(=), :phi, phi))
+    push!(ex.args,  Expr(:(=), :derivative, derivative))
+    push!(ex.args,  Expr(:(=), :integral, integral))
     if multioutput
         θs = Symbol[]
         phis = Symbol[]
         for v in depvars
-            push!(θs, :($(Symbol(:($θ), :_, v))))
+            push!(θs, :($(Symbol(:(θ), :_, v))))
             push!(phis, :($(Symbol(:phi, :_, v))))
         end
 
@@ -89,7 +89,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
         expr_phi = Expr[]
 
         for u in depvars
-            push!(expr_θ, :($θ.$(u)))
+            push!(expr_θ, :(θ.$(u)))
             push!(expr_phi, :(phi.$(u)))
         end
 
@@ -156,36 +156,20 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
     end
     let_ex = Expr(:let, vars_eq, vcat_expr_loss_functions)
     push!(ex.args, let_ex)
-    return expr_loss_function = :(($vars) -> begin $ex end)
+    return ex
 end
 
 function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars, i)
-    (; eq_params, param_estim, default_p, phi, derivative, integral) = pinnrep
+    (; eq_params, param_estim, default_p) = pinnrep
 
     bc_indvars = bc_indvars === nothing ? pinnrep.indvars : bc_indvars
 
-    expr_loss_function = build_symbolic_loss_function(pinnrep, eqs; bc_indvars=bc_indvars,
+    loss_function_body = build_symbolic_loss_function_body(pinnrep, eqs; bc_indvars=bc_indvars,
                                                       eq_params=eq_params,
                                                       param_estim=param_estim,
                                                       default_p=default_p)
 
-    args = expr_loss_function.args[1].args[1:2]
-    body = quote
-            let u = uu
-
-            # phi = $phi,
-            #derivative = $derivative,
-            #integral = $integral,
-            #u = (cord, θ, phi) -> phi(cord, θ),
-            #p = $default_p
-
-            $(expr_loss_function.args[2])
-            end
-    end
-
-    expr = :(($(args[1]), $(args[2]))-> begin
-    $(expr_loss_function.args[2])
-             end)
+    expr = Expr(:function, Expr(:call, Symbol(:loss_function_, i), :cord, :θ), loss_function_body)
 
     return eval(expr)
 end
@@ -279,7 +263,7 @@ end
 function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                dict_transformation_vars=nothing,
                                transformation_vars=nothing)
-    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput, phi, derivative, fdtype) = pinnrep
+    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput, fdtype) = pinnrep
     fdtype = fdtype
 
     _args = ex.args
@@ -290,9 +274,9 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                 num_depvar = dict_depvars[depvar]
                 indvars = _args[2:end]
                 ex.args = if !multioutput
-                    [:($(Expr(:$, :phi))), Symbol(:cord, :_, e), :($θ)]
+                    [:($(Expr(:$, :phi))), Symbol(:cord, :_, e), :θ]
                 else
-                    [:($(Expr(:$, Symbol(:phi, :_, e)))), Symbol(:cord, :_, e), Symbol(:($θ), :_, e)]
+                    [:($(Expr(:$, Symbol(:phi, :_, e)))), Symbol(:cord, :_, e), Symbol(:θ, :_, e)]
                 end
                 break
             elseif e isa ModelingToolkit.Differential
@@ -310,21 +294,20 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                               for (j, indvar) in enumerate(dict_depvar_input[depvar])])
                 dim_l = length(dict_interior_indvars)
 
-                var_ = is_integral ? :(derivative) : :($(Expr(:$, :derivative)))
                 εs = [get_ε(dim_l, d, fdtype, order) for d in 1:dim_l]
                 undv = [dict_interior_indvars[d_p] for d_p in derivative_variables]
                 εs_dnv = [εs[d] for d in undv]
 
                 ex.args = if !multioutput
-                    [var_, :phi, Symbol(:cord, :_, depvar), εs_dnv, order, :($θ)]
+                    [:($(Expr(:$, :derivative))), :phi, Symbol(:cord, :_, depvar), εs_dnv, order, :θ]
                 else
                     [
-                        var_,
+                        :($(Expr(:$, :derivative))),
                         Symbol(:phi, :_, depvar),
                         Symbol(:cord, :_, depvar),
                         εs_dnv,
                         order,
-                        Symbol(:($θ), :_, depvar),
+                        Symbol(:θ, :_, depvar),
                     ]
                 end
                 break
@@ -364,7 +347,7 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                                   transformation_vars=transformation_vars)
                 integrand__ = NeuralPDE._dot_(integrand_)
 
-                integrand = build_symbolic_loss_function(pinnrep, nothing;
+                integrand = build_symbolic_loss_function_body(pinnrep, nothing;
                                                          integrand=integrand__,
                                                          integrating_depvars=integrating_depvars,
                                                          eq_params=SciMLBase.NullParameters(),
@@ -414,7 +397,7 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                     integrand_func,
                     lb_,
                     ub_,
-                    :($θ),
+                    :θ,
                 ]
                 break
             end
