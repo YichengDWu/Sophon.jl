@@ -100,5 +100,5 @@ function scalarize(phi, weights::Tuple{Vararg{<:Function}}, datafree_loss_functi
                     abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
     end
     loss_f = :((θ, p) -> $ex)
-    return NeuralPDE.@RuntimeGeneratedFunction(loss_f)
+    return eval(loss_f)
 end
