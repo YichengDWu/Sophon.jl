@@ -167,10 +167,17 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars)
     expr_loss_function = build_symbolic_loss_function(pinnrep, eqs; bc_indvars=bc_indvars,
                                                       eq_params=eq_params,
                                                       default_p=default_p)
-    u(cord, θ, phi) = phi(cord, θ)
-    _loss_function = NeuralPDE.@RuntimeGeneratedFunction(expr_loss_function)
-    loss_function = (cord, θ) -> begin _loss_function(cord, θ, phi, derivative, integral, u,
-                                                      default_p) end
+    expr_loss_function.args[1].args = expr_loss_function.args[1].args[1:2]
+    body = deepcopy(expr_loss_function.args[2])
+    expr_loss_function.args[2] = quote
+        phi = $phi
+        derivative = $derivative
+        integral = $integral
+        u(cord, θ, phi) = phi(cord, θ)
+        p = $default_p
+        $body
+    end
+    loss_function = NeuralPDE.@RuntimeGeneratedFunction(expr_loss_function)
     return loss_function
 end
 
