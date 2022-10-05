@@ -55,12 +55,12 @@ end
 """
 function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
                                       eq_params=SciMLBase.NullParameters(),
-                                      param_estim=false, default_p=nothing,
+                                      default_p=nothing,
                                       bc_indvars=pinnrep.indvars, integrand=nothing,
                                       dict_transformation_vars=nothing,
                                       transformation_vars=nothing,
                                       integrating_depvars=pinnrep.depvars)
-    (; depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, init_params, strategy, eq_params, param_estim, default_p) = pinnrep
+    (; depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, init_params, strategy, eq_params, default_p) = pinnrep
 
     if integrand isa Nothing
         loss_function, pos, values = parse_equation(pinnrep, eq)
@@ -102,7 +102,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
         push!(ex.args, vars_phi)
     end
 
-    if eq_params != SciMLBase.NullParameters() && param_estim == false
+    if eq_params != SciMLBase.NullParameters()
         params_symbols = Symbol[]
         expr_params = Expr[]
         for (i, eq_param) in enumerate(eq_params)
@@ -160,13 +160,12 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
 end
 
 function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars)
-    (; eq_params, param_estim, default_p, phi, derivative, integral) = pinnrep
+    (; eq_params, default_p, phi, derivative, integral) = pinnrep
 
     bc_indvars = bc_indvars === nothing ? pinnrep.indvars : bc_indvars
 
     expr_loss_function = build_symbolic_loss_function(pinnrep, eqs; bc_indvars=bc_indvars,
                                                       eq_params=eq_params,
-                                                      param_estim=param_estim,
                                                       default_p=default_p)
     u(cord, θ, phi) = phi(cord, θ)
     _loss_function = NeuralPDE.NeuralPDE.@RuntimeGeneratedFunction(expr_loss_function)
@@ -357,7 +356,6 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                                          eq_params=SciMLBase.NullParameters(),
                                                          dict_transformation_vars=dict_transformation_vars,
                                                          transformation_vars=transformation_vars,
-                                                         param_estim=false,
                                                          default_p=nothing)
                 # integrand = repr(integrand)
                 lb = toexpr.(lb)
