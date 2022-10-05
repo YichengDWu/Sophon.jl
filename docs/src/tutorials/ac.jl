@@ -102,6 +102,5 @@ Zygote.gradient(p->sum(datafree_bc_loss_functions[1](prob.p[2], p)), prob.u0)[1]
 Zygote.gradient(p->sum(datafree_bc_loss_functions[1](cpu(prob.p[2]), p)), cpu(prob.u0))[1]
 
 
-Zygote.gradient(θ -> sum(Sophon.numeric_derivative(phi, uu, prob.p[1], [[0.0001220703125, 0.0], [0.0001220703125, 0.0]], 2, θ)), prob.u0)
-
+Zygote.gradient(θ -> sum(Sophon.numeric_derivative(phi, uu, prob.p[1], [[0.0001220703125, 0.0], [0.0001220703125, 0.0]], 2, θ)), prob.u0)[1]
 Zygote.gradient(θ -> sum(Sophon.numeric_derivative(phi, uu, prob.p[1],  [[0.0, 6.055454452393343e-6]], 1, θ)), prob.u0)[1]
