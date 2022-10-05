@@ -435,13 +435,9 @@ function get_ε(dim, der_num, fdtype, order)
 end
 
 function numeric_derivative(phi, u, x, εs, order, θ)
-    _type = parameterless_type(ComponentArrays.getdata(θ))
-
     ε = εs[order]
     _epsilon = inv(first(ε[ε .!= zero(ε)]))
-
-    ε = adapt(_type, ε)
-    x = adapt(_type, x)
+    ε = adapt(parameterless_type(x), ε)
 
     if order > 4 || any(x -> x != εs[1], εs)
         return (numeric_derivative(phi, u, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ) .-
