@@ -39,7 +39,7 @@ function get_datafree_pinn_loss_function(pde_system::PDESystem, pinn::PINN,
                                                                                          pde_indvars,
                                                                                          pde_integration_vars))])
 
-    datafree_bc_loss_functions = Tuple([build_loss_function(pinnrep, bc, bc_indvar,i)
+    datafree_bc_loss_functions = Tuple([build_loss_function(pinnrep, bc, bc_indvar, i+length(datafree_pde_loss_functions))
                                         for (i, (bc, bc_indvar, integration_indvar)) in enumerate(zip(bcs,
                                                                                        bc_indvars,
                                                                                        bc_integration_vars))])
