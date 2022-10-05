@@ -70,7 +70,7 @@ function discretize(pde_system::PDESystem, pinn::PINN, sampler::PINNSampler,
                     additional_loss=Sophon.null_additional_loss,
                     derivative=numeric_derivative) where {T, S}
     datasets = sample(pde_system, sampler, strategy)
-    datasets = pinn.init_params isa AbstractGPUComponentVector ? adapt(CuArray, datasets) : datasets
+    datasets = pinn.init_params isa AbstractGPUComponentVector ? map(Base.Fix1(adapt, CuArray), datasets) : datasets
     loss_function = get_datafree_pinn_loss_function(pde_system, pinn, strategy;
                                                     additional_loss=additional_loss,
                                                     derivative=derivative)
