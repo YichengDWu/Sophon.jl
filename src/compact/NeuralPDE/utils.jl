@@ -162,7 +162,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
 end
 
 function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars, i)
-    (; eq_params, default_p, phi, derivative, integral) = pinnrep
+    (; eq_params, default_p) = pinnrep
 
     bc_indvars = bc_indvars === nothing ? pinnrep.indvars : bc_indvars
 
@@ -171,7 +171,7 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars, i)
 
     expr = :(function ($(Symbol(:pinn_loss_function_, i)))($(vars.args[1]),
                                                            $(vars.args[2]))
-                 return $ex
+                $ex
              end)
     return NeuralPDE.@RuntimeGeneratedFunction(expr)
 end
