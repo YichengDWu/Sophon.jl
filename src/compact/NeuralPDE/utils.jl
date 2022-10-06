@@ -227,9 +227,7 @@ function parse_equation(pinnrep::NamedTuple, eq)
     dot_left_expr = NeuralPDE._dot_(tran_left_expr)
     dot_right_expr = NeuralPDE._dot_(tran_right_expr)
 
-    if left_expr isa Expr &&
-       right_expr isa Expr &&
-       toexpr(eq_lhs).args[1] === right_expr.args[1]
+    if is_periodic_bc(pinnrep.bcs, eq, pinnrep.depvars, left_expr, right_expr)
         pos = findfirst((left_expr.args[2:end] .!== right_expr.args[2:end])) # Assume the pericity is defined on n-1 hyperplanes with one depvar
         values = (left_expr.args[pos + 1], right_expr.args[pos + 1])
 
@@ -239,6 +237,19 @@ function parse_equation(pinnrep::NamedTuple, eq)
     else
         return loss_function = :($dot_left_expr .- $dot_right_expr), nothing, nothing
     end
+end
+
+function is_periodic_bc(bcs, eq, depvars, left_expr::Expr, right_expr::Expr)
+    eq ∉ bcs && return false
+    return left_expr.args[1] ∈ depvars && left_expr.args[1] === right_expr.args[1]
+end
+
+function is_periodic_bc(bcs, eq, depvars, left_expr::Number, right_expr::Expr)
+    return false
+end
+
+function is_periodic_bc(bcs, eq, depvars, left_expr::Expr, right_expr::Number)
+    return false
 end
 
 function parse_periodic_condition(left_expr, right_expr)
