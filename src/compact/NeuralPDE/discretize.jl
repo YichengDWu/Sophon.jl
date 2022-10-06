@@ -59,7 +59,7 @@ end
                     additional_loss)
 
 Convert the PDESystem into an `OptimizationProblem`. You can have access to each loss function by calling
-`Sophon.pinn_loss_function_1`, `Sophon.pinn_loss_function_2`... after calling this function.
+`Sophon.residual_function_1`, `Sophon.residual_function_2`... after calling this function.
 """
 function discretize(pde_system::PDESystem, pinn::PINN, sampler::PINNSampler,
                     strategy::AbstractTrainingAlg;

@@ -1,5 +1,3 @@
-θ = gensym("θ")
-
 function get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars)
     dict_span = Dict([Symbol(d.variables) => [infimum(d.domain), supremum(d.domain)]
                       for d in domains])
@@ -74,7 +72,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
         loss_function = integrand
     end
 
-    vars = :(cord, $θ)
+    vars = :(cord, θ)
     ex = Expr(:block)
     push!(ex.args, Expr(:(=), :phi, phi))
     push!(ex.args, Expr(:(=), :derivative, derivative))
@@ -83,7 +81,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
         θs = Symbol[]
         phis = Symbol[]
         for v in depvars
-            push!(θs, :($(Symbol(:($θ), :_, v))))
+            push!(θs, :($(Symbol(:θ, :_, v))))
             push!(phis, :($(Symbol(:phi, :_, v))))
         end
 
@@ -91,7 +89,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
         expr_phi = Expr[]
 
         for u in depvars
-            push!(expr_θ, :($θ.$(u)))
+            push!(expr_θ, :(θ.$(u)))
             push!(expr_phi, :(phi.$(u)))
         end
 
@@ -169,11 +167,8 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars, i)
     vars, ex = build_symbolic_loss_function(pinnrep, eqs; bc_indvars=bc_indvars,
                                             eq_params=eq_params, default_p=default_p)
 
-    expr = :(function ($(Symbol(:pinn_loss_function_, i)))($(vars.args[1]),
-                                                           $(vars.args[2]))
-                $ex
-             end)
-    return @RuntimeGeneratedFunction(expr)
+    expr = Expr(:function, Expr(:call, Symbol(:residual_function_, i), vars.args[1], vars.args[2]), ex)
+    return eval(expr)
 end
 
 function get_numeric_integral(pinnrep::NamedTuple)
@@ -276,12 +271,12 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                 num_depvar = dict_depvars[depvar]
                 indvars = _args[2:end]
                 ex.args = if !multioutput
-                    [:($(Expr(:$, :phi))), Symbol(:cord, :_, e), :($θ)]
+                    [:($(Expr(:$, :phi))), Symbol(:cord, :_, e), :θ]
                 else
                     [
                         :($(Expr(:$, Symbol(:phi, :_, e)))),
                         Symbol(:cord, :_, e),
-                        Symbol(:($θ), :_, e),
+                        Symbol(:θ, :_, e),
                     ]
                 end
                 break
@@ -311,7 +306,7 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                         Symbol(:cord, :_, depvar),
                         εs_dnv,
                         order,
-                        :($θ),
+                        :θ,
                     ]
                 else
                     [
@@ -320,7 +315,7 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                         Symbol(:cord, :_, depvar),
                         εs_dnv,
                         order,
-                        Symbol(:($θ), :_, depvar),
+                        Symbol(:θ, :_, depvar),
                     ]
                 end
                 break
@@ -410,7 +405,7 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                     integrand_func,
                     lb_,
                     ub_,
-                    :($θ),
+                    :θ,
                 ]
                 break
             end
