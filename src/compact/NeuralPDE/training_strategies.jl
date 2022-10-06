@@ -35,7 +35,7 @@ function scalarize(weights::NTuple{N, <:Real}, datafree_loss_function::Tuple) wh
         ex = :(mean($(weights[i]) .* abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
     end
     loss_f = :((θ, p) -> $ex)
-    return NeuralPDE.@RuntimeGeneratedFunction(loss_f)
+    return @RuntimeGeneratedFunction(loss_f)
 end
 
 """

@@ -17,8 +17,9 @@ using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
 import QuasiMonteCarlo
 import Sobol
 using Memoize, LRUCache
+using RuntimeGeneratedFunctions
 
-NeuralPDE.RuntimeGeneratedFunctions.init(@__MODULE__)
+RuntimeGeneratedFunctions.init(@__MODULE__)
 
 include("layers/basic.jl")
 include("layers/containers.jl")

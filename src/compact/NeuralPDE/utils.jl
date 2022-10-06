@@ -173,7 +173,7 @@ function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars, i)
                                                            $(vars.args[2]))
                 $ex
              end)
-    return NeuralPDE.@RuntimeGeneratedFunction(expr)
+    return @RuntimeGeneratedFunction(expr)
 end
 
 function get_numeric_integral(pinnrep::NamedTuple)
@@ -382,7 +382,7 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                                                         integrating_depvars=integrating_depvars,
                                                                         param_estim=false,
                                                                         default_p=nothing)
-                        l_f = NeuralPDE.@RuntimeGeneratedFunction(l_expr)
+                        l_f = @RuntimeGeneratedFunction(l_expr)
                         push!(lb_, l_f)
                     end
                 end
@@ -395,12 +395,12 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                                                         integrating_depvars=integrating_depvars,
                                                                         param_estim=false,
                                                                         default_p=nothing)
-                        u_f = NeuralPDE.@RuntimeGeneratedFunction(u_expr)
+                        u_f = @RuntimeGeneratedFunction(u_expr)
                         push!(ub_, u_f)
                     end
                 end
 
-                integrand_func = NeuralPDE.@RuntimeGeneratedFunction(integrand)
+                integrand_func = @RuntimeGeneratedFunction(integrand)
                 ex.args = [
                     :($(Expr(:$, :integral))),
                     :u,
