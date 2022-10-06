@@ -30,31 +30,19 @@ function get_datafree_pinn_loss_function(pde_system::PDESystem, pinn::PINN,
                indvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput,
                init_params, phi, derivative, strategy, pde_indvars, bc_indvars,
                pde_integration_vars, bc_integration_vars, fdtype = Float64,
-               eq_params=SciMLBase.NullParameters(), param_estim=false)
+               eq_params=SciMLBase.NullParameters())
     integral = get_numeric_integral(pinnrep)
     pinnrep = merge(pinnrep, (; integral))
 
-    symbolic_pde_loss_functions = [build_symbolic_loss_function(pinnrep, eq;
-                                                                bc_indvars=pde_indvar)
-                                   for (eq, pde_indvar) in zip(eqs, pde_indvars,
-                                                               pde_integration_vars)]
-
-    symbolic_bc_loss_functions = [build_symbolic_loss_function(pinnrep, bc;
-                                                               bc_indvars=bc_indvar)
-                                  for (bc, bc_indvar) in zip(bcs, bc_indvars,
-                                                             bc_integration_vars)]
-
-    pinnrep = merge(pinnrep, (; symbolic_pde_loss_functions, symbolic_bc_loss_functions))
-
-    datafree_pde_loss_functions = Tuple([build_loss_function(pinnrep, eq, pde_indvar)
-                                         for (eq, pde_indvar, integration_indvar) in zip(eqs,
+    datafree_pde_loss_functions = Tuple([build_loss_function(pinnrep, eq, pde_indvar,i)
+                                         for (i, (eq, pde_indvar, integration_indvar)) in enumerate(zip(eqs,
                                                                                          pde_indvars,
-                                                                                         pde_integration_vars)])
+                                                                                         pde_integration_vars))])
 
-    datafree_bc_loss_functions = Tuple([build_loss_function(pinnrep, bc, bc_indvar)
-                                        for (bc, bc_indvar, integration_indvar) in zip(bcs,
+    datafree_bc_loss_functions = Tuple([build_loss_function(pinnrep, bc, bc_indvar, i+length(datafree_pde_loss_functions))
+                                        for (i, (bc, bc_indvar, integration_indvar)) in enumerate(zip(bcs,
                                                                                        bc_indvars,
-                                                                                       bc_integration_vars)])
+                                                                                       bc_integration_vars))])
 
     pde_and_bcs_loss_function = scalarize(strategy, phi, datafree_pde_loss_functions,
                                           datafree_bc_loss_functions)
@@ -65,6 +53,14 @@ function get_datafree_pinn_loss_function(pde_system::PDESystem, pinn::PINN,
     return full_loss_function
 end
 
+"""
+     discretize(pde_system::PDESystem, pinn::PINN, sampler::PINNSampler,
+                    strategy::AbstractTrainingAlg;
+                    additional_loss)
+
+Convert the PDESystem into an `OptimizationProblem`. You can have access to each loss function by calling
+`Sophon.pinn_loss_function_1`, `Sophon.pinn_loss_function_2`... after calling this function.
+"""
 function discretize(pde_system::PDESystem, pinn::PINN, sampler::PINNSampler,
                     strategy::AbstractTrainingAlg;
                     additional_loss=Sophon.null_additional_loss,

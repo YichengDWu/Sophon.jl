@@ -14,8 +14,8 @@ using Optimization, OptimizationOptimJL
 Dₜ = Differential(t)
 Dₓ² = Differential(x)^2
 
-eqs=[Dₜ(u(x,t)) ~ -Dₓ²(v(x,t))/2 - ((v(x,t))^2 + (u(x,t))^2) * v(x,t),
-     Dₜ(v(x,t)) ~  Dₓ²(u(x,t))/2 + ((v(x,t))^2 + (u(x,t))^2) * u(x,t)]
+eqs=[Dₜ(u(x,t)) ~ -Dₓ²(v(x,t))/2 - (abs2(v(x,t)) + abs2(u(x,t))) * v(x,t),
+     Dₜ(v(x,t)) ~  Dₓ²(u(x,t))/2 + (abs2(v(x,t)) + abs2(u(x,t))) * u(x,t)]
 
 bcs = [u(x, 0.0) ~ 2sech(x),
        v(x, 0.0) ~ 0.0,

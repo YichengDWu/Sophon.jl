@@ -55,12 +55,11 @@ end
 """
 function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
                                       eq_params=SciMLBase.NullParameters(),
-                                      param_estim=false, default_p=nothing,
-                                      bc_indvars=pinnrep.indvars, integrand=nothing,
-                                      dict_transformation_vars=nothing,
+                                      default_p=nothing, bc_indvars=pinnrep.indvars,
+                                      integrand=nothing, dict_transformation_vars=nothing,
                                       transformation_vars=nothing,
                                       integrating_depvars=pinnrep.depvars)
-    (; depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, init_params, strategy, eq_params, param_estim, default_p) = pinnrep
+    (; depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, strategy, eq_params, default_p) = pinnrep
 
     if integrand isa Nothing
         loss_function, pos, values = parse_equation(pinnrep, eq)
@@ -75,8 +74,11 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
         loss_function = integrand
     end
 
-    vars = :(cord, $θ, phi, derivative, integral, u, p)
+    vars = :(cord, $θ)
     ex = Expr(:block)
+    push!(ex.args, Expr(:(=), :phi, phi))
+    push!(ex.args, Expr(:(=), :derivative, derivative))
+    push!(ex.args, Expr(:(=), :integral, integral))
     if multioutput
         θs = Symbol[]
         phis = Symbol[]
@@ -102,7 +104,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
         push!(ex.args, vars_phi)
     end
 
-    if eq_params != SciMLBase.NullParameters() && param_estim == false
+    if eq_params != SciMLBase.NullParameters()
         params_symbols = Symbol[]
         expr_params = Expr[]
         for (i, eq_param) in enumerate(eq_params)
@@ -156,23 +158,22 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
     end
     let_ex = Expr(:let, vars_eq, vcat_expr_loss_functions)
     push!(ex.args, let_ex)
-    return expr_loss_function = :(($vars) -> begin $ex end)
+    return vars, ex
 end
 
-function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars)
-    (; eq_params, param_estim, default_p, phi, derivative, integral) = pinnrep
+function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars, i)
+    (; eq_params, default_p, phi, derivative, integral) = pinnrep
 
     bc_indvars = bc_indvars === nothing ? pinnrep.indvars : bc_indvars
 
-    expr_loss_function = build_symbolic_loss_function(pinnrep, eqs; bc_indvars=bc_indvars,
-                                                      eq_params=eq_params,
-                                                      param_estim=param_estim,
-                                                      default_p=default_p)
-    u(cord, θ, phi) = phi(cord, θ)
-    _loss_function = NeuralPDE.NeuralPDE.@RuntimeGeneratedFunction(expr_loss_function)
-    loss_function = (cord, θ) -> begin _loss_function(cord, θ, phi, derivative, integral, u,
-                                                      default_p) end
-    return loss_function
+    vars, ex = build_symbolic_loss_function(pinnrep, eqs; bc_indvars=bc_indvars,
+                                            eq_params=eq_params, default_p=default_p)
+
+    expr = :(function ($(Symbol(:pinn_loss_function_, i)))($(vars.args[1]),
+                                                           $(vars.args[2]))
+                 return $ex
+             end)
+    return NeuralPDE.@RuntimeGeneratedFunction(expr)
 end
 
 function get_numeric_integral(pinnrep::NamedTuple)
@@ -264,7 +265,7 @@ end
 function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                dict_transformation_vars=nothing,
                                transformation_vars=nothing)
-    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput, phi, derivative, fdtype) = pinnrep
+    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput, fdtype) = pinnrep
     fdtype = fdtype
 
     _args = ex.args
@@ -274,11 +275,14 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                 depvar = _args[1]
                 num_depvar = dict_depvars[depvar]
                 indvars = _args[2:end]
-                var_ = is_integral ? :(u) : :($(Expr(:$, :u)))
                 ex.args = if !multioutput
-                    [var_, Symbol(:cord, :_, e), :($θ), :phi]
+                    [:($(Expr(:$, :phi))), Symbol(:cord, :_, e), :($θ)]
                 else
-                    [var_, Symbol(:cord, :_, e), Symbol(:($θ), :_, e), Symbol(:phi, :_, e)]
+                    [
+                        :($(Expr(:$, Symbol(:phi, :_, e)))),
+                        Symbol(:cord, :_, e),
+                        Symbol(:($θ), :_, e),
+                    ]
                 end
                 break
             elseif e isa ModelingToolkit.Differential
@@ -296,18 +300,23 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                               for (j, indvar) in enumerate(dict_depvar_input[depvar])])
                 dim_l = length(dict_interior_indvars)
 
-                var_ = is_integral ? :(derivative) : :($(Expr(:$, :derivative)))
                 εs = [get_ε(dim_l, d, fdtype, order) for d in 1:dim_l]
                 undv = [dict_interior_indvars[d_p] for d_p in derivative_variables]
                 εs_dnv = [εs[d] for d in undv]
 
                 ex.args = if !multioutput
-                    [var_, :phi, :u, Symbol(:cord, :_, depvar), εs_dnv, order, :($θ)]
+                    [
+                        :($(Expr(:$, :derivative))),
+                        :phi,
+                        Symbol(:cord, :_, depvar),
+                        εs_dnv,
+                        order,
+                        :($θ),
+                    ]
                 else
                     [
-                        var_,
+                        :($(Expr(:$, :derivative))),
                         Symbol(:phi, :_, depvar),
-                        :u,
                         Symbol(:cord, :_, depvar),
                         εs_dnv,
                         order,
@@ -351,14 +360,14 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                                   transformation_vars=transformation_vars)
                 integrand__ = NeuralPDE._dot_(integrand_)
 
-                integrand = build_symbolic_loss_function(pinnrep, nothing;
-                                                         integrand=integrand__,
-                                                         integrating_depvars=integrating_depvars,
-                                                         eq_params=SciMLBase.NullParameters(),
-                                                         dict_transformation_vars=dict_transformation_vars,
-                                                         transformation_vars=transformation_vars,
-                                                         param_estim=false,
-                                                         default_p=nothing)
+                integrand = build_symbolic_loss_function_body(pinnrep, nothing;
+                                                              integrand=integrand__,
+                                                              integrating_depvars=integrating_depvars,
+                                                              eq_params=SciMLBase.NullParameters(),
+                                                              dict_transformation_vars=dict_transformation_vars,
+                                                              transformation_vars=transformation_vars,
+                                                              param_estim=false,
+                                                              default_p=nothing)
                 # integrand = repr(integrand)
                 lb = toexpr.(lb)
                 ub = toexpr.(ub)
@@ -434,28 +443,40 @@ function get_ε(dim, der_num, fdtype, order)
     return ε
 end
 
-function numeric_derivative(phi, u, x, εs, order, θ)
+function numeric_derivative(phi, x, εs, order, θ)
     ε = εs[order]
     _epsilon = inv(first(ε[ε .!= zero(ε)]))
     ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(x), ε)
 
-    if order > 4 || any(x -> x != εs[1], εs)
-        return (numeric_derivative(phi, u, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ) .-
-                numeric_derivative(phi, u, x .- ε, @view(εs[1:(end - 1)]), order - 1, θ)) .*
+    if any(x -> x != εs[1], εs)
+        return (numeric_derivative(phi, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ) .-
+                numeric_derivative(phi, x .- ε, @view(εs[1:(end - 1)]), order - 1, θ)) .*
                _epsilon ./ 2
-    elseif order == 4
-        return (u(x .+ 2 .* ε, θ, phi) .- 4 .* u(x .+ ε, θ, phi) .+ 6 .* u(x, θ, phi) .-
-                4 .* u(x .- ε, θ, phi) .+ u(x .- 2 .* ε, θ, phi)) .* _epsilon^4
-    elseif order == 3
-        return (u(x .+ 2 .* ε, θ, phi) .- 2 .* u(x .+ ε, θ, phi) .+ 2 .* u(x .- ε, θ, phi) -
-                u(x .- 2 .* ε, θ, phi)) .* _epsilon^3 ./ 2
-    elseif order == 2
-        return (u(x .+ ε, θ, phi) .+ u(x .- ε, θ, phi) .- 2 .* u(x, θ, phi)) .* _epsilon^2
-    elseif order == 1
-        return (u(x .+ ε, θ, phi) .- u(x .- ε, θ, phi)) .* _epsilon ./ 2
     else
-        error("This shouldn't happen!")
+        numeric_derivative(phi, x, ε, Val(order), θ, _epsilon)
     end
+end
+
+function numeric_derivative(phi, x, ε::AbstractVector{T}, ::Val{1}, θ,
+                            h::T) where {T <: AbstractFloat}
+    return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* h ./ 2
+end
+
+function numeric_derivative(phi, x, ε::AbstractVector{T}, ::Val{2}, θ,
+                            h::T) where {T <: AbstractFloat}
+    return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* h^2
+end
+
+function numeric_derivative(phi, x, ε::AbstractVector{T}, ::Val{3}, θ,
+                            h::T) where {T <: AbstractFloat}
+    return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ, phi) .+ 2 .* phi(x .- ε, θ) -
+            phi(x .- 2 .* ε, θ)) .* h^3 ./ 2
+end
+
+function numeric_derivative(phi, x, ε::AbstractVector{T}, ::Val{4}, θ,
+                            h::T) where {T <: AbstractFloat}
+    return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
+            4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* h^4
 end
 
 function numeric_derivative(phi, x, θ, dim::Int, order::Int)
