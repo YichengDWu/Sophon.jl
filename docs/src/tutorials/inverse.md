@@ -1,5 +1,5 @@
 
-# Lorenz System
+# Inverse Problem of the Lorenz System
 
 $\frac{\mathrm{d} x}{\mathrm{~d} t}=\sigma(y-x)$,
 
@@ -77,7 +77,6 @@ end
 ```
 
 ```julia
-#Parameters of inversion
 print(res.u.σ.constant, res.u.ρ.constant, res.u.β.constant)
 ```
 
