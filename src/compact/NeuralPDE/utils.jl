@@ -159,12 +159,12 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
     return vars, ex
 end
 
-function build_loss_function(pinnrep::NamedTuple, eqs, bc_indvars, i)
+function build_loss_function(pinnrep::NamedTuple, eq, bc_indvars, i)
     (; eq_params, default_p) = pinnrep
 
     bc_indvars = bc_indvars === nothing ? pinnrep.indvars : bc_indvars
 
-    vars, ex = build_symbolic_loss_function(pinnrep, eqs; bc_indvars=bc_indvars,
+    vars, ex = build_symbolic_loss_function(pinnrep, eq; bc_indvars=bc_indvars,
                                             eq_params=eq_params, default_p=default_p)
 
     expr = Expr(:function, Expr(:call, Symbol(:residual_function_, i), vars.args[1], vars.args[2]), ex)
@@ -475,7 +475,7 @@ end
 
 function numeric_derivative(phi, x, ε::AbstractVector{T}, ::Val{3}, θ,
                             h::T) where {T <: AbstractFloat}
-    return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ, phi) .+ 2 .* phi(x .- ε, θ) -
+    return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ) .+ 2 .* phi(x .- ε, θ) -
             phi(x .- 2 .* ε, θ)) .* h^3 ./ 2
 end
 
