@@ -1,5 +1,5 @@
 
-function get_datafree_pinn_loss_function(pde_system::PDESystem, pinn::PINN,
+function get_datafree_pinn_loss_function(pde_system::NeuralPDE.PDESystem, pinn::PINN,
                                          strategy::AbstractTrainingAlg;
                                          additional_loss=Sophon.null_additional_loss,
                                          derivative=numeric_derivative)
@@ -61,7 +61,7 @@ end
 Convert the PDESystem into an `OptimizationProblem`. You can have access to each loss function by calling
 `Sophon.residual_function_1`, `Sophon.residual_function_2`... after calling this function.
 """
-function discretize(pde_system::PDESystem, pinn::PINN, sampler::PINNSampler,
+function discretize(pde_system::NeuralPDE.PDESystem, pinn::PINN, sampler::PINNSampler,
                     strategy::AbstractTrainingAlg;
                     additional_loss=Sophon.null_additional_loss,
                     derivative=numeric_derivative) where {T, S}

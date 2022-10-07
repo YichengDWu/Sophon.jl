@@ -1,4 +1,4 @@
-function get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars)
+function get_bounds(domains::Vector{Symbolics.VarDomainPairing}, eqs, bcs, eltypeθ, dict_indvars, dict_depvars)
     dict_span = Dict([Symbol(d.variables) => [infimum(d.domain), supremum(d.domain)]
                       for d in domains])
     pde_args = NeuralPDE.get_argument(eqs, dict_indvars, dict_depvars)
@@ -17,7 +17,21 @@ function get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars)
     return pde_bounds, bcs_bounds
 end
 
+function get_bounds(d::Domain)
+    return infimum(d), supremum(d)
+end
+
 function get_bounds(pde::PDESystem)
+    pde_bounds = map(pde.eqs) do eq
+        get_bounds(eq[2])
+    end
+    bcs_bounds = map(pde.bcs) do bc
+        get_bounds(bc[2])
+    end
+    return pde_bounds, bcs_bounds
+end
+
+function get_bounds(pde::NeuralPDE.PDESystem)
     (; eqs, bcs, domain, ivs, dvs) = pde
     _, _, dict_indvars, dict_depvars, _ = NeuralPDE.get_vars(ivs, dvs)
     bounds = get_bounds(domain, eqs, bcs, Float64, dict_indvars, dict_depvars)
@@ -504,5 +518,17 @@ function numeric_derivative(phi, x, θ, dim::Int, order::Int)
         return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* _epsilon ./ 2
     else
         error("The order $order is not supported!")
+    end
+end
+
+function Base.getproperty(d::Symbolics.VarDomainPairing,var::Symbol)
+    if var == :variables
+        return getfield(d,:variables)
+    elseif var == :domain
+        return getfield(d,:domain)
+    else
+        idx = findfirst(v -> v.name===var, d.variables)
+        domain = getfield(d,:domain)
+        return Interval(infimum(domain)[idx],supremum(domain)[idx])
     end
 end

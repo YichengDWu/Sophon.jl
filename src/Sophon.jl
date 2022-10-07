@@ -10,7 +10,8 @@ import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, Tria
                             Sin, SinDecay2, SinExp, CosAnneal, Sequence, Loop, Interpolator,
                             Shifted, ComposedSchedule, Constant
 using ParameterSchedulers: AbstractSchedule
-using NeuralPDE, ComponentArrays
+using ComponentArrays
+import NeuralPDE
 import SciMLBase: parameterless_type, __solve, build_solution, NullParameters
 using StatsBase, QuasiMonteCarlo
 using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
@@ -18,6 +19,9 @@ import QuasiMonteCarlo
 import Sobol
 using Memoize, LRUCache
 using RuntimeGeneratedFunctions
+using DomainSets
+using DomainSets: ×
+import Symbolics
 
 RuntimeGeneratedFunctions.init(@__MODULE__)
 

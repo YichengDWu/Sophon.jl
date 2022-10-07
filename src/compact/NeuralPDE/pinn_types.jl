@@ -112,3 +112,49 @@ function Lux.cpu(pinn::PINN)
     Lux.@set! pinn.init_params = cpu(pinn.init_params)
     return pinn
 end
+
+"""
+using Sophon
+
+@parameters x
+@variables t u(..)
+Dxx = Differential(x)^2
+Dtt = Differential(t)^2
+Dt = Differential(t)
+
+C=1
+eq  = (Dtt(u(t,x)) ~ C^2*Dxx(u(t,x)), (0.0..1.0) × (0.0..1.0))
+
+bcs = [(u(t,x) ~ 0.0, (0.0..1.0) × (0.0..0.0)),
+(u(t,x) ~ 0.0, (0.0..1.0) × (1.0..1.0)),
+(u(t,x) ~ x*(1. - x), (0.0..0.0) × (0.0..1.0),
+Dt(u(t,x)) ~ 0.0, (0.0..0.0) × (0.0..1.0))]
+
+pde_system = PDESystem(eq,bcs,[t,x],[u(t,x)])
+"""
+struct PDESystem
+    eqs::Vector
+    bcs::Vectors
+    ivs::Vector
+    dvs::Vector
+end
+
+function PDESystem(eq::Tuple{Symbolics.Equation, <:Domain}, bcs, ivs, dvs)
+    return PDESystem([eq], bcs, ivs, dvs)
+end
+
+Base.summary(prob::PDESystem) = string(nameof(typeof(prob)))
+function Base.show(io::IO, ::MIME"text/plain", sys::PDESystem)
+    println(io, summary(sys))
+    println(io, "Equations: ")
+    map(sys.eqs) do eq
+        println(io, "  ", eq[1], " on ", eq[2])
+    end
+    println(io, "Boundary Conditions: ")
+    map(sys.bcs) do bc
+        println(io, "  ", bc[1], " on ", bc[2])
+    end
+    println(io, "Dependent Variables: ", sys.dvs)
+    println(io, "Independent Variables: ", sys.ivs)
+    return nothing
+end
