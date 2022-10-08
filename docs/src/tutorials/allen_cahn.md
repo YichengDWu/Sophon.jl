@@ -1,4 +1,4 @@
-# Allen-Cahn equation with Sequential Training
+# Allen-Cahn Equation with Sequential Training
 
 In this tutorial we are going to solve the Allen-Cahn equation with periodic boundary condition from ``t=0`` to ``t=1``. The traning process is split into four stages, namely 
 ``t\in [0,0.25]``, ``t\in [0.0,0.5]``, ``t\in [0.0,0.75]`` and ``t\in [0.0, 1.0]``.
