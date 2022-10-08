@@ -68,6 +68,9 @@ function sample(pde::NeuralPDE.PDESystem, sampler::QuasiRandomSampler{P, B, Sobo
     (; pde_points, bcs_points) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
+    pde_points = length(pde_points) == 1 ?
+                 ntuple(_ -> first(pde_points), length(pde_bounds)) : Tuple(pde_points)
+
     bcs_points = length(bcs_points) == 1 ?
                  ntuple(_ -> first(bcs_points), length(bcs_bounds)) : Tuple(bcs_points)
 
