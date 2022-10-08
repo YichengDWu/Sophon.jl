@@ -66,8 +66,8 @@ v = [sum(phi.v(([x,t]), ps.v)) for x in xs, t in ts]
 ψ = @. sqrt(u^2+ v^2)
 
 axis = (xlabel="t", ylabel="x", title="u")
-fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, u', axis=axis)
-ax2, hm2= CairoMakie.heatmap(fig[1, end+1], ts, xs, v', axis= merge(axis, (; title="v")))
+fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, u', axis=axis, colormap=:jet)
+ax2, hm2= CairoMakie.heatmap(fig[1, end+1], ts, xs, v', axis= merge(axis, (; title="v")), colormap=:jet)
 display(fig)
 save("uv.png", fig); nothing # hide
 ```
@@ -75,7 +75,7 @@ save("uv.png", fig); nothing # hide
 
 ```@example Schrödinger
 axis = (xlabel="t", ylabel="x", title="ψ")
-fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, ψ', axis=axis)
+fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, ψ', axis=axis, colormap=:jet)
 Colorbar(fig[:, end+1], hm1)
 display(fig)
 save("phi.png", fig); nothing # hide
