@@ -41,7 +41,7 @@ include("compact/NeuralPDE/pinnsampler.jl")
 include("compact/NeuralPDE/discretize.jl")
 include("layers/operators.jl")
 
-export Scheduler, QuasiRandom
+export Scheduler
 export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature,
        ConstantFunction, ScalarLayer, SplitFunction
