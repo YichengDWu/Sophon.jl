@@ -114,10 +114,11 @@ function Lux.cpu(pinn::PINN)
 end
 
 """
-using Sophon
+using Sophon, ModelingToolkit, DomainSets
+using DomainSets: ×
 
-@parameters x
-@variables t u(..)
+@parameters x, t
+@variables u(..)
 Dxx = Differential(x)^2
 Dtt = Differential(t)^2
 Dt = Differential(t)
@@ -126,15 +127,15 @@ C=1
 eq  = (Dtt(u(t,x)) ~ C^2*Dxx(u(t,x)), (0.0..1.0) × (0.0..1.0))
 
 bcs = [(u(t,x) ~ 0.0, (0.0..1.0) × (0.0..0.0)),
-(u(t,x) ~ 0.0, (0.0..1.0) × (1.0..1.0)),
-(u(t,x) ~ x*(1. - x), (0.0..0.0) × (0.0..1.0),
-Dt(u(t,x)) ~ 0.0, (0.0..0.0) × (0.0..1.0))]
+       (u(t,x) ~ 0.0, (0.0..1.0) × (1.0..1.0)),
+       (u(t,x) ~ x*(1. - x), (0.0..0.0) × (0.0..1.0)),
+       (Dt(u(t,x)) ~ 0.0, (0.0..0.0) × (0.0..1.0))]
 
-pde_system = PDESystem(eq,bcs,[t,x],[u(t,x)])
+pde_system = Sophon.PDESystem(eq,bcs,[t,x],[u(t,x)])
 """
 struct PDESystem
     eqs::Vector
-    bcs::Vectors
+    bcs::Vector
     ivs::Vector
     dvs::Vector
 end

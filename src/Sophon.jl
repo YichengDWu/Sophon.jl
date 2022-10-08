@@ -20,8 +20,8 @@ import Sobol
 using Memoize, LRUCache
 using RuntimeGeneratedFunctions
 using DomainSets
-using DomainSets: ×
 import Symbolics
+import ModelingToolkit
 
 RuntimeGeneratedFunctions.init(@__MODULE__)
 
@@ -31,12 +31,12 @@ include("layers/nets.jl")
 include("utils.jl")
 include("activations.jl")
 include("training/scheduler.jl")
-include("training/rad.jl")
-include("training/causal.jl")
-include("training/evo.jl")
+#include("training/rad.jl")
+#include("training/causal.jl")
+#include("training/evo.jl")
 include("compact/componentarrays.jl")
-include("compact/NeuralPDE/utils.jl")
 include("compact/NeuralPDE/pinn_types.jl")
+include("compact/NeuralPDE/utils.jl")
 include("compact/NeuralPDE/training_strategies.jl")
 include("compact/NeuralPDE/pinnsampler.jl")
 include("compact/NeuralPDE/discretize.jl")
