@@ -21,7 +21,6 @@ using Memoize, LRUCache
 using RuntimeGeneratedFunctions
 using DomainSets
 import Symbolics
-import ModelingToolkit
 
 RuntimeGeneratedFunctions.init(@__MODULE__)
 
