@@ -17,47 +17,12 @@ Please star this repository if you find it useful.
 ```julia
 julia>] add Sophon
 ```
-
-## Example: 1D Multi-scale Poisson Equation 
-Simply replace primitive fully connected neural nets with those defined in this pacakge!
-
-```julia
-using ModelingToolkit, IntervalSets, Sophon
-using Optimization, OptimizationOptimJL
-using CairoMakie
-
-@parameters x
-@variables u(..)
-Dₓ² = Differential(x)^2
-
-f(x) = -4 * π^2 * sin(2 * π * x) - 250 * π^2 * sin(50 * π * x)
-eq = Dₓ²(u(x)) ~ f(x)
-domain = [x ∈ 0 .. 1]
-bcs = [u(0) ~ 0, u(1) ~ 0]
-
-@named poisson = PDESystem(eq, bcs, domain, [x], [u(x)])
-
-chain = Siren(1, 32, 32, 32, 32, 1) # This is the meat!
-pinn = PINN(chain)
-sampler = QuasiRandomSampler(100, 1) 
-strategy = NonAdaptiveTraining(1 , 50)
-
-prob = Sophon.discretize(poisson, pinn, sampler, strategy)
-res = Optimization.solve(prob, BFGS(); maxiters=2000)
-
-phi = pinn.phi
-xs = 0:0.001:1
-u_true = @. sin(2 * pi * xs) + 0.1 * sin(50 * pi * xs)
-us = phi(xs', res.u)
-fig = Figure()
-axis = Axis(fig[1, 1])
-lines!(xs, u_true; label="Ground Truth")
-lines!(xs, vec(us); label="Prediction")
-axislegend(axis)
-display(fig)
-```
-![possion](https://github.com/YichengDWu/Sophon.jl/blob/main/assets/poisson.png)
-
+## Gallery
+| ![](assets/functionfitting.svg)     | ![](assets/poisson.png)                 | ![](assets/examples/DecayingTurbulence2D.png)                | ![](assets/examples/TaylorGreenVortex2D.png)                |
+|:---------------------------------------:|:-------------------------------------------------------------:|:------------------------------------------------------------:|:-----------------------------------------------------------:|
+| [Function Fitting)](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/discontinuous/) | [Multi-scale Poisson Equation)](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/poisson/) | [Decaying Turbulence (2D)](examples/DecayingTurbulence2D.jl) | [Taylor-Green Vortex (2D)](examples/TaylorGreenVortex2D.jl) |
+| ![](assets/allen.png)     | ![](assets/Schrödinger.png)                 | ![](assets/Lshape.png)                |              |
+| [Allen-Cahn Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/allen_cahn/) | [Schrödinger equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/Schr%C3%B6dingerEquation/) | [L-shaped Domain](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/L_shape/) |  |
 ## Related Libraries
 
 - [NeuralPDE](https://github.com/SciML/NeuralPDE.jl)
