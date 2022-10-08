@@ -18,7 +18,7 @@ Please star this repository if you find it useful.
 pkg> add Sophon
 ```
 ## Gallery
-| ![](assets/functionfitting.svg)     | ![](assets/poisson.png)                 | ![](assets/convection.png)                | ![](assets/examples/TaylorGreenVortex2D.png)                |
+| ![](assets/functionfitting.svg)     | ![](assets/poisson.png)                 | ![](assets/convection.png)                | ![](assets/helmholtz.png)                |
 |:---------------------------------------:|:-------------------------------------------------------------:|:------------------------------------------------------------:|:-----------------------------------------------------------:|
 | [Function Fitting](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/discontinuous/) | [Multi-scale Poisson Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/poisson/) | [Convection Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/convection/) | [Helmholtz Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/helmholtz/) |
 | ![](assets/allen.png)     | ![](assets/Schrödinger.png)                 | ![](assets/Lshape.png)                |              |
