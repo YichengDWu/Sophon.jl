@@ -2,7 +2,7 @@
 
 julia_version = "1.8.1"
 manifest_format = "2.0"
-project_hash = "52e29bad7c795d7ecaff0686a337227ebfdd28e4"
+project_hash = "1aaa11edaad1d775721c25a45fba746dec371c10"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -1962,10 +1962,10 @@ version = "1.5.0"
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[deps.Sophon]]
-deps = ["Adapt", "CUDA", "ChainRulesCore", "ComponentArrays", "GPUArrays", "GPUArraysCore", "LRUCache", "LinearAlgebra", "Lux", "Memoize", "NNlib", "NNlibCUDA", "NeuralPDE", "Optimisers", "Optimization", "OptimizationOptimisers", "ParameterSchedulers", "QuasiMonteCarlo", "Random", "SciMLBase", "Sobol", "StatsBase"]
+deps = ["Adapt", "CUDA", "ChainRulesCore", "ComponentArrays", "DomainSets", "GPUArrays", "GPUArraysCore", "LRUCache", "LinearAlgebra", "Lux", "Memoize", "NNlib", "NNlibCUDA", "NeuralPDE", "Optimisers", "Optimization", "OptimizationOptimisers", "ParameterSchedulers", "QuasiMonteCarlo", "Random", "RuntimeGeneratedFunctions", "SciMLBase", "Sobol", "StatsBase", "Symbolics"]
 path = ".."
 uuid = "077df616-1c15-4d29-b519-7542a62df138"
-version = "0.2.2"
+version = "0.2.9"
 
 [[deps.SortingAlgorithms]]
 deps = ["DataStructures"]
