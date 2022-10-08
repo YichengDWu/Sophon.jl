@@ -49,6 +49,6 @@ u_pred = [ifelse(x>0.0 && y>0.0, NaN, pinn.phi([x,y], res.u)[1]) for x in xs, y 
 fig, ax, hm = heatmap(xs, ys, u_pred, colormap=:jet)
 Colorbar(fig[:, end+1], hm)
 fig
-save("result.png", fig); nothing # hide
+save("Lshape.png", fig); nothing # hide
 ```
-![](result.png)
+![](Lshape.png)
