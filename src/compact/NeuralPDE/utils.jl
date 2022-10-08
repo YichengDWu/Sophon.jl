@@ -1,4 +1,4 @@
-function get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars)
+function get_bounds(domains::Vector{Symbolics.VarDomainPairing}, eqs, bcs, eltypeθ, dict_indvars, dict_depvars)
     dict_span = Dict([Symbol(d.variables) => [infimum(d.domain), supremum(d.domain)]
                       for d in domains])
     pde_args = NeuralPDE.get_argument(eqs, dict_indvars, dict_depvars)
@@ -17,7 +17,21 @@ function get_bounds(domains, eqs, bcs, eltypeθ, dict_indvars, dict_depvars)
     return pde_bounds, bcs_bounds
 end
 
-function get_bounds(pde::PDESystem)
+function get_bounds(d::Domain)
+    return infimum(d), supremum(d)
+end
+
+function get_bounds(pde::Sophon.PDESystem)
+    pde_bounds = map(pde.eqs) do eq
+        get_bounds(eq[2])
+    end
+    bcs_bounds = map(pde.bcs) do bc
+        get_bounds(bc[2])
+    end
+    return pde_bounds, bcs_bounds
+end
+
+function get_bounds(pde::NeuralPDE.PDESystem)
     (; eqs, bcs, domain, ivs, dvs) = pde
     _, _, dict_indvars, dict_depvars, _ = NeuralPDE.get_vars(ivs, dvs)
     bounds = get_bounds(domain, eqs, bcs, Float64, dict_indvars, dict_depvars)
@@ -57,7 +71,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
                                       integrand=nothing, dict_transformation_vars=nothing,
                                       transformation_vars=nothing,
                                       integrating_depvars=pinnrep.depvars)
-    (; depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, strategy, eq_params, default_p) = pinnrep
+    (; depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, strategy) = pinnrep
 
     if integrand isa Nothing
         loss_function, pos, values = parse_equation(pinnrep, eq)
@@ -132,7 +146,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
     vcat_expr = Expr(:block, :($(eq_pair_expr...)))
     vcat_expr_loss_functions = Expr(:block, vcat_expr, loss_function)
 
-    if strategy isa QuadratureTraining
+    if strategy isa NeuralPDE.QuadratureTraining
         indvars_ex = get_indvars_ex(bc_indvars)
         left_arg_pairs, right_arg_pairs = this_eq_indvars, indvars_ex
         vars_eq = Expr(:(=), NeuralPDE.build_expr(:tuple, left_arg_pairs),
@@ -160,13 +174,8 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
 end
 
 function build_loss_function(pinnrep::NamedTuple, eq, bc_indvars, i)
-    (; eq_params, default_p) = pinnrep
-
     bc_indvars = bc_indvars === nothing ? pinnrep.indvars : bc_indvars
-
-    vars, ex = build_symbolic_loss_function(pinnrep, eq; bc_indvars=bc_indvars,
-                                            eq_params=eq_params, default_p=default_p)
-
+    vars, ex = build_symbolic_loss_function(pinnrep, eq; bc_indvars=bc_indvars)
     expr = Expr(:function, Expr(:call, Symbol(:residual_function_, i), vars.args[1], vars.args[2]), ex)
     return eval(expr)
 end
@@ -217,13 +226,13 @@ function get_numeric_integral(pinnrep::NamedTuple)
 end
 
 function parse_equation(pinnrep::NamedTuple, eq)
-    eq_lhs = isequal(expand_derivatives(eq.lhs), 0) ? eq.lhs : expand_derivatives(eq.lhs)
-    eq_rhs = isequal(expand_derivatives(eq.rhs), 0) ? eq.rhs : expand_derivatives(eq.rhs)
-    left_expr = toexpr(eq_lhs)
-    right_expr = toexpr(eq_rhs)
+    eq_lhs = isequal(NeuralPDE.expand_derivatives(eq.lhs), 0) ? eq.lhs : NeuralPDE.expand_derivatives(eq.lhs)
+    eq_rhs = isequal(NeuralPDE.expand_derivatives(eq.rhs), 0) ? eq.rhs : NeuralPDE.expand_derivatives(eq.rhs)
+    left_expr = NeuralPDE.toexpr(eq_lhs)
+    right_expr = NeuralPDE.toexpr(eq_rhs)
 
-    tran_left_expr = transform_expression(pinnrep, toexpr(eq_lhs))
-    tran_right_expr = transform_expression(pinnrep, toexpr(eq_rhs))
+    tran_left_expr = transform_expression(pinnrep, NeuralPDE.toexpr(eq_lhs))
+    tran_right_expr = transform_expression(pinnrep, NeuralPDE.toexpr(eq_rhs))
     dot_left_expr = NeuralPDE._dot_(tran_left_expr)
     dot_right_expr = NeuralPDE._dot_(tran_right_expr)
 
@@ -291,12 +300,12 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                     ]
                 end
                 break
-            elseif e isa ModelingToolkit.Differential
+            elseif e isa NeuralPDE.Differential
                 derivative_variables = Symbol[]
                 order = 0
-                while (_args[1] isa ModelingToolkit.Differential)
+                while (_args[1] isa NeuralPDE.Differential)
                     order += 1
-                    push!(derivative_variables, toexpr(_args[1].x))
+                    push!(derivative_variables, NeuralPDE.toexpr(_args[1].x))
                     _args = _args[2].args
                 end
                 depvar = _args[1]
@@ -333,10 +342,10 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
             elseif e isa Symbolics.Integral
                 if _args[1].domain.variables isa Tuple
                     integrating_variable_ = collect(_args[1].domain.variables)
-                    integrating_variable = toexpr.(integrating_variable_)
+                    integrating_variable = NeuralPDE.toexpr.(integrating_variable_)
                     integrating_var_id = [dict_indvars[i] for i in integrating_variable]
                 else
-                    integrating_variable = toexpr(_args[1].domain.variables)
+                    integrating_variable = NeuralPDE.toexpr(_args[1].domain.variables)
                     integrating_var_id = [dict_indvars[integrating_variable]]
                 end
 
@@ -375,8 +384,8 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                                                               param_estim=false,
                                                               default_p=nothing)
                 # integrand = repr(integrand)
-                lb = toexpr.(lb)
-                ub = toexpr.(ub)
+                lb = NeuralPDE.toexpr.(lb)
+                ub = NeuralPDE.toexpr.(ub)
                 ub_ = []
                 lb_ = []
                 for l in lb
@@ -433,7 +442,7 @@ end
 Finds which dependent variables are being used in an equation.
 """
 function pair(eq, depvars, dict_depvar_input)
-    expr = NeuralPDE.toexpr(eq)
+    expr = NeuralPDE.NeuralPDE.toexpr(eq)
     pair_ = map(depvars) do depvar
         if !isempty(NeuralPDE.find_thing_in_expr(expr, depvar))
             depvar => dict_depvar_input[depvar]
@@ -504,5 +513,17 @@ function numeric_derivative(phi, x, θ, dim::Int, order::Int)
         return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* _epsilon ./ 2
     else
         error("The order $order is not supported!")
+    end
+end
+
+function Base.getproperty(d::Symbolics.VarDomainPairing,var::Symbol)
+    if var == :variables
+        return getfield(d,:variables)
+    elseif var == :domain
+        return getfield(d,:domain)
+    else
+        idx = findfirst(v -> v.name===var, d.variables)
+        domain = getfield(d,:domain)
+        return Interval(infimum(domain)[idx],supremum(domain)[idx])
     end
 end
