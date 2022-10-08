@@ -20,9 +20,9 @@ julia>] add Sophon
 ## Gallery
 | ![](assets/functionfitting.svg)     | ![](assets/poisson.png)                 | ![](assets/examples/DecayingTurbulence2D.png)                | ![](assets/examples/TaylorGreenVortex2D.png)                |
 |:---------------------------------------:|:-------------------------------------------------------------:|:------------------------------------------------------------:|:-----------------------------------------------------------:|
-| [Function Fitting)](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/discontinuous/) | [Multi-scale Poisson Equation)](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/poisson/) | [Convection Equation](examples/DecayingTurbulence2D.jl) | [Helmholtz equation](examples/TaylorGreenVortex2D.jl) |
+| [Function Fitting](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/discontinuous/) | [Multi-scale Poisson Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/poisson/) | [Convection Equation](examples/DecayingTurbulence2D.jl) | [Helmholtz Equation](examples/TaylorGreenVortex2D.jl) |
 | ![](assets/allen.png)     | ![](assets/Schrödinger.png)                 | ![](assets/Lshape.png)                |              |
-| [Allen-Cahn Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/allen_cahn/) | [Schrödinger equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/Schr%C3%B6dingerEquation/) | [L-shaped Domain](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/L_shape/) |  |
+| [Allen-Cahn Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/allen_cahn/) | [Schrödinger Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/Schr%C3%B6dingerEquation/) | [L-shaped Domain](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/L_shape/) |  |
 ## Related Libraries
 
 - [NeuralPDE](https://github.com/SciML/NeuralPDE.jl)
