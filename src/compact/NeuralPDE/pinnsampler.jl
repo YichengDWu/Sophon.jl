@@ -83,7 +83,7 @@ function sample(pde::NeuralPDE.PDESystem, sampler::QuasiRandomSampler{P, B, Sobo
     return [pde_datasets; boundary_datasets]
 end
 
-function sample(d::Rectangle, points::Int, ::Function)
+function sample(d::Rectangle, points::Int, ::SobolSample)
     bounds = get_bounds(d)
     return sobolsample(points, bounds[1], bounds[2])
 end
@@ -93,13 +93,19 @@ function sample(d::Interval, points::Int, ::SobolSample)
     return sobolsample(points, bounds[1], bounds[2])
 end
 
+function sample(d::SetdiffDomain{S, <:Tuple{<:Rectangle, F}}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {S, F}
+    rec = d.domains[1]
+    data = sample(rec, points, alg)
+    idx = [x ∈ d for d in eachcol(data)]
+    return data[:, idx]
+end
 
-function sample(d::Rectangle, points::Int, sampling_alg:: QuasiMonteCarlo.SamplingAlgorithm)
+function sample(d::Rectangle, points::Int, sampling_alg::QuasiMonteCarlo.SamplingAlgorithm)
     bounds = get_bounds(d)
     return QuasiMonteCarlo.sample(points, bounds[1], bounds[2], sampling_alg)
 end
 
-function sample(d::Interval, points::Int, sampling_alg:: QuasiMonteCarlo.SamplingAlgorithm)
+function sample(d::Interval, points::Int, sampling_alg::QuasiMonteCarlo.SamplingAlgorithm)
     bounds = get_bounds(d)
     return QuasiMonteCarlo.sample(points, bounds[1], bounds[2], sampling_alg)
 end
