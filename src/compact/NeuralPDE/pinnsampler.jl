@@ -83,14 +83,28 @@ function sample(pde::NeuralPDE.PDESystem, sampler::QuasiRandomSampler{P, B, Sobo
     return [pde_datasets; boundary_datasets]
 end
 
-function sample(d::GenericSphere{Vector{T}, T}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+function sample(d::GenericBall{Vector{T}}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
     (; center, radius) = d
-    return sample(Sphere(radius, SVector(center...)), points, alg)
+    return sample(Ball(radius, StaticArraysCore.SVector(center...)), points, alg)
 end
 
-function sample(d::GenericSphere{StaticArraysCore.SVector{2, T}, T}, points::Int, ::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+function sample(d::GenericBall{StaticArraysCore.SVector{2, T}}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
     (; center, radius) = d
-    θ = sample(points, [0.0], [2π], sampling_alg)
+    xys = sample(points, [-1,-1], [1,1], alg)
+    data = [ifelse(abs(xy[1])≥abs(xy[2]),  [xy[1]*cos(π/4*xy[2]/xy[1]), xy[1]*sin(π/4*xy[2]/xy[1])], [xy[2]*sin(π/4*xy[1]/xy[2]), xy[2]*cos(π/4*xy[1]/xy[2])]) for xy in eachcol(xys)]
+    data = reduce(hcat, data)
+    data = [center...;;] .+ radius .* [cos.(θ); sin.(θ)]
+    return data
+end
+
+function sample(d::GenericSphere{Vector{T}, T}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+    (; center, radius) = d
+    return sample(Sphere(radius, StaticArraysCore.SVector(center...)), points, alg)
+end
+
+function sample(d::GenericSphere{StaticArraysCore.SVector{2, T}, T}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+    (; center, radius) = d
+    θ = sample(points, [0.0], [2π], alg)
     data = [center...;;] .+ radius .* [cos.(θ); sin.(θ)]
     return data
 end
@@ -126,17 +140,17 @@ function sample(d::Interval, points::Int, sampling_alg::QuasiMonteCarlo.Sampling
     return sample(points, bounds[1], bounds[2], sampling_alg)
 end
 
-function sobolsample(n::Int, lb, ub)
-    s = cached_sobolseq(n, lb, ub)
-    return reduce(hcat, [Sobol.next!(s) for i in 1:n])
-end
-
 function sample(points::Int, lb::AbstractVector, ub::AbstractVector, sampling_alg::QuasiMonteCarlo.SamplingAlgorithm)
     return QuasiMonteCarlo.sample(points, lb, ub, sampling_alg)
 end
 
 function sample(points::Int, lb::AbstractVector, ub::AbstractVector, ::SobolSample)
     return sobolsample(points, lb, ub)
+end
+
+function sobolsample(n::Int, lb, ub)
+    s = cached_sobolseq(n, lb, ub)
+    return reduce(hcat, [Sobol.next!(s) for i in 1:n])
 end
 
 @memoize LRU{Tuple{Int, AbstractVector, AbstractVector}, Any}(maxsize=100) function cached_sobolseq(n, lb,

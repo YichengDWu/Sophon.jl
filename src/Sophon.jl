@@ -19,7 +19,7 @@ import QuasiMonteCarlo
 import Sobol
 using Memoize, LRUCache
 using RuntimeGeneratedFunctions
-using DomainSets
+using DomainSets, StaticArraysCore
 import Symbolics
 
 RuntimeGeneratedFunctions.init(@__MODULE__)
