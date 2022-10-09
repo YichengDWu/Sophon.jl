@@ -92,7 +92,7 @@ z_pred = phi.x(ts, θ.z)
 
 ```julia
 using Plots
-Plots.plot(vec(ts), [vec(x_pred),vec(y_pred),vec(z_pred)],  title=["x(t)" "y(t)" "z(t)"])   
+Plots.plot(vec(ts), [vec(x_pred),vec(y_pred),vec(z_pred)],  label=["x(t)" "y(t)" "z(t)"])   
 ```
 
 
