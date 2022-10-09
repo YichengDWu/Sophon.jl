@@ -2020,9 +2020,7 @@ uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[deps.Sophon]]
 deps = ["Adapt", "CUDA", "ChainRulesCore", "ComponentArrays", "DomainSets", "GPUArrays", "GPUArraysCore", "LRUCache", "LinearAlgebra", "Lux", "Memoize", "NNlib", "NNlibCUDA", "NeuralPDE", "Optimisers", "Optimization", "OptimizationOptimisers", "ParameterSchedulers", "QuasiMonteCarlo", "Random", "RuntimeGeneratedFunctions", "SciMLBase", "Sobol", "StatsBase", "Symbolics"]
-git-tree-sha1 = "d090719b162f96c612413efa8d77b0970c34333f"
-repo-rev = "main"
-repo-url = "https://github.com/YichengDWu/Sophon.jl"
+path = ".."
 uuid = "077df616-1c15-4d29-b519-7542a62df138"
 version = "0.3.0"
 
