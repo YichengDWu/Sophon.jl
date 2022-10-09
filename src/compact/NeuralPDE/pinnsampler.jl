@@ -83,7 +83,7 @@ function sample(pde::NeuralPDE.PDESystem, sampler::QuasiRandomSampler{P, B, Sobo
     return [pde_datasets; boundary_datasets]
 end
 
-function sample(d::Rectangle, points::Int, ::Function)
+function sample(d::Rectangle, points::Int, ::SobolSample)
     bounds = get_bounds(d)
     return sobolsample(points, bounds[1], bounds[2])
 end
