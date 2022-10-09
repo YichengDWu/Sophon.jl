@@ -2,7 +2,7 @@
 
 julia_version = "1.8.0"
 manifest_format = "2.0"
-project_hash = "1aaa11edaad1d775721c25a45fba746dec371c10"
+project_hash = "329e97062214a2786847717f5a495e076bb8dd93"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -1782,9 +1782,9 @@ version = "2.5.0"
 
 [[deps.QuasiMonteCarlo]]
 deps = ["Distributions", "LatinHypercubeSampling", "LatticeRules", "LinearAlgebra", "Primes", "Sobol", "StatsBase"]
-git-tree-sha1 = "e58d2bc8b8c5216e41caab9918b95b08f858fcee"
+git-tree-sha1 = "70c770295392eb721354c9c971353b8358e21382"
 uuid = "8a4e6c94-4038-4cdc-81c3-7e6ffdb2a71b"
-version = "0.2.10"
+version = "0.2.11"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -2020,7 +2020,9 @@ uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[deps.Sophon]]
 deps = ["Adapt", "CUDA", "ChainRulesCore", "ComponentArrays", "DomainSets", "GPUArrays", "GPUArraysCore", "LRUCache", "LinearAlgebra", "Lux", "Memoize", "NNlib", "NNlibCUDA", "NeuralPDE", "Optimisers", "Optimization", "OptimizationOptimisers", "ParameterSchedulers", "QuasiMonteCarlo", "Random", "RuntimeGeneratedFunctions", "SciMLBase", "Sobol", "StatsBase", "Symbolics"]
-path = ".."
+git-tree-sha1 = "d090719b162f96c612413efa8d77b0970c34333f"
+repo-rev = "main"
+repo-url = "https://github.com/YichengDWu/Sophon.jl"
 uuid = "077df616-1c15-4d29-b519-7542a62df138"
 version = "0.3.0"
 
