@@ -13,7 +13,7 @@ The domain is ``[-1,1]``. The number of training points used is `50`.
 ## Import pacakges
 ```@example ds
 using Lux, Sophon
-using NNlib, Optimisers, Plots, Random, Statistics, Zygote
+using NNlib, Optimisers, Plots, Random, StatsBase, Zygote
 ```
 
 ## Dataset
