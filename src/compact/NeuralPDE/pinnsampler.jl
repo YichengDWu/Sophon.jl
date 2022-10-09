@@ -83,14 +83,30 @@ function sample(pde::NeuralPDE.PDESystem, sampler::QuasiRandomSampler{P, B, Sobo
     return [pde_datasets; boundary_datasets]
 end
 
-function sample(d::Rectangle, points::Int, ::SobolSample)
-    bounds = get_bounds(d)
-    return sobolsample(points, bounds[1], bounds[2])
+function sample(d::GenericSphere{Vector{T}, T}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+    (; center, radius) = d
+    return sample(Sphere(radius, SVector(center...)), points, alg)
 end
 
-function sample(d::Interval, points::Int, ::SobolSample)
-    bounds = get_bounds(d)
-    return sobolsample(points, bounds[1], bounds[2])
+function sample(d::GenericSphere{StaticArraysCore.SVector{2, T}, T}, points::Int, ::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+    (; center, radius) = d
+    θ = sample(points, [0.0], [2π], sampling_alg)
+    data = [center...;;] .+ radius .* [cos.(θ); sin.(θ)]
+    return data
+end
+
+function sample(d::GenericSphere{StaticArraysCore.SVector{3, T}, T}, points::Int,  alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+    (; center, radius) = d
+    r = sample(points, [-1,-1], [1,1], alg)
+    r = r[:, [x[1]^2 + x[2]^2 <= 1 for x in eachcol(r)]]
+    x1 = r[1:1, :]
+    x2 = r[2:2, :]
+    x = @. 2*x1*sqrt(1-x1^2-x2^2)
+    y = @. 2*x2*sqrt(1-x1^2-x2^2)
+    z = @. 1 - 2*(x1^2 + x2^2)
+    data = [x; y; z]
+    data = [center...;;] .+ radius .* data
+    return data
 end
 
 function sample(d::SetdiffDomain{S, <:Tuple{<:Rectangle, F}}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {S, F}
@@ -102,17 +118,25 @@ end
 
 function sample(d::Rectangle, points::Int, sampling_alg::QuasiMonteCarlo.SamplingAlgorithm)
     bounds = get_bounds(d)
-    return QuasiMonteCarlo.sample(points, bounds[1], bounds[2], sampling_alg)
+    return sample(points, bounds[1], bounds[2], sampling_alg)
 end
 
 function sample(d::Interval, points::Int, sampling_alg::QuasiMonteCarlo.SamplingAlgorithm)
     bounds = get_bounds(d)
-    return QuasiMonteCarlo.sample(points, bounds[1], bounds[2], sampling_alg)
+    return sample(points, bounds[1], bounds[2], sampling_alg)
 end
 
 function sobolsample(n::Int, lb, ub)
     s = cached_sobolseq(n, lb, ub)
     return reduce(hcat, [Sobol.next!(s) for i in 1:n])
+end
+
+function sample(points::Int, lb::AbstractVector, ub::AbstractVector, sampling_alg::QuasiMonteCarlo.SamplingAlgorithm)
+    return QuasiMonteCarlo.sample(points, lb, ub, sampling_alg)
+end
+
+function sample(points::Int, lb::AbstractVector, ub::AbstractVector, ::SobolSample)
+    return sobolsample(points, lb, ub)
 end
 
 @memoize LRU{Tuple{Int, AbstractVector, AbstractVector}, Any}(maxsize=100) function cached_sobolseq(n, lb,
