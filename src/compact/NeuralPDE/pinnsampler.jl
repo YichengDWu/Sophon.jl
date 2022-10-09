@@ -83,12 +83,12 @@ function sample(pde::NeuralPDE.PDESystem, sampler::QuasiRandomSampler{P, B, Sobo
     return [pde_datasets; boundary_datasets]
 end
 
-function sample(d::GenericBall{Vector{T}}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+function sample(d::DomainSets.GenericBall{Vector{T}}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
     (; center, radius) = d
     return sample(Ball(radius, StaticArraysCore.SVector(center...)), points, alg)
 end
 
-function sample(d::GenericBall{StaticArraysCore.SVector{2, T}}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+function sample(d::DomainSets.GenericBall{StaticArraysCore.SVector{2, T}}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
     (; center, radius) = d
     xys = sample(points, [-1,-1], [1,1], alg)
     data = [ifelse(abs(xy[1])≥abs(xy[2]),  [xy[1]*cos(π/4*xy[2]/xy[1]), xy[1]*sin(π/4*xy[2]/xy[1])], [xy[2]*sin(π/4*xy[1]/xy[2]), xy[2]*cos(π/4*xy[1]/xy[2])]) for xy in eachcol(xys)]
@@ -97,19 +97,19 @@ function sample(d::GenericBall{StaticArraysCore.SVector{2, T}}, points::Int, alg
     return data
 end
 
-function sample(d::GenericSphere{Vector{T}, T}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+function sample(d::DomainSets.GenericSphere{Vector{T}, T}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
     (; center, radius) = d
     return sample(Sphere(radius, StaticArraysCore.SVector(center...)), points, alg)
 end
 
-function sample(d::GenericSphere{StaticArraysCore.SVector{2, T}, T}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+function sample(d::DomainSets.GenericSphere{StaticArraysCore.SVector{2, T}, T}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
     (; center, radius) = d
     θ = sample(points, [0.0], [2π], alg)
     data = [center...;;] .+ radius .* [cos.(θ); sin.(θ)]
     return data
 end
 
-function sample(d::GenericSphere{StaticArraysCore.SVector{3, T}, T}, points::Int,  alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+function sample(d::DomainSets.GenericSphere{StaticArraysCore.SVector{3, T}, T}, points::Int,  alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
     (; center, radius) = d
     r = sample(points, [-1,-1], [1,1], alg)
     r = r[:, [x[1]^2 + x[2]^2 <= 1 for x in eachcol(r)]]
