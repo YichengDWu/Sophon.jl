@@ -88,12 +88,12 @@ function sample(d::DomainSets.GenericBall{Vector{T}}, points::Int, alg::QuasiMon
     return sample(Ball(radius, StaticArraysCore.SVector(center...)), points, alg)
 end
 
-function sample(d::DomainSets.GenericBall{StaticArraysCore.SVector{2, T}}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
+function sample(d::DomainSets.Disk, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm)
     (; center, radius) = d
-    xys = sample(points, [-1,-1], [1,1], alg)
+    xys = sample(points, [-1.0,-1.0], [1.0,1.0], alg)
     data = [ifelse(abs(xy[1])≥abs(xy[2]),  [xy[1]*cos(π/4*xy[2]/xy[1]), xy[1]*sin(π/4*xy[2]/xy[1])], [xy[2]*sin(π/4*xy[1]/xy[2]), xy[2]*cos(π/4*xy[1]/xy[2])]) for xy in eachcol(xys)]
     data = reduce(hcat, data)
-    data = [center...;;] .+ radius .* [cos.(θ); sin.(θ)]
+    data = center .+ radius .* data
     return data
 end
 
@@ -105,7 +105,7 @@ end
 function sample(d::DomainSets.GenericSphere{StaticArraysCore.SVector{2, T}, T}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
     (; center, radius) = d
     θ = sample(points, [0.0], [2π], alg)
-    data = [center...;;] .+ radius .* [cos.(θ); sin.(θ)]
+    data = center .+ radius .* [cos.(θ); sin.(θ)]
     return data
 end
 
@@ -119,14 +119,14 @@ function sample(d::DomainSets.GenericSphere{StaticArraysCore.SVector{3, T}, T}, 
     y = @. 2*x2*sqrt(1-x1^2-x2^2)
     z = @. 1 - 2*(x1^2 + x2^2)
     data = [x; y; z]
-    data = [center...;;] .+ radius .* data
+    data = center .+ radius .* data
     return data
 end
 
 function sample(d::SetdiffDomain{S, <:Tuple{<:Rectangle, F}}, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {S, F}
     rec = d.domains[1]
     data = sample(rec, points, alg)
-    idx = [x ∈ d for d in eachcol(data)]
+    idx = [x ∈ d for x in eachcol(data)]
     return data[:, idx]
 end
 
@@ -159,3 +159,5 @@ end
     s = Sobol.skip(s, n)
     return s
 end
+
+logrange(x1, x2, n) = exp10.(range(log10(x1), log10(x2), length=n))
