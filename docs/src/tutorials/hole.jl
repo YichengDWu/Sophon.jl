@@ -49,10 +49,10 @@ T_analytical(x, y) = abs2(sqrt(abs2(x) + abs2(y)) - r)
 T_true = [[x,y] ∈ Disk(r) ? NaN : T_analytical(x, y) for x in xs, y in ys]
 T_pred = [[x,y] ∈ Disk(r) ? NaN : pinn.phi([x, y], res.u)[1] for x in xs, y in ys]
 
-fig, ax, hm = heatmap(x, y, T_pred)
-fig, ax, hm = heatmap(x, y, T_true)
+fig, ax, hm = heatmap(xs, ys, T_pred)
+fig, ax, hm = heatmap(xs, ys, T_true)
 
-fig, ax, hm = heatmap(x, y, abs.(T_pred .- T_true))
+fig, ax, hm = heatmap(xs, ys, abs.(T_pred .- T_true))
 Colorbar(fig[:, end+1], hm)
 
 fig
