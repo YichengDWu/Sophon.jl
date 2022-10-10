@@ -159,3 +159,5 @@ end
     s = Sobol.skip(s, n)
     return s
 end
+
+logrange(x1, x2, n) = exp10.(range(log10(x1), log10(x2), length=n))
