@@ -7,8 +7,8 @@ using QuasiMonteCarlo
 @variables x(..), y(..), z(..)
 
 σ = 10.0
-β = 28.0
-ρ = 8/3
+ρ = 28.0
+β = 8/3
 
 Dt = Differential(t)
 eqs = [Dt(x(t)) ~ σ*(y(t) - x(t)),
