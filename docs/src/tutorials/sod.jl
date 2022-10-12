@@ -38,7 +38,7 @@ pinn = PINN(u=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
 sampler = QuasiRandomSampler(1000, 100)
 
 function pde_weights(phi, x, θ)
-    ux = ChainRulesCore.@ignore_derivatives Sophon.numeric_derivative(phi.u, x, θ.u, 1, 1)
+    ux = ChainRulesCore.@ignore_derivatives Sophon.finitediff(phi.u, x, θ.u, 1, 1)
     return inv.(0.2 .* (abs.(ux) .- ux) .+ 1)
 end
 

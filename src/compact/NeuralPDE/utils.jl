@@ -458,43 +458,46 @@ function get_ε(dim, der_num, fdtype, order)
     return ε
 end
 
-function numeric_derivative(phi, x, εs, order, θ)
+forwarddiff(phi, t, εs, order, θ) = ForwardDiff.jacobian(sum ∘ Base.Fix2(phi, θ), t)
+
+function finitediff(phi, x, εs, order, θ)
     ε = εs[order]
     _epsilon = inv(first(ε[ε .!= zero(ε)]))
     ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(x), ε)
 
     if any(x -> x != εs[1], εs)
-        return (numeric_derivative(phi, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ) .-
-                numeric_derivative(phi, x .- ε, @view(εs[1:(end - 1)]), order - 1, θ)) .*
+        return (finitediff(phi, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ) .-
+                finitediff(phi, x .- ε, @view(εs[1:(end - 1)]), order - 1, θ)) .*
                _epsilon ./ 2
     else
-        numeric_derivative(phi, x, ε, Val(order), θ, _epsilon)
+        finitediff(phi, x, ε, Val(order), θ, _epsilon)
     end
 end
 
-function numeric_derivative(phi, x, ε::AbstractVector{T}, ::Val{1}, θ,
+
+function finitediff(phi, x, ε::AbstractVector{T}, ::Val{1}, θ,
                             h::T) where {T <: AbstractFloat}
     return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* h ./ 2
 end
 
-function numeric_derivative(phi, x, ε::AbstractVector{T}, ::Val{2}, θ,
+function finitediff(phi, x, ε::AbstractVector{T}, ::Val{2}, θ,
                             h::T) where {T <: AbstractFloat}
     return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* h^2
 end
 
-function numeric_derivative(phi, x, ε::AbstractVector{T}, ::Val{3}, θ,
+function finitediff(phi, x, ε::AbstractVector{T}, ::Val{3}, θ,
                             h::T) where {T <: AbstractFloat}
     return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ) .+ 2 .* phi(x .- ε, θ) -
             phi(x .- 2 .* ε, θ)) .* h^3 ./ 2
 end
 
-function numeric_derivative(phi, x, ε::AbstractVector{T}, ::Val{4}, θ,
+function finitediff(phi, x, ε::AbstractVector{T}, ::Val{4}, θ,
                             h::T) where {T <: AbstractFloat}
     return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
             4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* h^4
 end
 
-function numeric_derivative(phi, x, θ, dim::Int, order::Int)
+function finitediff(phi, x, θ, dim::Int, order::Int)
     ε = ChainRulesCore.@ignore_derivatives get_ε(size(x, 1), dim, eltype(θ), order)
     _type = parameterless_type(ComponentArrays.getdata(θ))
     _epsilon = inv(first(ε[ε .!= zero(ε)]))
