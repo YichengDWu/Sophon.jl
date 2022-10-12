@@ -458,6 +458,9 @@ function get_ε(dim, der_num, fdtype, order)
     return ε
 end
 
+"""
+This function is only used for the first order derivative.
+"""
 forwarddiff(phi, t, εs, order, θ) = ForwardDiff.jacobian(sum ∘ Base.Fix2(phi, θ), t)
 
 function finitediff(phi, x, εs, order, θ)
