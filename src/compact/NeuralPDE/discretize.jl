@@ -113,12 +113,13 @@ Convert the PDESystem into an `OptimizationProblem`. You can have access to each
 function discretize(pde_system, pinn::PINN, sampler::PINNSampler,
                     strategy::AbstractTrainingAlg;
                     additional_loss=Sophon.null_additional_loss,
-                    derivative=finitediff)
+                    derivative=finitediff,
+                    adtype = Optimization.AutoZygote())
     datasets = sample(pde_system, sampler, strategy)
     datasets = pinn.init_params isa AbstractGPUComponentVector ? map(Base.Fix1(adapt, CuArray), datasets) : datasets
     loss_function = get_datafree_pinn_loss_function(pde_system, pinn, strategy;
                                                     additional_loss=additional_loss,
                                                     derivative=derivative)
-    f = OptimizationFunction(loss_function, Optimization.AutoZygote())
+    f = OptimizationFunction(loss_function, adtype)
     return Optimization.OptimizationProblem(f, pinn.init_params, datasets)
 end
