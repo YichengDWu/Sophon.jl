@@ -461,7 +461,7 @@ end
 """
 This function is only used for the first order derivative.
 """
-forwarddiff(phi, t, εs, order, θ) = ForwardDiff.jacobian(sum ∘ Base.Fix2(phi, θ), t)
+forwarddiff(phi, t, εs, order, θ) = ForwardDiff.gradient(sum ∘ Base.Fix2(phi, θ), t)
 
 function finitediff(phi, x, εs, order, θ)
     ε = εs[order]
