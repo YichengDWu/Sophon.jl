@@ -115,13 +115,6 @@ function sample(d::DomainSets.UnitCircle, points::Int, alg::QuasiMonteCarlo.Samp
     return data
 end
 
-function sample(d::DomainSets. points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
-    (; center, radius) = d
-    θ = sample(points, [0.0], [2π], alg)
-    data = center .+ radius .* [cos.(θ); sin.(θ)]
-    return data
-end
-
 
 function sample(d::DomainSets.GenericSphere{StaticArraysCore.SVector{3, T}, T}, points::Int,  alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
     (; center, radius) = d
