@@ -109,6 +109,13 @@ function sample(d::DomainSets.GenericSphere{StaticArraysCore.SVector{2, T}, T}, 
     return data
 end
 
+function sample(d::DomainSets.UnitCircle, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm)
+    θ = sample(points, [0.0], [2π], alg)
+    data = [cos.(θ); sin.(θ)]
+    return data
+end
+
+
 function sample(d::DomainSets.GenericSphere{StaticArraysCore.SVector{3, T}, T}, points::Int,  alg::QuasiMonteCarlo.SamplingAlgorithm) where {T}
     (; center, radius) = d
     r = sample(points, [-1,-1], [1,1], alg)
@@ -130,6 +137,11 @@ function sample(d::SetdiffDomain{S, <:Tuple{<:Rectangle, F}}, points::Int, alg::
     return data[:, idx]
 end
 
+function sample(d::UnionDomain, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {S, F}
+    data = mapreduce(x -> sample(x, points, alg), hcat, d.domains)
+    return data
+end
+
 function sample(d::Rectangle, points::Int, sampling_alg::QuasiMonteCarlo.SamplingAlgorithm)
     bounds = get_bounds(d)
     return sample(points, bounds[1], bounds[2], sampling_alg)
@@ -147,6 +159,7 @@ end
 function sample(points::Int, lb::AbstractVector, ub::AbstractVector, ::SobolSample)
     return sobolsample(points, lb, ub)
 end
+
 
 function sobolsample(n::Int, lb, ub)
     s = cached_sobolseq(n, lb, ub)
