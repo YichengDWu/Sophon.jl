@@ -362,6 +362,10 @@ each row and the weight matrix.
     - `scale`: scaling factors. Shape: `(out_dims, 1)`
     - `weight`: Weight Matrix of size `(out_dims, in_dims)`.
     - `bias`: Bias of size `(out_dims, 1)`.
+
+## References
+
+[wang2022random](@cite)
 """
 struct FactorizedDense{F1, F2, F3} <: AbstractExplicitLayer
     activation::F1
