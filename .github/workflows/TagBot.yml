@@ -7,6 +7,7 @@ on:
 permissions:
   contents: write
   actions: write
+  deployments: write
 jobs:
   TagBot:
     if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
