@@ -45,7 +45,7 @@ include("layers/operators.jl")
 export Scheduler
 export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature,
-       ConstantFunction, ScalarLayer, SplitFunction
+       ConstantFunction, ScalarLayer, SplitFunction, FactorizedDense
 export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON
 export DeepONet
 export PINN, symbolic_discretize, discretize, QuasiRandomSampler, NonAdaptiveTraining,
