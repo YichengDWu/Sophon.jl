@@ -343,25 +343,25 @@ each row and the weight matrix.
 
 ## Keyword Arguments
 
-    - `mean`: mean of the scaling factors
-    - `std`: standard deviation of the scaling factors
-    - `init_weight`: weight initialization function
-    - `init_bias`: bias initialization function
+  - `mean`: mean of the scaling factors
+  - `std`: standard deviation of the scaling factors
+  - `init_weight`: weight initialization function
+  - `init_bias`: bias initialization function
 
 ## Input
 
-      - `x`: input vector or matrix
+  - `x`: input vector or matrix
 
 ## Returns
 
-      - `y = activation.(scale * weight * x+ bias)`.
-      - Empty `NamedTuple()`.
+  - `y = activation.(scale * weight * x+ bias)`.
+  - Empty `NamedTuple()`.
 
 ## Parameters
 
-    - `scale`: scaling factors. Shape: `(out_dims, 1)`
-    - `weight`: Weight Matrix of size `(out_dims, in_dims)`.
-    - `bias`: Bias of size `(out_dims, 1)`.
+  - `scale`: scaling factors. Shape: `(out_dims, 1)`
+  - `weight`: Weight Matrix of size `(out_dims, in_dims)`.
+  - `bias`: Bias of size `(out_dims, 1)`.
 
 ## References
 
