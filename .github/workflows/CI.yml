@@ -45,6 +45,7 @@ jobs:
       deployments: write
       pages: write
       pull-requests: write
+      statuses: write
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
