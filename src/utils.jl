@@ -76,8 +76,8 @@ ChainRulesCore.@non_differentiable init_uniform(::Any...)
 Return an `Array{Float32}` of the given `size` containing random numbers drawn from the
 standard normal distribution.
 """
-@inline function init_normal(rng::AbstractRNG, dims::Integer...; std::Real=1)
-    return randn(rng, Float32, dims...) .* std
+@inline function init_normal(rng::AbstractRNG, dims::Integer...; std::Real=1, mean::Real=0)
+    return randn(rng, Float32, dims...) .* std .+ mean
 end
 
 @inline function init_normal(std::Real)

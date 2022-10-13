@@ -326,3 +326,108 @@ end
 function (sf::SplitFunction)(x::AbstractMatrix, ps, st::NamedTuple)
     return map(i -> view(x, i, :), sf.indices), st
 end
+
+"""
+    FactorizedDense(in_dims::Int, out_dims::Int, activation=identity;
+                         mean::AbstractFloat=1.0f0, std::AbstractFloat=0.1f0,
+                         init_weight=kaiming_uniform(activation), init_bias=zeros32)
+
+Create a `Dense` layer where the weight is factorized into twa parts, the scaling factors for
+each row and the weight matrix.
+
+## Arguments
+
+  - `in_dims`: number of input dimensions
+  - `out_dims`: number of output dimensions
+  - `activation`: activation function
+
+## Keyword Arguments
+
+    - `mean`: mean of the scaling factors
+    - `std`: standard deviation of the scaling factors
+    - `init_weight`: weight initialization function
+    - `init_bias`: bias initialization function
+
+## Input
+
+      - `x`: input vector or matrix
+
+## Returns
+
+      - `y = activation.(scale * weight * x+ bias)`.
+      - Empty `NamedTuple()`.
+
+## Parameters
+
+    - `scale`: scaling factors. Shape: `(out_dims, 1)`
+    - `weight`: Weight Matrix of size `(out_dims, in_dims)`.
+    - `bias`: Bias of size `(out_dims, 1)`.
+
+## References
+
+[wang2022random](@cite)
+"""
+struct FactorizedDense{F1, F2, F3} <: AbstractExplicitLayer
+    activation::F1
+    in_dims::Int
+    out_dims::Int
+    mean::AbstractFloat
+    std::AbstractFloat
+    init_weight::F2
+    init_bias::F3
+end
+
+function FactorizedDense(in_dims::Int, out_dims::Int, activation=identity;
+                         mean::AbstractFloat=1.0f0, std::AbstractFloat=0.1f0,
+                         init_weight=kaiming_uniform(activation), init_bias=zeros32)
+    activation = NNlib.fast_act(activation)
+    return FactorizedDense{typeof(activation), typeof(init_weight), typeof(init_bias)}(activation,
+                                                                                       in_dims,
+                                                                                       out_dims,
+                                                                                       mean,
+                                                                                       std,
+                                                                                       init_weight,
+                                                                                       init_bias)
+end
+
+function FactorizedDense(mapping::Pair{<:Int, <:Int}, activation=identity;
+                         mean::AbstractFloat=1.0f0, std::AbstractFloat=0.1f0,
+                         init_weight=kaiming_uniform(activation), init_bias=zeros32)
+    return FactorizedDense(first(mapping), last(mapping), activation; mean=mean, std=std,
+                           init_weight=init_weight, init_bias=init_bias)
+end
+
+function initialparameters(rng::AbstractRNG, s::FactorizedDense)
+    weight = s.init_weight(rng, s.out_dims, s.in_dims)
+    scale = init_normal(rng, s.out_dims, 1; mean=s.mean, std=s.std)
+    scale = exp.(scale)
+    weight = weight ./ scale
+    bias = s.init_bias(rng, s.out_dims, 1)
+    return (scale=scale, weight=weight, bias=bias)
+end
+
+@inline function (fd::FactorizedDense)(x::AbstractVector, ps, st::NamedTuple)
+    y = (ps.scale .* ps.weight) * x .+ vec(ps.bias)
+    return fd.activation.(y), st
+end
+
+@inline function (fd::FactorizedDense)(x::AbstractMatrix, ps, st::NamedTuple)
+    y = (ps.scale .* ps.weight) * x .+ ps.bias
+    return fd.activation.(y), st
+end
+
+@inline function (fd::FactorizedDense{typeof(identity)})(x::AbstractVector, ps,
+                                                         st::NamedTuple)
+    y = (ps.scale .* ps.weight) * x .+ vec(ps.bias)
+    return y, st
+end
+
+@inline function (fd::FactorizedDense{typeof(identity)})(x::AbstractMatrix, ps,
+                                                         st::NamedTuple)
+    y = (ps.scale .* ps.weight) * x .+ ps.bias
+    return y, st
+end
+
+function Base.show(io::IO, fd::FactorizedDense)
+    return print(io, "FactorizedDense($(fd.in_dims) => $(fd.out_dims))")
+end

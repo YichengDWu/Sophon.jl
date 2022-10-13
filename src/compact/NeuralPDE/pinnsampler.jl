@@ -137,7 +137,7 @@ function sample(d::SetdiffDomain{S, <:Tuple{<:Rectangle, F}}, points::Int, alg::
     return data[:, idx]
 end
 
-function sample(d::UnionDomain, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm) where {S, F}
+function sample(d::UnionDomain, points::Int, alg::QuasiMonteCarlo.SamplingAlgorithm)
     data = mapreduce(x -> sample(x, points, alg), hcat, d.domains)
     return data
 end
@@ -159,7 +159,6 @@ end
 function sample(points::Int, lb::AbstractVector, ub::AbstractVector, ::SobolSample)
     return sobolsample(points, lb, ub)
 end
-
 
 function sobolsample(n::Int, lb, ub)
     s = cached_sobolseq(n, lb, ub)
