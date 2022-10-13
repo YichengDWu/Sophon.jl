@@ -24,7 +24,7 @@ bcs = [u(0) ~ 0, u(1) ~ 0]
 ```
 
 ```@example poisson
-chain = Siren(1, 32, 32, 32, 32, 1)
+chain = Siren(1, 16, 32, 16, 1)
 pinn = PINN(chain)
 sampler = QuasiRandomSampler(200, 1) 
 strategy = NonAdaptiveTraining(1 , 50)
