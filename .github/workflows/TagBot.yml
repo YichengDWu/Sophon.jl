@@ -10,6 +10,10 @@ permissions:
   deployments: write
   pages: write
   pull-requests: write
+  checks: write
+  packages: write
+  statuses: write
+  
 jobs:
   TagBot:
     if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
