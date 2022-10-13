@@ -9,6 +9,7 @@ permissions:
   actions: write
   deployments: write
   pages: write
+  pull-requests: write
 jobs:
   TagBot:
     if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
