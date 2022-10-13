@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
-  Metadata: write
+  actions: write
 jobs:
   TagBot:
     if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
