@@ -41,6 +41,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write
+      deployments: write
+      pages: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
