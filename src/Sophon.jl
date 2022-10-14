@@ -49,6 +49,6 @@ export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFour
 export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON
 export DeepONet
 export PINN, symbolic_discretize, discretize, QuasiRandomSampler, NonAdaptiveTraining,
-       AdaptiveTraining
+       AdaptiveTraining, ChainState
 
 end
