@@ -31,7 +31,7 @@ domains = [t ∈ Interval(t_min, t_max), x ∈ Interval(x_min, x_max)]
 
 @named pde_system = PDESystem(eqs, bcs, domains, [t, x], [u(t, x), ρ(t, x), p(t, x)])
 
-pinn = PINN(u=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
+pinn = PINN(; u=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
             ρ=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
             p=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16)) |> gpu
 
