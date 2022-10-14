@@ -4,6 +4,12 @@
 A container for a neural network, its states and its initial parameters. Call `gpu` and `cpu` to move the neural network to the GPU and CPU respectively.
 The default element type of the neural network is `Float64`.
 
+## Fields
+
+  - `phi`: [`ChainState`](@ref) if there is only one neural network, or an named tuple of [`ChainState`](@ref)s if there are multiple neural networks.
+    The names are the same as the dependent variables in the PDE.
+  - `init_params`: The initial parameters of the neural network.
+
 ## Arguments
 
   - `chain`: `AbstractExplicitLayer` or a named tuple of `AbstractExplicitLayer`s.
@@ -35,11 +41,22 @@ end
 """
     ChainState(model, rng::AbstractRNG=Random.default_rng())
 
-Wraps a model in a stateful container.
+It this similar to `Lux.Chain` but wraps it in a stateful container.
+
+## Fields
+
+  - `model`: The neural network.
+  - `states`: The states of the neural network.
+
+## Input
+
+  - `x`: The input to the neural network.
+  - `ps`: The parameters of the neural network.
 
 ## Arguments
 
     - `model`: `AbstractExplicitLayer`, or a named tuple of them, which will be treated as a `Chain`.
+    - `rng`: `AbstractRNG` to use for initialising the neural network.
 """
 mutable struct ChainState{L, S}
     model::L
