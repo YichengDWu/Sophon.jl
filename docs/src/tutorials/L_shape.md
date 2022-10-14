@@ -33,7 +33,7 @@ pde_system = Sophon.PDESystem(eqs, bcs, [x,y], [u(x,y)])
 ```@example L
 chain = FullyConnected((2,16,16,16,1), tanh)
 pinn = PINN(chain)
-sampler = QuasiRandomSampler(500, 30)
+sampler = QuasiRandomSampler(300, 30)
 strategy = NonAdaptiveTraining()
 
 prob = Sophon.discretize(pde_system, pinn, sampler, strategy)
