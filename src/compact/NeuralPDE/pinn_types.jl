@@ -13,7 +13,14 @@ The default element type of the neural network is `Float64`.
 ## Arguments
 
   - `chain`: `AbstractExplicitLayer` or a named tuple of `AbstractExplicitLayer`s.
-  - `rng`: `AbstractRNG` to use for initialising the neural network.
+  - `rng`: `AbstractRNG` to use for initialising the neural network. If yout want to set the seed, write
+
+```julia
+using Random
+rng = Random.default_rng()
+Random.seed!(rng, 0)
+```
+and pass `rng` to `PINN`.
 """
 struct PINN{PHI, P}
     phi::PHI
