@@ -1,5 +1,6 @@
 """
     PINN(chain, rng::AbstractRNG=Random.default_rng())
+    PINN(rng::AbstractRNG=Random.default_rng(); kwargs...)
 
 A container for a neural network, its states and its initial parameters. Call `gpu` and `cpu` to move the neural network to the GPU and CPU respectively.
 The default element type of the neural network is `Float64`.
