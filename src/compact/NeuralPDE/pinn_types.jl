@@ -21,7 +21,20 @@ using Random
 rng = Random.default_rng()
 Random.seed!(rng, 0)
 ```
-and pass `rng` to `PINN`.
+and pass `rng` to `PINN` as 
+```julia
+using Sophon
+
+chain = FullyConnected((1,6,6,1), sin);
+
+# sinple dependent varibale
+pinn = PINN(chain, rng);
+
+# multiple dependent varibales
+pinn = PINN(rng;
+            a = chain,
+            b = chain);
+```
 """
 struct PINN{PHI, P}
     phi::PHI
