@@ -165,9 +165,9 @@ C=1
 eq  = (Dtt(u(t,x)) ~ C^2*Dxx(u(t,x)), (0.0..1.0) × (0.0..1.0))
 
 bcs = [(u(t,x) ~ 0.0, (0.0..1.0) × (0.0..0.0)),
-       (u(t,x) ~ 0.0, (0.0..1.0) × (1.0..1.0)),
-       (u(t,x) ~ x*(1. - x), (0.0..0.0) × (0.0..1.0)),
-       (Dt(u(t,x)) ~ 0.0, (0.0..0.0) × (0.0..1.0))]
+(u(t,x) ~ 0.0, (0.0..1.0) × (1.0..1.0)),
+(u(t,x) ~ x*(1. - x), (0.0..0.0) × (0.0..1.0)),
+(Dt(u(t,x)) ~ 0.0, (0.0..0.0) × (0.0..1.0))]
 
 pde_system = Sophon.PDESystem(eq,bcs,[t,x],[u(t,x)])
 """
@@ -187,11 +187,11 @@ function Base.show(io::IO, ::MIME"text/plain", sys::PDESystem)
     println(io, summary(sys))
     println(io, "Equations: ")
     map(sys.eqs) do eq
-        println(io, "  ", eq[1], " on ", eq[2])
+        return println(io, "  ", eq[1], " on ", eq[2])
     end
     println(io, "Boundary Conditions: ")
     map(sys.bcs) do bc
-        println(io, "  ", bc[1], " on ", bc[2])
+        return println(io, "  ", bc[1], " on ", bc[2])
     end
     println(io, "Dependent Variables: ", sys.dvs)
     println(io, "Independent Variables: ", sys.ivs)

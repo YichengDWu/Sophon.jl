@@ -9,8 +9,7 @@ bib = CitationBibliography(joinpath(@__DIR__, "bibliography.bib"); sorting=:nyt)
 
 DocMeta.setdocmeta!(Sophon, :DocTestSetup, :(using Sophon); recursive=true)
 
-makedocs(bib; modules=[Sophon],
-         sitename="Sophon.jl",
+makedocs(bib; modules=[Sophon], sitename="Sophon.jl",
          format=Documenter.HTML(; prettyurls=get(ENV, "CI", "false") == "true",
                                 canonical="https://YichengDWu.github.io/Sophon.jl",
                                 edit_link="main", assets=String[indigo]),
