@@ -1,8 +1,9 @@
 """
     PINN(chain, rng::AbstractRNG=Random.default_rng())
+    PINN(rng::AbstractRNG=Random.default_rng(); kwargs...)
 
 A container for a neural network, its states and its initial parameters. Call `gpu` and `cpu` to move the neural network to the GPU and CPU respectively.
-The default element type of the neural network is `Float64`.
+The default element type of the parameters is `Float64`.
 
 ## Fields
 
@@ -20,8 +21,20 @@ using Random
 rng = Random.default_rng()
 Random.seed!(rng, 0)
 ```
+  and pass `rng` to `PINN` as 
+```julia
+using Sophon
 
-and pass `rng` to `PINN`.
+chain = FullyConnected((1,6,6,1), sin);
+
+# sinple dependent varibale
+pinn = PINN(chain, rng);
+
+# multiple dependent varibales
+pinn = PINN(rng;
+            a = chain,
+            b = chain);
+```
 """
 struct PINN{PHI, P}
     phi::PHI
@@ -63,8 +76,8 @@ It this similar to `Lux.Chain` but wraps it in a stateful container.
 
 ## Arguments
 
-    - `model`: `AbstractExplicitLayer`, or a named tuple of them, which will be treated as a `Chain`.
-    - `rng`: `AbstractRNG` to use for initialising the neural network.
+  - `model`: `AbstractExplicitLayer`, or a named tuple of them, which will be treated as a `Chain`.
+  - `rng`: `AbstractRNG` to use for initialising the neural network.
 """
 mutable struct ChainState{L, S}
     model::L

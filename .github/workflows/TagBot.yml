@@ -6,13 +6,6 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
-  actions: write
-  deployments: write
-  pages: write
-  pull-requests: write
-  checks: write
-  packages: write
-  statuses: write
 jobs:
   TagBot:
     if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
@@ -22,4 +15,3 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ssh: ${{ secrets.DOCUMENTER_KEY }}
-          ssh_password: ${{ secrets.SSH_PASSWORD }}
