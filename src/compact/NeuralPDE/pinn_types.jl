@@ -21,7 +21,7 @@ using Random
 rng = Random.default_rng()
 Random.seed!(rng, 0)
 ```
-and pass `rng` to `PINN` as 
+  and pass `rng` to `PINN` as 
 ```julia
 using Sophon
 
