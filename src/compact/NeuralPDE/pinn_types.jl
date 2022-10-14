@@ -76,8 +76,8 @@ It this similar to `Lux.Chain` but wraps it in a stateful container.
 
 ## Arguments
 
-    - `model`: `AbstractExplicitLayer`, or a named tuple of them, which will be treated as a `Chain`.
-    - `rng`: `AbstractRNG` to use for initialising the neural network.
+  - `model`: `AbstractExplicitLayer`, or a named tuple of them, which will be treated as a `Chain`.
+  - `rng`: `AbstractRNG` to use for initialising the neural network.
 """
 mutable struct ChainState{L, S}
     model::L
