@@ -116,7 +116,7 @@ rng = Random.default_rng()
                 @test all(ps.scale .> 0)
                 @test size(ps.scale) == (4, 1)
                 @test size(ps.weight) == (4, 3)
-                @test size(ps.bias) == (4,1)
+                @test size(ps.bias) == (4, 1)
 
                 fd2 = FactorizedDense(3, 5, tanh)
                 ps2, st2 = Lux.setup(rng, fd2)
@@ -125,7 +125,7 @@ rng = Random.default_rng()
                 @test all(ps.scale .> 0)
                 @test size(ps2.scale) == (5, 1)
                 @test size(ps2.weight) == (5, 3)
-                @test size(ps2.bias) == (5,1)
+                @test size(ps2.bias) == (5, 1)
             end
         end
         @testset "Nets" begin

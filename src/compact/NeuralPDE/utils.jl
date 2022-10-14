@@ -1,4 +1,5 @@
-function get_bounds(domains::Vector{Symbolics.VarDomainPairing}, eqs, bcs, eltypeθ, dict_indvars, dict_depvars)
+function get_bounds(domains::Vector{Symbolics.VarDomainPairing}, eqs, bcs, eltypeθ,
+                    dict_indvars, dict_depvars)
     dict_span = Dict([Symbol(d.variables) => [infimum(d.domain), supremum(d.domain)]
                       for d in domains])
     pde_args = NeuralPDE.get_argument(eqs, dict_indvars, dict_depvars)
@@ -23,10 +24,10 @@ end
 
 function get_bounds(pde::Sophon.PDESystem)
     pde_bounds = map(pde.eqs) do eq
-        get_bounds(eq[2])
+        return get_bounds(eq[2])
     end
     bcs_bounds = map(pde.bcs) do bc
-        get_bounds(bc[2])
+        return get_bounds(bc[2])
     end
     return pde_bounds, bcs_bounds
 end
@@ -176,7 +177,8 @@ end
 function build_loss_function(pinnrep::NamedTuple, eq, bc_indvars, i)
     bc_indvars = bc_indvars === nothing ? pinnrep.indvars : bc_indvars
     vars, ex = build_symbolic_loss_function(pinnrep, eq; bc_indvars=bc_indvars)
-    expr = Expr(:function, Expr(:call, Symbol(:residual_function_, i), vars.args[1], vars.args[2]), ex)
+    expr = Expr(:function,
+                Expr(:call, Symbol(:residual_function_, i), vars.args[1], vars.args[2]), ex)
     return eval(expr)
 end
 
@@ -226,8 +228,10 @@ function get_numeric_integral(pinnrep::NamedTuple)
 end
 
 function parse_equation(pinnrep::NamedTuple, eq)
-    eq_lhs = isequal(NeuralPDE.expand_derivatives(eq.lhs), 0) ? eq.lhs : NeuralPDE.expand_derivatives(eq.lhs)
-    eq_rhs = isequal(NeuralPDE.expand_derivatives(eq.rhs), 0) ? eq.rhs : NeuralPDE.expand_derivatives(eq.rhs)
+    eq_lhs = isequal(NeuralPDE.expand_derivatives(eq.lhs), 0) ? eq.lhs :
+             NeuralPDE.expand_derivatives(eq.lhs)
+    eq_rhs = isequal(NeuralPDE.expand_derivatives(eq.rhs), 0) ? eq.rhs :
+             NeuralPDE.expand_derivatives(eq.rhs)
     left_expr = NeuralPDE.toexpr(eq_lhs)
     right_expr = NeuralPDE.toexpr(eq_rhs)
 
@@ -477,25 +481,24 @@ function finitediff(phi, x, εs, order, θ)
     end
 end
 
-
 function finitediff(phi, x, ε::AbstractVector{T}, ::Val{1}, θ,
-                            h::T) where {T <: AbstractFloat}
+                    h::T) where {T <: AbstractFloat}
     return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* h ./ 2
 end
 
 function finitediff(phi, x, ε::AbstractVector{T}, ::Val{2}, θ,
-                            h::T) where {T <: AbstractFloat}
+                    h::T) where {T <: AbstractFloat}
     return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* h^2
 end
 
 function finitediff(phi, x, ε::AbstractVector{T}, ::Val{3}, θ,
-                            h::T) where {T <: AbstractFloat}
+                    h::T) where {T <: AbstractFloat}
     return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ) .+ 2 .* phi(x .- ε, θ) -
             phi(x .- 2 .* ε, θ)) .* h^3 ./ 2
 end
 
 function finitediff(phi, x, ε::AbstractVector{T}, ::Val{4}, θ,
-                            h::T) where {T <: AbstractFloat}
+                    h::T) where {T <: AbstractFloat}
     return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
             4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* h^4
 end
@@ -522,14 +525,14 @@ function finitediff(phi, x, θ, dim::Int, order::Int)
     end
 end
 
-function Base.getproperty(d::Symbolics.VarDomainPairing,var::Symbol)
+function Base.getproperty(d::Symbolics.VarDomainPairing, var::Symbol)
     if var == :variables
-        return getfield(d,:variables)
+        return getfield(d, :variables)
     elseif var == :domain
-        return getfield(d,:domain)
+        return getfield(d, :domain)
     else
-        idx = findfirst(v -> v.name===var, d.variables)
-        domain = getfield(d,:domain)
-        return Interval(infimum(domain)[idx],supremum(domain)[idx])
+        idx = findfirst(v -> v.name === var, d.variables)
+        domain = getfield(d, :domain)
+        return Interval(infimum(domain)[idx], supremum(domain)[idx])
     end
 end
