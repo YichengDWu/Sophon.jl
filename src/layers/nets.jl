@@ -86,7 +86,7 @@ x → [FourierFeature(x); x] → PINNAttention
 ## Arguments
 
   - `in_dims`: The input dimension.
-    
+
       + `out_dims`: The output dimension.
       + `activation`: The activation function.
       + `std`: See [`FourierFeature`](@ref).
@@ -353,6 +353,15 @@ end
     FourierFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int,
                      bandwidth::Real)
 
+Multiplicative filter network defined by
+```
+\begin{equation}
+\begin{aligned}
+z^{(1)} &=g\left(x ; \theta^{(1)}\right) \\
+z^{(i+1)} &=\left(W^{(i)} z^{(i)}+b^{(i)}\right) \circ sin\left(x ; \theta^{(i+1)}\right) \\
+f(x) &=W^{(k)} z^{(k)}+b^{(k)}
+\end{aligned}
+```
 ## Keyword Arguments
   - `bandwidth`: The maximum bandwidth of the network. The bandwidth is the sum of each filter's bandwidth.
 ## Parameters
