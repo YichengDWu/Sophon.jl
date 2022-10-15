@@ -75,7 +75,7 @@ save("uv.png", fig); nothing # hide
 
 ```@example Schrödinger
 axis = (xlabel="t", ylabel="x", title="ψ")
-fig, ax1, hm1 = CairoMakie.heatmap(ts, xs, ψ', axis=axis, colormap=:jet)
+fig, ax1, hm1 = heatmap(ts, xs, ψ', axis=axis, colormap=:jet)
 Colorbar(fig[:, end+1], hm1)
 display(fig)
 save("phi.png", fig); nothing # hide
