@@ -91,7 +91,7 @@ using StatsBase
 
 data = vec([[x, t] for x in xs, t in ts])
 wv = vec(ψ)
-new_data = wsample(data, wv, 2000)
+new_data = wsample(data, wv, 500)
 new_data = reduce(hcat, new_data)
 fig, ax = scatter(new_data[2,:], new_data[1,:])
 save("data.png", fig); nothing # hide
