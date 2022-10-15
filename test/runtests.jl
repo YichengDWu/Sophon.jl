@@ -254,6 +254,7 @@ rng = Random.default_rng()
                 @test_nowarn PINN(u=chain, p=chain)
                 @test_nowarn PINN(chain, rng)
                 @test_nowarn PINN(rng; u=chain, p=chain)
+                @test_nowarn Lux.initialparameters(rng, PINN)
             end
         end
     end
