@@ -407,6 +407,26 @@ function FourierFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_lay
                                                          output_layer)
 end
 
+
+function GaborFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int,
+                          bandwidth::Real)
+    names = ntuple(i -> Symbol("filter_$i"), num_layers)
+    scale = 2.0f0π * bandwidth / num_layers
+    layers = ntuple(i -> Dense(in_dims, hidden_dims, sin; init_bias=init_uniform(1.0f0π),
+                               init_weight=init_uniform(scale)), num_layers)
+    nt = NamedTuple{names}(layers)
+    filters = BranchLayer{typeof(nt)}(nt)
+
+    layers = ntuple(i -> Dense(hidden_dims, hidden_dims; init_weight=kaiming_uniform(sin)),
+                    num_layers - 1)
+    linear_layers = PairwiseFusion(.*, layers...)
+
+    output_layer = Dense(hidden_dims, out_dims; init_weight=kaiming_uniform(sin))
+    return MultiplicativeFilterNet{typeof(filters), typeof(linear_layers),
+                                   typeof(output_layer)}(filters, linear_layers,
+                                                         output_layer)
+end
+
 """
     BACON(in_dims::Int, out_dims::Int, N::Int, period::Real; hidden_dims::Int, num_layers::Int)
 
