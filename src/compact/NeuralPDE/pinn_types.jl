@@ -21,7 +21,7 @@ using Random
 rng = Random.default_rng()
 Random.seed!(rng, 0)
 ```
-  and pass `rng` to `PINN` as 
+  and pass `rng` to `PINN` as
 ```julia
 using Sophon
 
@@ -57,6 +57,12 @@ function PINN(chain::AbstractExplicitLayer, rng::AbstractRNG=Random.default_rng(
     init_params = ComponentArray(initialparameters(rng, phi)) .|> Float64
 
     return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
+end
+
+function initialparameters(rng::AbstractRNG, pinn::PINN)
+    init_params = initialparameters(rng, pinn.phi)
+    init_params = ComponentArray(init_params) .|> Float64
+    return init_params
 end
 
 """
