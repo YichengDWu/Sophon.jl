@@ -33,8 +33,7 @@ v → branch_net → flatten_layer → linear_layer → b
 ## Inputs
 
   - `(v, ξ)`: `v` is an array of shape ``(b_1,b_2,...b_d, m)``, which is a discretization of ``m`` functions
-    from ``R^d`` to ``R``. ``ξ`` is a matrix of shape ``(d', n)``, which is a discretiztion of the domain 
-    ``R^{d'}`` into `n` points.
+    from ``R^d`` to ``R``. ``ξ`` is a matrix of shape ``(d', n)``, representing ``n`` data points of the domain ``R^{d'}``.
 
 ## Returns
 
