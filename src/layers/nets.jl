@@ -407,13 +407,22 @@ function FourierFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_lay
                                                          output_layer)
 end
 
+function GaborFilterNet(in_dims::Int, out_dims::Int, bandwidth::Real, range::Real;
+                        hidden_dims::Int, num_layers::Int)
+    init_center = init_uniform(range)
+    return GaborFilterNet(in_dims, out_dims, bandwidth; hidden_dims=hidden_dims,
+                          num_layers=num_layers, init_center=init_center)
+end
 
-function GaborFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int,
-                          bandwidth::Real)
+function GaborFilterNet(in_dims::Int, out_dims::Int, bandwidth::Real; hidden_dims::Int,
+                        num_layers::Int, init_center::Function)
     names = ntuple(i -> Symbol("filter_$i"), num_layers)
     scale = 2.0f0π * bandwidth / num_layers
-    layers = ntuple(i -> Dense(in_dims, hidden_dims, sin; init_bias=init_uniform(1.0f0π),
-                               init_weight=init_uniform(scale)), num_layers)
+    α = 6f0 / num_layers
+    init_gamma = (rng, dims...) -> Float32.(rand(rng, Gamma(α, 1.0f0), dims...))
+    layers = ntuple(i -> GaborFilter(in_dims, hidden_dims; init_center=init_center,
+                                     init_gamma=init_gamma, init_bias=init_uniform(1.0f0π),
+                                     init_weight=init_uniform(scale)), num_layers)
     nt = NamedTuple{names}(layers)
     filters = BranchLayer{typeof(nt)}(nt)
 

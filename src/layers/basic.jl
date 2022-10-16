@@ -431,3 +431,50 @@ end
 function Base.show(io::IO, fd::FactorizedDense)
     return print(io, "FactorizedDense($(fd.in_dims) => $(fd.out_dims))")
 end
+
+struct GaborFilter{F1, F2, F3, F4} <: AbstractExplicitLayer
+    in_dims::Int
+    out_dims::Int
+    init_gamma::F1
+    init_center::F2
+    init_weight::F3
+    init_bias::F4
+end
+
+function GaborFilter(in_dims::Int, out_dims::Int; init_gamma, init_center, init_weight,
+                     init_bias)
+    return GaborFilter{typeof(init_gamma), typeof(init_center), typeof(init_weight),
+                       typeof(init_bias)}(in_dims, out_dims, init_gamma, init_center,
+                                          init_weight, init_bias)
+end
+
+function GaborFilter(mapping::Pair{<:Int, <:Int}; init_gamma, init_center, init_weight,
+                     init_bias)
+    return GaborFilter(first(mapping), last(mapping); init_gamma=init_gamma,
+                       init_center=init_center, init_weight=init_weight,
+                       init_bias=init_bias)
+end
+
+function initialparameters(rng::AbstractRNG, s::GaborFilter)
+    gamma = s.init_gamma(rng, s.out_dims, 1)
+    center = s.init_center(rng, s.out_dims, s.in_dims)
+    weight = s.init_weight(rng, s.out_dims, s.in_dims)
+    bias = s.init_bias(rng, s.out_dims, 1)
+    return (gamma, center=center, weight=weight, bias=bias)
+end
+
+function (m::GaborFilter)(x::AbstractVecOrMat, ps, st::NamedTuple)
+    x_norm = sum(abs2, x; dims=1)
+    center_norm = sum(abs2, ps.center; dims=2)
+    d = -2 * ps.center * x .+ x_norm .+ center_norm
+    z = -ps.gamma .* d
+    z_shit = z .- maximum(z; dims=1)
+    r = exp.(z_shit)
+    r = r ./ reshape(sum(r; dims=1), 1, :)
+    y = r .* sin.(ps.weight * x .+ ps.bias)
+    return y, st
+end
+
+function Base.show(io::IO, m::GaborFilter)
+    return print(io, "GaborFilter($(m.in_dims) => $(m.out_dims))")
+end

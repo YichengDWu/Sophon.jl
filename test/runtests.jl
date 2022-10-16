@@ -257,6 +257,14 @@ rng = Random.default_rng()
                 @test Lux.initialparameters(rng, PINN(chain)) isa Lux.ComponentArray
                 @test Lux.initialparameters(rng, PINN(u=chain, p=chain)) isa Lux.ComponentArray
             end
+            @testset "GaborFilterNet" begin
+                x = rand(Float32, 2, 5)
+                gfn = GaborFilterNet(2, 4, 10, 1; hidden_dims=10, num_layers=3)
+                ps, st = Lux.setup(rng, gfn)
+                y, st = gfn(x, ps, st)
+                @test size(y) == (4, 5)
+                @test eltype(y) == Float32
+            end
         end
     end
 

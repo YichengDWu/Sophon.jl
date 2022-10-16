@@ -22,6 +22,7 @@ using RuntimeGeneratedFunctions
 using DomainSets, StaticArraysCore
 import Symbolics
 using ForwardDiff
+using Distributions: Gamma
 
 RuntimeGeneratedFunctions.init(@__MODULE__)
 
@@ -45,8 +46,8 @@ include("layers/operators.jl")
 export Scheduler
 export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature,
-       ConstantFunction, ScalarLayer, SplitFunction, FactorizedDense
-export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON
+       ConstantFunction, ScalarLayer, SplitFunction, FactorizedDense, GaborFilter
+export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON, GaborFilterNet
 export DeepONet
 export PINN, symbolic_discretize, discretize, QuasiRandomSampler, NonAdaptiveTraining,
        AdaptiveTraining, ChainState
