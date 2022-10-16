@@ -481,23 +481,23 @@ function finitediff(phi, x, εs, order, θ)
     end
 end
 
-function finitediff(phi, x, ε::AbstractVector{T}, ::Val{1}, θ,
+@inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{1}, θ,
                     h::T) where {T <: AbstractFloat}
     return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* h ./ 2
 end
 
-function finitediff(phi, x, ε::AbstractVector{T}, ::Val{2}, θ,
+@inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{2}, θ,
                     h::T) where {T <: AbstractFloat}
     return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* h^2
 end
 
-function finitediff(phi, x, ε::AbstractVector{T}, ::Val{3}, θ,
+@inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{3}, θ,
                     h::T) where {T <: AbstractFloat}
     return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ) .+ 2 .* phi(x .- ε, θ) -
             phi(x .- 2 .* ε, θ)) .* h^3 ./ 2
 end
 
-function finitediff(phi, x, ε::AbstractVector{T}, ::Val{4}, θ,
+@inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{4}, θ,
                     h::T) where {T <: AbstractFloat}
     return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
             4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* h^4
