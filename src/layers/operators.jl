@@ -32,9 +32,9 @@ v → branch_net → flatten_layer → linear_layer → b
 
 ## Inputs
 
-  - `(v, ξ)`: `v` is an array of shape ``(b_1,b_2,...b_d, m)``, where ``d`` is the dimension
-    of the input function, and ``m`` is the number of input functions. ``ξ`` is a matrix of shape ``(d', n)``,
-    where ``d'`` is the dimension of the output function, and ``n`` is the number of "sensors".
+  - `(v, ξ)`: `v` is an array of shape ``(b_1,b_2,...b_d, m)``, which is a discretization of ``m`` functions
+    from ``R^d`` to ``R``. ``ξ`` is a matrix of shape ``(d', n)``, which is a discretiztion of the domain 
+    ``R^{d'}`` into `n` points.
 
 ## Returns
 
