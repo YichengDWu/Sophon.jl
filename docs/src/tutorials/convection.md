@@ -71,7 +71,7 @@ We can verify that our model is indeed, periodic.
 ```@example convection
 xs, ts= [infimum(d.domain):0.01:supremum(d.domain)*2 for d in domains]
 u_pred = [sum(phi([x,t],res.u)) for x in xs, t in ts]
-fig, ax, hm = CairoMakie.heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
+fig, ax, hm = heatmap(ts, xs, u_pred', axis=(xlabel="t", ylabel="x", title="c = $c"))
 display(fig)
 save("convection2.png", fig); nothing # hide
 ```
