@@ -29,8 +29,8 @@ domains = [x ∈ Interval(-5.0, 5.0),
 ```
 
 ```@example Schrödinger
-pinn = PINN(u = FullyConnected(2, 1, tanh; hidden_dims=16,num_layers=4),
-            v = FullyConnected(2, 1, tanh; hidden_dims=16,num_layers=4))
+pinn = PINN(u = Siren(2,1; hidden_dims=16,num_layers=4, omega = 1.0),
+            v = Siren(2,1; hidden_dims=16,num_layers=4, omega = 1.0))
             
 sampler = QuasiRandomSampler(500, (200,200,20,20))
 strategy = NonAdaptiveTraining(1,(10,10,1,1))
