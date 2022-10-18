@@ -37,4 +37,4 @@ makedocs(bib; modules=[Sophon], sitename="Sophon.jl",
              "References" => "references.md",
          ])
 
-deploydocs(; repo="github.com/YichengDWu/Sophon.jl", devbranch="main")
+deploydocs(; repo="github.com/YichengDWu/Sophon.jl", devbranch="main", preview=true)
