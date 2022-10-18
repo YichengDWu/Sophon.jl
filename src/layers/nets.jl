@@ -354,7 +354,7 @@ end
                      bandwidth::Real)
 
 Multiplicative filter network defined by
-```
+```math
 \begin{aligned}
 z^{(1)} &=g\left(x ; \theta^{(1)}\right) \\
 z^{(i+1)} &=\left(W^{(i)} z^{(i)}+b^{(i)}\right) \circ \sin \left(\omega^{(i)} x+\phi^{(i)}\right)\right) \\
