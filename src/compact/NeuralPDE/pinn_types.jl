@@ -250,6 +250,9 @@ get_local_ps(p::PINNParameterHandler) = p.cords
 get_global_ps(::PINNParameterHandler) = nothing
 Base.getindex(p::PINNParameterHandler, idx) = getindex(p.cords, idx)
 
+@inline get_local_ps(p::Vector{Matrix}) = p
+@inline get_global_ps(::Vector{Matrix}) = nothing
+
 ChainRulesCore.@non_differentiable get_local_ps(::Any...)
 ChainRulesCore.@non_differentiable get_global_ps(::Any...)
 ChainRulesCore.@non_differentiable Base.getindex(p::PINNParameterHandler, ::Any)
