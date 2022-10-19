@@ -164,7 +164,7 @@ function discretize(pde_system, pinn::PINN, sampler::PINNSampler,
                                                     additional_loss=additional_loss,
                                                     derivative=derivative)
     f = OptimizationFunction(loss_function, adtype)
-    return Optimization.OptimizationProblem(f, pinn.init_params, PINNParameterHandler(datasets))
+    return Optimization.OptimizationProblem(f, pinn.init_params, datasets)
 end
 
 function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSampler,

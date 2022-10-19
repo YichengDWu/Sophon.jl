@@ -242,17 +242,8 @@ get_local_ps(p::PINOParameterHandler) = p.cords
 get_global_ps(p::PINOParameterHandler) = p.fs
 
 
-mutable struct PINNParameterHandler
-    cords
-end
-
-get_local_ps(p::PINNParameterHandler) = p.cords
-get_global_ps(::PINNParameterHandler) = nothing
-Base.getindex(p::PINNParameterHandler, idx) = getindex(p.cords, idx)
-
-@inline get_local_ps(p::Vector{Matrix}) = p
-@inline get_global_ps(::Vector{Matrix}) = nothing
+@inline get_local_ps(p::Vector{<:AbstractMatrix}) = p
+@inline get_global_ps(::Vector{<:AbstractMatrix}) = nothing
 
 ChainRulesCore.@non_differentiable get_local_ps(::Any...)
 ChainRulesCore.@non_differentiable get_global_ps(::Any...)
-ChainRulesCore.@non_differentiable Base.getindex(p::PINNParameterHandler, ::Any)
