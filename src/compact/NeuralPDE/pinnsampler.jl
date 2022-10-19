@@ -1,4 +1,5 @@
 abstract type PINNSampler end
+abstract type FunctionSampler end
 
 """
     sample(pde::PDESystem, sampler::PINNSampler, strategy=nothing)
@@ -46,7 +47,7 @@ function sample(pde::NeuralPDE.PDESystem, sampler::QuasiRandomSampler, strategy)
     return [pde_datasets; boundary_datasets]
 end
 
-function sample(pde::PDESystem, sampler::QuasiRandomSampler, strategy)
+function sample(pde, sampler::QuasiRandomSampler, strategy)
     (; pde_points, bcs_points, sampling_alg) = sampler
     (; eqs, bcs) = pde
 
@@ -57,8 +58,8 @@ function sample(pde::PDESystem, sampler::QuasiRandomSampler, strategy)
 
     pde_datasets = [sample(eq[2], points, sampling_alg)
                     for (eq, points) in zip(eqs, pde_points)]
-    boundary_datasets = [sample(bcs[2], points, sampling_alg)
-                         for (bcs, points) in zip(bcs, bcs_points)]
+    boundary_datasets = [sample(bc[2], points, sampling_alg)
+                         for (bc, points) in zip(bcs, bcs_points)]
 
     return [pde_datasets; boundary_datasets]
 end

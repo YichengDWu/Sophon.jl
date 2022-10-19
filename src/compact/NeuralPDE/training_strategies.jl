@@ -18,29 +18,37 @@ struct NonAdaptiveTraining{P, B} <: AbstractTrainingAlg
     end
 end
 
-function scalarize(strategy::NonAdaptiveTraining{P, B}, phi, datafree_pde_loss_function,
-                   datafree_bc_loss_function) where {P, B}
+function scalarize(strategy::NonAdaptiveTraining{P, B}, phi, datafree_pde_loss_functions,
+                   datafree_bc_loss_functions) where {P, B}
     (; pde_weights, bcs_weights) = strategy
 
-    N1 = length(datafree_pde_loss_function)
-    N2 = length(datafree_bc_loss_function)
+    N1 = length(datafree_pde_loss_functions)
+    N2 = length(datafree_bc_loss_functions)
 
     pde_weights = P <: Number ? ntuple(_ -> first(pde_weights), N1) : Tuple(pde_weights)
     bcs_weights = B <: Number ? ntuple(_ -> first(bcs_weights), N2) : Tuple(bcs_weights)
 
     f = scalarize((pde_weights..., bcs_weights...),
-                  (datafree_pde_loss_function..., datafree_bc_loss_function...))
+                  (datafree_pde_loss_functions..., datafree_bc_loss_functions...))
 
     return f
 end
 
-function scalarize(weights::NTuple{N, <:Real}, datafree_loss_function::Tuple) where {N}
-    ex = :(mean($(weights[1]) .* abs2.($(datafree_loss_function[1])(p[1], θ))))
+function scalarize(weights::NTuple{N, <:Real}, datafree_loss_functions::Tuple) where {N}
+    body = Expr(:block)
+    push!(body.args, Expr(:(=), :local_ps, :(get_local_ps(pp))))
+    push!(body.args, Expr(:(=), :gobal_ps, :(get_global_ps(pp))))
+
+    ex = :(mean($(weights[1]) .*
+                abs2.($(datafree_loss_functions[1])(local_ps[1], θ, gobal_ps))))
     for i in 2:N
-        ex = :(mean($(weights[i]) .* abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
+        ex = :(mean($(weights[i]) .*
+                    abs2.($(datafree_loss_functions[i])(local_ps[$i], θ, gobal_ps))) +
+               $ex)
     end
-    loss_f = :((θ, p) -> $ex)
-    return @RuntimeGeneratedFunction(loss_f)
+    push!(body.args, ex)
+    loss_f = Expr(:function, Expr(:call, :(pinn_loss_function), :θ, :pp), body)
+    return eval(loss_f)
 end
 
 """
@@ -98,12 +106,17 @@ end
 
 function scalarize(phi, weights::Tuple{Vararg{<:Function}}, datafree_loss_function::Tuple)
     N = length(datafree_loss_function)
-    ex = :(mean($(weights[1])($phi, p[1], θ) .*
-                abs2.($(datafree_loss_function[1])(p[1], θ))))
+    body = Expr(:block)
+    push!(body.args, Expr(:(=), :local_ps, :(get_local_ps(pp))))
+    push!(body.args, Expr(:(=), :gobal_ps, :(get_global_ps(pp))))
+
+    ex = :(mean($(weights[1])($phi, local_ps[1], θ) .*
+                abs2.($(datafree_loss_function[1])(local_ps[1], θ, gobal_ps))))
     for i in 2:N
-        ex = :(mean($(weights[i])($phi, p[$i], θ) .*
-                    abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
+        ex = :(mean($(weights[i])($phi, local_ps[$i], θ) .*
+                    abs2.($(datafree_loss_function[i])(local_ps[$i], θ, gobal_ps))) + $ex)
     end
-    loss_f = :((θ, p) -> $ex)
+    push!(body.args, ex)
+    loss_f = Expr(:function, Expr(:call, :(pinn_loss_function), :θ, :pp), body)
     return eval(loss_f)
 end

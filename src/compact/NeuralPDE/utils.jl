@@ -22,6 +22,10 @@ function get_bounds(d::Domain)
     return infimum(d), supremum(d)
 end
 
+function get_bounds(d::Interval)
+    return [infimum(d)], [supremum(d)]
+end
+
 function get_bounds(pde::Sophon.PDESystem)
     pde_bounds = map(pde.eqs) do eq
         return get_bounds(eq[2])
@@ -47,7 +51,7 @@ end
 @inline null_additional_loss(phi, θ) = 0
 """
 ```julia
-:((cord, θ, phi, derivative, u) -> begin
+:((cord, θ) -> begin
   #= ... =#
   #= ... =#
   begin
@@ -66,32 +70,33 @@ end
   end end)
 ```
 """
-function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
-                                      eq_params=SciMLBase.NullParameters(),
-                                      default_p=nothing, bc_indvars=pinnrep.indvars,
-                                      integrand=nothing, dict_transformation_vars=nothing,
-                                      transformation_vars=nothing,
-                                      integrating_depvars=pinnrep.depvars)
-    (; depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput, strategy) = pinnrep
+function build_symbolic_loss_function(pinnrep::NamedTuple{names}, eq::Symbolics.Equation) where names
+    (; depvars, dict_depvars, dict_depvar_input, derivative, multioutput, dict_indvars) = pinnrep
 
-    if integrand isa Nothing
-        loss_function, pos, values = parse_equation(pinnrep, eq)
-        this_eq_pair = pair(eq, depvars, dict_depvar_input)
-        this_eq_indvars = unique(vcat([getindex(this_eq_pair, v)
-                                       for v in keys(this_eq_pair)]...))
+    loss_function, pos, values = parse_equation(pinnrep, eq)
+    this_eq_pair = pair(eq, depvars, dict_depvar_input)
+    this_eq_indvars = unique(vcat([getindex(this_eq_pair, v)
+                                        for v in keys(this_eq_pair)]...))
+
+    vars = :(cord, θ, pfs)
+    ex = Expr(:block)
+    if :pvs ∈ names
+        (; pinn, cord_branch_net) = pinnrep
+
+        push!(ex.args, Expr(:(=), :deeponet, pinn.phi))
+        push!(ex.args, Expr(:(=), :derivative, derivative))
+        push!(ex.args, Expr(:(=), :cord_branch_net, cord_branch_net))
+        push!(ex.args, Expr(:(=), :(get_pfs_output(x::AbstractMatrix)), :(ChainRulesCore.ignore_derivatives(mapreduce(f -> f.(x), vcat, pfs)))))
+        push!(ex.args, Expr(:(=), :(get_pfs_output(x::AbstractVector...)), :(ChainRulesCore.ignore_derivatives(mapreduce(f -> reshape(f.(x...), 1, :), vcat, pfs)))))
+        push!(ex.args, Expr(:(=), :(branch_net_input), :(transpose(get_pfs_output(cord_branch_net...)))))
+        push!(ex.args, Expr(:(=), :(phi(x_, θ_)), :(deeponet((branch_net_input, x_), θ_))))
+
     else
-        this_eq_pair = Dict(map(intvars -> dict_depvars[intvars] => dict_depvar_input[intvars],
-                                integrating_depvars))
-        this_eq_indvars = transformation_vars isa Nothing ?
-                          unique(vcat(values(this_eq_pair)...)) : transformation_vars
-        loss_function = integrand
+        phi = pinnrep.phi
+        push!(ex.args, Expr(:(=), :phi, phi))
+        push!(ex.args, Expr(:(=), :derivative, derivative))
     end
 
-    vars = :(cord, θ)
-    ex = Expr(:block)
-    push!(ex.args, Expr(:(=), :phi, phi))
-    push!(ex.args, Expr(:(=), :derivative, derivative))
-    push!(ex.args, Expr(:(=), :integral, integral))
     if multioutput
         θs = Symbol[]
         phis = Symbol[]
@@ -117,18 +122,6 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
         push!(ex.args, vars_phi)
     end
 
-    if eq_params != SciMLBase.NullParameters()
-        params_symbols = Symbol[]
-        expr_params = Expr[]
-        for (i, eq_param) in enumerate(eq_params)
-            push!(expr_params, :(ArrayInterfaceCore.allowed_getindex(p, ($i):($i))))
-            push!(params_symbols, Symbol(:($eq_param)))
-        end
-        params_eq = Expr(:(=), NeuralPDE.build_expr(:tuple, params_symbols),
-                         NeuralPDE.build_expr(:tuple, expr_params))
-        push!(ex.args, params_eq)
-    end
-
     eq_pair_expr = Expr[]
     if pos isa Int
         v = first(keys(this_eq_pair))
@@ -138,6 +131,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
         ivars_r[pos] = :(zero(cord[[1], :]) .+ $(values[2]))
         push!(eq_pair_expr, :($(Symbol(:cord, :_, :($v), :_l)) = vcat($(ivars_l...))))
         push!(eq_pair_expr, :($(Symbol(:cord, :_, :($v), :_r)) = vcat($(ivars_r...))))
+        this_eq_indvars = this_eq_indvars[setdiff(1:length(this_eq_indvars), pos)]
     else
         for v in keys(this_eq_pair)
             push!(eq_pair_expr,
@@ -147,38 +141,21 @@ function build_symbolic_loss_function(pinnrep::NamedTuple, eq;
     vcat_expr = Expr(:block, :($(eq_pair_expr...)))
     vcat_expr_loss_functions = Expr(:block, vcat_expr, loss_function)
 
-    if strategy isa NeuralPDE.QuadratureTraining
-        indvars_ex = get_indvars_ex(bc_indvars)
-        left_arg_pairs, right_arg_pairs = this_eq_indvars, indvars_ex
-        vars_eq = Expr(:(=), NeuralPDE.build_expr(:tuple, left_arg_pairs),
-                       NeuralPDE.build_expr(:tuple, right_arg_pairs))
-    else
-        indvars_ex = [:($:cord[[$i], :]) for (i, x) in enumerate(this_eq_indvars)]
-        left_arg_pairs, right_arg_pairs = this_eq_indvars, indvars_ex
-        vars_eq = Expr(:(=), NeuralPDE.build_expr(:tuple, left_arg_pairs),
-                       NeuralPDE.build_expr(:tuple, right_arg_pairs))
-    end
 
-    if !(dict_transformation_vars isa Nothing)
-        transformation_expr_ = Expr[]
+    indvars_ex = [:($:cord[[$i], :]) for (i, x) in enumerate(this_eq_indvars)]
+    left_arg_pairs, right_arg_pairs = this_eq_indvars, indvars_ex
+    vars_eq = Expr(:(=), NeuralPDE.build_expr(:tuple, left_arg_pairs),
+                    NeuralPDE.build_expr(:tuple, right_arg_pairs))
 
-        for (i, u) in dict_transformation_vars
-            push!(transformation_expr_, :($i = $u))
-        end
-        transformation_expr = Expr(:block, :($(transformation_expr_...)))
-        vcat_expr_loss_functions = Expr(:block, transformation_expr, vcat_expr,
-                                        loss_function)
-    end
     let_ex = Expr(:let, vars_eq, vcat_expr_loss_functions)
     push!(ex.args, let_ex)
     return vars, ex
 end
 
-function build_loss_function(pinnrep::NamedTuple, eq, bc_indvars, i)
-    bc_indvars = bc_indvars === nothing ? pinnrep.indvars : bc_indvars
-    vars, ex = build_symbolic_loss_function(pinnrep, eq; bc_indvars=bc_indvars)
+function build_loss_function(pinnrep::NamedTuple, eq::Symbolics.Equation, i)
+    vars, ex = build_symbolic_loss_function(pinnrep, eq)
     expr = Expr(:function,
-                Expr(:call, Symbol(:residual_function_, i), vars.args[1], vars.args[2]), ex)
+                Expr(:call, Symbol(:residual_function_, i), vars.args[1], vars.args[2], :($(Expr(:kw, vars.args[3], :nothing)))), ex)
     return eval(expr)
 end
 
@@ -252,8 +229,13 @@ function parse_equation(pinnrep::NamedTuple, eq)
     end
 end
 
-function is_periodic_bc(bcs, eq, depvars, left_expr::Expr, right_expr::Expr)
+function is_periodic_bc(bcs::Vector{<:Symbolics.Equation}, eq, depvars, left_expr::Expr, right_expr::Expr)
     eq ∉ bcs && return false
+    return left_expr.args[1] ∈ depvars && left_expr.args[1] === right_expr.args[1]
+end
+
+function is_periodic_bc(bcs::Vector{<:Pair{<:Symbolics.Equation, <:DomainSets.Domain}}, eq, depvars, left_expr::Expr, right_expr::Expr)
+    eq ∉ bcs[1] && return false
     return left_expr.args[1] ∈ depvars && left_expr.args[1] === right_expr.args[1]
 end
 
@@ -271,29 +253,21 @@ function parse_periodic_condition(left_expr, right_expr)
     return left_expr, right_expr
 end
 
-function transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
-                              dict_transformation_vars=nothing, transformation_vars=nothing)
+function transform_expression(pinnrep::NamedTuple, ex)
     if ex isa Expr
-        ex = _transform_expression(pinnrep, ex; is_integral=is_integral,
-                                   dict_transformation_vars=dict_transformation_vars,
-                                   transformation_vars=transformation_vars)
+        ex = _transform_expression(pinnrep, ex)
     end
     return ex
 end
 
-function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
-                               dict_transformation_vars=nothing,
-                               transformation_vars=nothing)
+function _transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where names
     (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput, fdtype) = pinnrep
     fdtype = fdtype
-
+    dict_pmdepvars = :dict_pmdepvars in names ? pinnrep.dict_pmdepvars : Dict{Symbol, Symbol}()
     _args = ex.args
     for (i, e) in enumerate(_args)
         if !(e isa Expr)
             if e in keys(dict_depvars)
-                depvar = _args[1]
-                num_depvar = dict_depvars[depvar]
-                indvars = _args[2:end]
                 ex.args = if !multioutput
                     [:($(Expr(:$, :phi))), Symbol(:cord, :_, e), :θ]
                 else
@@ -303,6 +277,9 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                         Symbol(:θ, :_, e),
                     ]
                 end
+                break
+            elseif e in keys(dict_pmdepvars)
+                ex.args[1] = :($(Expr(:$, :get_pfs_output)))
                 break
             elseif e isa NeuralPDE.Differential
                 derivative_variables = Symbol[]
@@ -343,100 +320,9 @@ function _transform_expression(pinnrep::NamedTuple, ex; is_integral=false,
                     ]
                 end
                 break
-            elseif e isa Symbolics.Integral
-                if _args[1].domain.variables isa Tuple
-                    integrating_variable_ = collect(_args[1].domain.variables)
-                    integrating_variable = NeuralPDE.toexpr.(integrating_variable_)
-                    integrating_var_id = [dict_indvars[i] for i in integrating_variable]
-                else
-                    integrating_variable = NeuralPDE.toexpr(_args[1].domain.variables)
-                    integrating_var_id = [dict_indvars[integrating_variable]]
-                end
-
-                integrating_depvars = []
-                integrand_expr = _args[2]
-                for d in depvars
-                    d_ex = find_thing_in_expr(integrand_expr, d)
-                    if !isempty(d_ex)
-                        push!(integrating_depvars, d_ex[1].args[1])
-                    end
-                end
-
-                lb, ub = get_limits(_args[1].domain.domain)
-                lb, ub, _args[2], dict_transformation_vars, transformation_vars = transform_inf_integral(lb,
-                                                                                                         ub,
-                                                                                                         _args[2],
-                                                                                                         integrating_depvars,
-                                                                                                         dict_depvar_input,
-                                                                                                         dict_depvars,
-                                                                                                         integrating_variable,
-                                                                                                         fdtype)
-
-                num_depvar = map(int_depvar -> dict_depvars[int_depvar],
-                                 integrating_depvars)
-                integrand_ = transform_expression(pinnrep, _args[2]; is_integral=false,
-                                                  dict_transformation_vars=dict_transformation_vars,
-                                                  transformation_vars=transformation_vars)
-                integrand__ = NeuralPDE._dot_(integrand_)
-
-                integrand = build_symbolic_loss_function_body(pinnrep, nothing;
-                                                              integrand=integrand__,
-                                                              integrating_depvars=integrating_depvars,
-                                                              eq_params=SciMLBase.NullParameters(),
-                                                              dict_transformation_vars=dict_transformation_vars,
-                                                              transformation_vars=transformation_vars,
-                                                              param_estim=false,
-                                                              default_p=nothing)
-                # integrand = repr(integrand)
-                lb = NeuralPDE.toexpr.(lb)
-                ub = NeuralPDE.toexpr.(ub)
-                ub_ = []
-                lb_ = []
-                for l in lb
-                    if l isa Number
-                        push!(lb_, l)
-                    else
-                        l_expr = NeuralPDE.build_symbolic_loss_function(pinnrep, nothing;
-                                                                        integrand=NeuralPDE._dot_(l),
-                                                                        integrating_depvars=integrating_depvars,
-                                                                        param_estim=false,
-                                                                        default_p=nothing)
-                        l_f = @RuntimeGeneratedFunction(l_expr)
-                        push!(lb_, l_f)
-                    end
-                end
-                for u_ in ub
-                    if u_ isa Number
-                        push!(ub_, u_)
-                    else
-                        u_expr = NeuralPDE.build_symbolic_loss_function(pinnrep, nothing;
-                                                                        integrand=NeuralPDE._dot_(u_),
-                                                                        integrating_depvars=integrating_depvars,
-                                                                        param_estim=false,
-                                                                        default_p=nothing)
-                        u_f = @RuntimeGeneratedFunction(u_expr)
-                        push!(ub_, u_f)
-                    end
-                end
-
-                integrand_func = @RuntimeGeneratedFunction(integrand)
-                ex.args = [
-                    :($(Expr(:$, :integral))),
-                    :u,
-                    Symbol(:cord, num_depvar[1]),
-                    :phi,
-                    integrating_var_id,
-                    integrand_func,
-                    lb_,
-                    ub_,
-                    :θ,
-                ]
-                break
             end
         else
-            ex.args[i] = _transform_expression(pinnrep, ex.args[i]; is_integral=is_integral,
-                                               dict_transformation_vars=dict_transformation_vars,
-                                               transformation_vars=transformation_vars)
+            ex.args[i] = _transform_expression(pinnrep, ex.args[i])
         end
     end
     return ex

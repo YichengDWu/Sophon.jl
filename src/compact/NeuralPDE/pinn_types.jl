@@ -184,7 +184,7 @@ struct PDESystem
     dvs::Vector
 end
 
-function PDESystem(eq::Tuple{Symbolics.Equation, <:Domain}, bcs, ivs, dvs)
+function PDESystem(eq::Pair{Symbolics.Equation, <:DomainSets.Domain}, bcs, ivs, dvs)
     return PDESystem([eq], bcs, ivs, dvs)
 end
 
@@ -203,3 +203,47 @@ function Base.show(io::IO, ::MIME"text/plain", sys::PDESystem)
     println(io, "Independent Variables: ", sys.ivs)
     return nothing
 end
+
+struct ParametricPDESystem
+    eqs::Vector
+    bcs::Vector
+    ivs::Vector
+    dvs::Vector
+    pvs::Vector
+end
+
+function ParametricPDESystem(eq::Pair{Symbolics.Equation, <:DomainSets.Domain}, bcs, ivs, dvs, pvs)
+    return PDESystem([eq], bcs, ivs, dvs, pvs)
+end
+
+Base.summary(prob::ParametricPDESystem) = string(nameof(typeof(prob)))
+function Base.show(io::IO, ::MIME"text/plain", sys::ParametricPDESystem)
+    println(io, summary(sys))
+    println(io, "Equations: ")
+    map(sys.eqs) do eq
+        return println(io, "  ", eq[1], " on ", eq[2])
+    end
+    println(io, "Boundary Conditions: ")
+    map(sys.bcs) do bc
+        return println(io, "  ", bc[1], " on ", bc[2])
+    end
+    println(io, "Dependent Variables: ", sys.dvs)
+    println(io, "Independent Variables: ", sys.ivs)
+    println(io, "Parametric Variables: ", sys.pvs)
+    return nothing
+end
+
+mutable struct PINOParameterHandler
+    cords
+    fs
+end
+
+get_local_ps(p::PINOParameterHandler) = p.cords
+get_global_ps(p::PINOParameterHandler) = p.fs
+Base.getindex(p::PINOParameterHandler, i) = getindex(p.cords, i)
+
+@inline get_local_ps(p::Vector{<:AbstractMatrix}) = p
+@inline get_global_ps(::Vector{<:AbstractMatrix}) = nothing
+
+ChainRulesCore.@non_differentiable get_local_ps(::Any...)
+ChainRulesCore.@non_differentiable get_global_ps(::Any...)
