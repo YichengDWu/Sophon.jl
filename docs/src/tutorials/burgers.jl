@@ -23,14 +23,14 @@ Burgers = Sophon.ParametricPDESystem([eq], bcs, [t, x], [u(x,t)], [a(x)])
 
 chain = DeepONet((50, 50, 50, 50), tanh, (2, 50, 50, 50, 50), tanh)
 pinn = PINN(chain)
-sampler = QuasiRandomSampler(100)
-strategy = NonAdaptiveTraining()
+sampler = QuasiRandomSampler(500, 50)
+strategy = NonAdaptiveTraining(1, (1, 20))
 
 struct MyFuncSampler <: Sophon.FunctionSampler
     num_fcs::Int
 end
 
-Sophon.sample(::MyFuncSampler) = [cospi, sinpi, x-> cospi(2x), x-> sinpi(2x), x -> 0.5]
+Sophon.sample(::MyFuncSampler) = [cospi, sinpi, x -> cospi(2x), x-> sinpi(2x)]
 
 cord_branch_net = [range(0.0, 1.0, length=50)...]
 
@@ -38,18 +38,18 @@ prob = Sophon.discretize(Burgers, pinn, sampler, strategy, MyFuncSampler(5), cor
 
 callback = function (p,l)
     println("Current loss is: $l")
-        return false
-        end
+    return false
+end
 
-@time res = Optimization.solve(prob, BFGS(); maxiters=300, callback=callback)
+@time res = Optimization.solve(prob, BFGS(); maxiters=500, callback=callback)
 
 using CairoMakie
 
 phi = pinn.phi
-xs = 0.0:0.01:1.0
-ts = 0.0:0.01:1.0
+xs = 0.0:0.001:1.0
+ts = 0.0:0.001:1.0
 
-u0 = reshape(sinpi.(cord_branch_net), :, 1)
+u0 = reshape(cospi.(cord_branch_net), :, 1)
 axis = (xlabel="t", ylabel="x", title="Prediction")
 u_pred = [sum(pinn.phi((u0, [x, t]), res.u)) for x in xs, t in ts]
-fig, ax, hm = heatmap(xs, ts, u_pred, axis=axis, colormap=:jet)
+fig, ax, hm = heatmap(ts, xs, u_pred', axis=axis, colormap=:jet)
