@@ -238,14 +238,18 @@ mutable struct PINOParameterHandler
     fs
 end
 
-ChainRulesCore.@non_differentiable get_local_ps(p::PINOParameterHandler) = p.cords
-ChainRulesCore.@non_differentiable get_global_ps(p::PINOParameterHandler) = p.fs
+get_local_ps(p::PINOParameterHandler) = p.cords
+get_global_ps(p::PINOParameterHandler) = p.fs
 
 
 mutable struct PINNParameterHandler
     cords
 end
 
-ChainRulesCore.@non_differentiable get_local_ps(p::PINNParameterHandler) = p.cords
-ChainRulesCore.@non_differentiable get_global_ps(::PINNParameterHandler) = nothing
-ChainRulesCore.@non_differentiable Base.getindex(p::PINNParameterHandler, idx) = getindex(p.cords, idx)
+get_local_ps(p::PINNParameterHandler) = p.cords
+get_global_ps(::PINNParameterHandler) = nothing
+Base.getindex(p::PINNParameterHandler, idx) = getindex(p.cords, idx)
+
+ChainRulesCore.@non_differentiable get_local_ps(::Any...)
+ChainRulesCore.@non_differentiable get_global_ps(::Any...)
+ChainRulesCore.@non_differentiable Base.getindex(p::PINNParameterHandler, ::Any)
