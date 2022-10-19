@@ -51,4 +51,5 @@ export DeepONet
 export PINN, symbolic_discretize, discretize, QuasiRandomSampler, NonAdaptiveTraining,
        AdaptiveTraining, ChainState
 
+export get_global_ps, get_local_ps
 end
