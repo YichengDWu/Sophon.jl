@@ -58,8 +58,8 @@ function sample(pde, sampler::QuasiRandomSampler, strategy)
 
     pde_datasets = [sample(eq[2], points, sampling_alg)
                     for (eq, points) in zip(eqs, pde_points)]
-    boundary_datasets = [sample(bcs[2], points, sampling_alg)
-                         for (bcs, points) in zip(bcs, bcs_points)]
+    boundary_datasets = [sample(bc[2], points, sampling_alg)
+                         for (bc, points) in zip(bcs, bcs_points)]
 
     return [pde_datasets; boundary_datasets]
 end

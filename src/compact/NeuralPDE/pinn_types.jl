@@ -240,7 +240,7 @@ end
 
 get_local_ps(p::PINOParameterHandler) = p.cords
 get_global_ps(p::PINOParameterHandler) = p.fs
-
+Base.getindex(p::PINOParameterHandler, i) = getindex(p.cords, i)
 
 @inline get_local_ps(p::Vector{<:AbstractMatrix}) = p
 @inline get_global_ps(::Vector{<:AbstractMatrix}) = nothing

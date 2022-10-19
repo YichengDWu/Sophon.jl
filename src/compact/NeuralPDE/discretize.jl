@@ -177,6 +177,8 @@ function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSa
                map(Base.Fix1(adapt, CuArray), datasets) : datasets
 
     pfs = sample(functionsampler)
+    cord_branch_net = cord_branch_net isa Union{AbstractVector, StepRangeLen} ?
+                      [cord_branch_net] : cord_branch_net
     loss_function = get_datafree_pinn_loss_function(pde_system, pinn, strategy, pfs,
                                                     cord_branch_net;
                                                     additional_loss=additional_loss,

@@ -22,6 +22,10 @@ function get_bounds(d::Domain)
     return infimum(d), supremum(d)
 end
 
+function get_bounds(d::Interval)
+    return [infimum(d)], [supremum(d)]
+end
+
 function get_bounds(pde::Sophon.PDESystem)
     pde_bounds = map(pde.eqs) do eq
         return get_bounds(eq[2])
@@ -67,36 +71,30 @@ end
 ```
 """
 function build_symbolic_loss_function(pinnrep::NamedTuple{names}, eq::Symbolics.Equation) where names
-    if :pvs ∈ names
-        (; depvars, dict_depvars, dict_depvar_input, derivative, multioutput, pinn, cord_branch_net) = pinnrep
+    (; depvars, dict_depvars, dict_depvar_input, derivative, multioutput, dict_indvars) = pinnrep
 
-        loss_function, pos, values = parse_equation(pinnrep, eq)
-        this_eq_pair = pair(eq, depvars, dict_depvar_input)
-        this_eq_indvars = unique(vcat([getindex(this_eq_pair, v)
+    loss_function, pos, values = parse_equation(pinnrep, eq)
+    this_eq_pair = pair(eq, depvars, dict_depvar_input)
+    this_eq_indvars = unique(vcat([getindex(this_eq_pair, v)
                                         for v in keys(this_eq_pair)]...))
 
-        vars = :(cord, θ, pfs)
-        ex = Expr(:block)
+    vars = :(cord, θ, pfs)
+    ex = Expr(:block)
+    if :pvs ∈ names
+        (; pinn, cord_branch_net) = pinnrep
+
         push!(ex.args, Expr(:(=), :deeponet, pinn.phi))
         push!(ex.args, Expr(:(=), :derivative, derivative))
         push!(ex.args, Expr(:(=), :cord_branch_net, cord_branch_net))
-        push!(ex.args, Expr(:(=), :(get_pfs_output(x...)), :(ChainRulesCore.ignore_derivatives(mapreduce(f -> f.(x...), vcat, pfs)))))
+        push!(ex.args, Expr(:(=), :(get_pfs_output(x::AbstractMatrix)), :(ChainRulesCore.ignore_derivatives(mapreduce(f -> f.(x), vcat, pfs)))))
+        push!(ex.args, Expr(:(=), :(get_pfs_output(x::AbstractVector...)), :(ChainRulesCore.ignore_derivatives(mapreduce(f -> reshape(f.(x...), 1, :), vcat, pfs)))))
         push!(ex.args, Expr(:(=), :(branch_net_input), :(transpose(get_pfs_output(cord_branch_net...)))))
         push!(ex.args, Expr(:(=), :(phi(x_, θ_)), :(deeponet((branch_net_input, x_), θ_))))
 
     else
-        (; depvars, dict_depvars, dict_depvar_input, phi, derivative, integral, multioutput) = pinnrep
-
-        loss_function, pos, values = parse_equation(pinnrep, eq)
-        this_eq_pair = pair(eq, depvars, dict_depvar_input)
-        this_eq_indvars = unique(vcat([getindex(this_eq_pair, v)
-                                        for v in keys(this_eq_pair)]...))
-
-        vars = :(cord, θ, pfs)
-        ex = Expr(:block)
+        phi = pinnrep.phi
         push!(ex.args, Expr(:(=), :phi, phi))
         push!(ex.args, Expr(:(=), :derivative, derivative))
-        push!(ex.args, Expr(:(=), :integral, integral))
     end
 
     if multioutput
@@ -133,6 +131,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple{names}, eq::Symbolics.
         ivars_r[pos] = :(zero(cord[[1], :]) .+ $(values[2]))
         push!(eq_pair_expr, :($(Symbol(:cord, :_, :($v), :_l)) = vcat($(ivars_l...))))
         push!(eq_pair_expr, :($(Symbol(:cord, :_, :($v), :_r)) = vcat($(ivars_r...))))
+        this_eq_indvars = this_eq_indvars[setdiff(1:length(this_eq_indvars), pos)]
     else
         for v in keys(this_eq_pair)
             push!(eq_pair_expr,
@@ -230,8 +229,13 @@ function parse_equation(pinnrep::NamedTuple, eq)
     end
 end
 
-function is_periodic_bc(bcs, eq, depvars, left_expr::Expr, right_expr::Expr)
+function is_periodic_bc(bcs::Vector{<:Symbolics.Equation}, eq, depvars, left_expr::Expr, right_expr::Expr)
     eq ∉ bcs && return false
+    return left_expr.args[1] ∈ depvars && left_expr.args[1] === right_expr.args[1]
+end
+
+function is_periodic_bc(bcs::Vector{<:Pair{<:Symbolics.Equation, <:DomainSets.Domain}}, eq, depvars, left_expr::Expr, right_expr::Expr)
+    eq ∉ bcs[1] && return false
     return left_expr.args[1] ∈ depvars && left_expr.args[1] === right_expr.args[1]
 end
 
