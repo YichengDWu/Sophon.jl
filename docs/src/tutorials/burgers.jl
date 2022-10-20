@@ -2,6 +2,8 @@ using Sophon, ModelingToolkit
 using DomainSets
 using DomainSets: ×
 using Optimization, OptimizationOptimJL
+using Interpolations, GaussianRandomFields
+using Setfield
 
 @parameters x t
 @variables u(..) a(..)
@@ -26,14 +28,34 @@ pinn = PINN(chain)
 sampler = QuasiRandomSampler(500, 100)
 strategy = NonAdaptiveTraining()
 
-struct MyFuncSampler <: Sophon.FunctionSampler end
+struct MyFuncSampler <: Sophon.FunctionSampler 
+    pts
+    grf
+    n
+end
 
-Sophon.sample(::MyFuncSampler) = [cospi, sinpi, x -> cospi(2x), x-> sinpi(2x), x -> 0.5*cospi(2x), x -> 0.5*sinpi(2x),
-                                  x -> 0.25*cospi(x), x -> 0.25*sinpi(x), x -> 0.75*cospi(4x), x -> 0.75*sinpi(4x)]
+function MyFuncSampler(pts, n)
+   cov = CovarianceFunction(1, Whittle(.1))      
+   grf = GaussianRandomField(cov, KarhunenLoeve(5), pts)
+   return MyFuncSampler(pts, grf, n)
+end
 
-cord_branch_net = range(0.0, 1.0, length=50) |> collect
+function Sophon.sample(sampler::MyFuncSampler)
+    (; n, grf, pts) = sampler
+    xs = 
+    ys = [cubic_spline_interpolation(pts, pts .* (1 .- pts) .* sample(grf))]
+    for _ in 1:n-1
+        y = cubic_spline_interpolation(pts, pts .* (1 .- pts) .* sample(grf))
+        push!(ys, y)
+    end
+    return ys
+end 
 
-prob = Sophon.discretize(Burgers, pinn, sampler, strategy, MyFuncSampler(), cord_branch_net)
+cord_branch_net = range(0.0, 1.0, length=50)
+
+fsampler = MyFuncSampler(cord_branch_net, 10) 
+                     
+prob = Sophon.discretize(Burgers, pinn, sampler, strategy, fsampler, cord_branch_net)
 
 function callback(p,l)
     println("Loss: $l")
@@ -42,6 +64,15 @@ end
 
 @time res = Optimization.solve(prob, BFGS(); maxiters=1000, callback=callback)
 
+for i in 1:10
+    cord = Sophon.sample(Burgers, sampler, strategy)
+    fs = Sophon.sample(fsampler)
+    @set! prob.p.cord = cord
+    @set! prob.p.fs = fs
+    @set! prob.u0 = res.u
+    res = Optimization.solve(prob, BFGS(); maxiters=200, callback=callback)
+end
+                                   
 using CairoMakie
 
 phi = pinn.phi
