@@ -65,11 +65,10 @@ end
 @time res = Optimization.solve(prob, BFGS(); maxiters=1000, callback=callback)
 
 for i in 1:10
-    cord = Sophon.sample(Burgers, sampler, strategy)
+    cords = Sophon.sample(Burgers, sampler, strategy)
     fs = Sophon.sample(fsampler)
-    @set! prob.p.cord = cord
-    @set! prob.p.fs = fs
-    @set! prob.u0 = res.u
+    p = Sophon.PINOParameterHandler(cords, fs)
+    prob = remake(prob; u0 = res.u, p = p)
     res = Optimization.solve(prob, BFGS(); maxiters=200, callback=callback)
 end
                                    
