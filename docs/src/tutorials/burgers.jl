@@ -43,9 +43,9 @@ end
 function Sophon.sample(sampler::MyFuncSampler)
     (; n, grf, pts) = sampler
     xs = 
-    ys = [cubic_spline_interpolation(pts, pts .* (1 .- pts) .* sample(grf))]
+    ys = [cubic_spline_interpolation(pts, pts .* (1 .- pts) .* sample(grf) .+ 0.1*randn())]
     for _ in 1:n-1
-        y = cubic_spline_interpolation(pts, pts .* (1 .- pts) .* sample(grf))
+        y = cubic_spline_interpolation(pts, pts .* (1 .- pts) .* sample(grf) .+ 0.1*randn())
         push!(ys, y)
     end
     return ys
