@@ -33,8 +33,7 @@ domains = [t ∈ Interval(t_min, t_max), x ∈ Interval(x_min, x_max)]
 
 pinn = PINN(; u=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
             ρ=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
-            p=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16)) |> gpu
-
+            p=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16)) 
 sampler = QuasiRandomSampler(1000, 100)
 
 function pde_weights(phi, x, θ)
