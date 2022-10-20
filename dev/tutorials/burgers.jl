@@ -29,7 +29,7 @@ strategy = NonAdaptiveTraining()
 struct MyFuncSampler <: Sophon.FunctionSampler end
 
 Sophon.sample(::MyFuncSampler) = [cospi, sinpi, x -> cospi(2x), x-> sinpi(2x), x -> 0.5*cospi(2x), x -> 0.5*sinpi(2x),
-                                  x -> 0.25*cospi(x), x -> 0.25*sinpi(x), x -> 0.75*cospi(3x), x -> 0.75*sinpi(3x)]
+                                  x -> 0.25*cospi(x), x -> 0.25*sinpi(x), x -> 0.75*cospi(4x), x -> 0.75*sinpi(4x)]
 
 cord_branch_net = range(0.0, 1.0, length=50) |> collect
 
