@@ -1,7 +1,7 @@
 using Sophon, ModelingToolkit
 using DomainSets
 using DomainSets: ×
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, Optimisers
 using Interpolations, GaussianRandomFields
 using Setfield
 
@@ -64,12 +64,13 @@ end
 
 @time res = Optimization.solve(prob, BFGS(); maxiters=1000, callback=callback)
 
-for i in 1:10
+adam = Adam()            
+for i in 1:100
     cords = Sophon.sample(Burgers, sampler, strategy)
     fs = Sophon.sample(fsampler)
     p = Sophon.PINOParameterHandler(cords, fs)
     prob = remake(prob; u0 = res.u, p = p)
-    res = Optimization.solve(prob, BFGS(); maxiters=200, callback=callback)
+    res = Optimization.solve(prob, adam; maxiters=200, callback=callback)
 end
                                    
 using CairoMakie
