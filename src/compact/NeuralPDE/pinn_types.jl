@@ -212,7 +212,7 @@ struct ParametricPDESystem
     pvs::Vector
 end
 
-function ParametricPDESystem(eq::Pair{Symbolics.Equation, <:DomainSets.Domain}, bcs, ivs, dvs, pvs)
+function ParametricPDESystem(eq::Pair{<:Symbolics.Equation, <:DomainSets.Domain}, bcs, ivs, dvs, pvs)
     return PDESystem([eq], bcs, ivs, dvs, pvs)
 end
 
