@@ -1,7 +1,7 @@
 using Sophon, ModelingToolkit
 using DomainSets
 using DomainSets: ×
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, Optimisers
 using Interpolations, GaussianRandomFields
 using Setfield
 
@@ -25,7 +25,7 @@ Burgers = Sophon.ParametricPDESystem([eq], bcs, [t, x], [u(x,t)], [a(x)])
 
 chain = DeepONet((50, 50, 50, 50), tanh, (2, 50, 50, 50, 50), tanh)
 pinn = PINN(chain)
-sampler = QuasiRandomSampler(500, 100)
+sampler = QuasiRandomSampler(500, 50)
 strategy = NonAdaptiveTraining()
 
 struct MyFuncSampler <: Sophon.FunctionSampler 
@@ -43,9 +43,9 @@ end
 function Sophon.sample(sampler::MyFuncSampler)
     (; n, grf, pts) = sampler
     xs = 
-    ys = [cubic_spline_interpolation(pts, pts .* (1 .- pts) .* sample(grf))]
+    ys = [cubic_spline_interpolation(pts, pts .* (1 .- pts) .* sample(grf) .+ 0.1*randn())]
     for _ in 1:n-1
-        y = cubic_spline_interpolation(pts, pts .* (1 .- pts) .* sample(grf))
+        y = cubic_spline_interpolation(pts, pts .* (1 .- pts) .* sample(grf) .+ 0.1*randn())
         push!(ys, y)
     end
     return ys
@@ -64,12 +64,24 @@ end
 
 @time res = Optimization.solve(prob, BFGS(); maxiters=1000, callback=callback)
 
-for i in 1:10
+using ProgressMeter
+                            
+n = 20000 
+k = 10
+pg = Progress(n; showspeed=true)
+                            
+function callback(p,l)
+    ProgressMeter.next!(pg; showvalues = [(:loss, l)])
+    return false
+end
+                                   
+adam = Adam()            
+for i in 1:k
     cords = Sophon.sample(Burgers, sampler, strategy)
     fs = Sophon.sample(fsampler)
     p = Sophon.PINOParameterHandler(cords, fs)
     prob = remake(prob; u0 = res.u, p = p)
-    res = Optimization.solve(prob, BFGS(); maxiters=200, callback=callback)
+    res = Optimization.solve(prob, adam; maxiters= n ÷ k, callback=callback)
 end
                                    
 using CairoMakie
