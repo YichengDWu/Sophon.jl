@@ -37,8 +37,8 @@ cord_branch_net = [range(0.0, 1.0, length=50)...]
 
 prob = Sophon.discretize(Burgers, pinn, sampler, strategy, MyFuncSampler(5), cord_branch_net)
 
-callback = function (p,l)
-    println("Current loss is: $l")
+function callback(p,l)
+    println("Loss: $l")
     return false
 end
 
