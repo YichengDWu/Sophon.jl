@@ -64,13 +64,24 @@ end
 
 @time res = Optimization.solve(prob, BFGS(); maxiters=1000, callback=callback)
 
+using ProgressMeter
+                            
+n = 20000 
+k = 10
+pg = Progress(n; showspeed=true)
+                            
+function callback(p,l)
+    ProgressMeter.next!(pg; showvalues = [(:loss, l)])
+    return false
+end
+                                   
 adam = Adam()            
-for i in 1:100
+for i in 1:k
     cords = Sophon.sample(Burgers, sampler, strategy)
     fs = Sophon.sample(fsampler)
     p = Sophon.PINOParameterHandler(cords, fs)
     prob = remake(prob; u0 = res.u, p = p)
-    res = Optimization.solve(prob, adam; maxiters=200, callback=callback)
+    res = Optimization.solve(prob, adam; maxiters= n ÷ k, callback=callback)
 end
                                    
 using CairoMakie
