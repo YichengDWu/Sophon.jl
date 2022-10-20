@@ -150,7 +150,7 @@ end
                     strategy::AbstractTrainingAlg;
                     additional_loss)
 
-Convert the PDESystem into an `OptimizationProblem`. You can have access to each loss function by calling
+Convert the PDESystem into an `OptimizationProblem`. You will have access to each loss function 
 `Sophon.residual_function_1`, `Sophon.residual_function_2`... after calling this function.
 """
 function discretize(pde_system, pinn::PINN, sampler::PINNSampler,
