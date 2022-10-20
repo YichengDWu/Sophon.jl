@@ -25,7 +25,7 @@ Burgers = Sophon.ParametricPDESystem([eq], bcs, [t, x], [u(x,t)], [a(x)])
 
 chain = DeepONet((50, 50, 50, 50), tanh, (2, 50, 50, 50, 50), tanh)
 pinn = PINN(chain)
-sampler = QuasiRandomSampler(500, 100)
+sampler = QuasiRandomSampler(500, 50)
 strategy = NonAdaptiveTraining()
 
 struct MyFuncSampler <: Sophon.FunctionSampler 
