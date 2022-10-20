@@ -23,19 +23,17 @@ Burgers = Sophon.ParametricPDESystem([eq], bcs, [t, x], [u(x,t)], [a(x)])
 
 chain = DeepONet((50, 50, 50, 50), tanh, (2, 50, 50, 50, 50), tanh)
 pinn = PINN(chain)
-sampler = QuasiRandomSampler(500, 50)
-strategy = NonAdaptiveTraining(1, 1)
+sampler = QuasiRandomSampler(500, 100)
+strategy = NonAdaptiveTraining()
 
-struct MyFuncSampler <: Sophon.FunctionSampler
-    num_fcs::Int
-end
+struct MyFuncSampler <: Sophon.FunctionSampler end
 
 Sophon.sample(::MyFuncSampler) = [cospi, sinpi, x -> cospi(2x), x-> sinpi(2x), x -> 0.5*cospi(2x), x -> 0.5*sinpi(2x),
                                   x -> 0.25*cospi(x), x -> 0.25*sinpi(x), x -> 0.75*cospi(3x), x -> 0.75*sinpi(3x)]
 
-cord_branch_net = [range(0.0, 1.0, length=50)...]
+cord_branch_net = range(0.0, 1.0, length=50) |> collect
 
-prob = Sophon.discretize(Burgers, pinn, sampler, strategy, MyFuncSampler(5), cord_branch_net)
+prob = Sophon.discretize(Burgers, pinn, sampler, strategy, MyFuncSampler(), cord_branch_net)
 
 function callback(p,l)
     println("Loss: $l")
