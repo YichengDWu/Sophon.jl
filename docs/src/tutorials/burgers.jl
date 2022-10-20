@@ -79,7 +79,7 @@ phi = pinn.phi
 xs = 0.0:0.01:1.0
 ts = 0.0:0.01:1.0
 
-f_test(x) = sinpi(x)
+f_test(x) = sinpi(2x)
 u0 = reshape(f_test.(cord_branch_net), :, 1)
 axis = (xlabel="t", ylabel="x", title="Prediction")
 u_pred = [sum(pinn.phi((u0, [x, t]), res.u)) for x in xs, t in ts]
