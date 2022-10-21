@@ -168,8 +168,8 @@ function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSa
                       [cord_branch_net] : cord_branch_net
     pde_and_bcs_loss_function = build_loss_function(pde_system, pinn, strategy,
                                                     cord_branch_net; derivative=derivative)
-    function full_loss_function(θ, p, pfs)
-        return pde_and_bcs_loss_function(θ, p, pfs) + additional_loss(pinn.phi, θ)
+    function full_loss_function(θ, p)
+        return pde_and_bcs_loss_function(θ, p) + additional_loss(pinn.phi, θ)
     end
     f = OptimizationFunction(full_loss_function, adtype)
 
