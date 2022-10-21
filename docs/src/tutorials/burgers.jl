@@ -4,7 +4,6 @@ using DomainSets: ×
 using Optimization, OptimizationOptimJL
 import OptimizationFlux: Adam
 using Interpolations, GaussianRandomFields
-using Setfield
 
 @parameters x t
 @variables u(..) a(..)
@@ -79,9 +78,8 @@ end
 
 adam = Adam()
 for i in 1:k
-    cords = Sophon.sample(Burgers, sampler, strategy)
     fs = Sophon.sample(fsampler)
-    p = Sophon.PINOParameterHandler(cords, fs)
+    p = Sophon.PINOParameterHandler(prob.p.cords, fs)
     prob = remake(prob; u0=res.u, p=p)
     res = Optimization.solve(prob, adam; maxiters=n ÷ k, callback=callback)
 end
