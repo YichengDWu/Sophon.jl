@@ -70,13 +70,13 @@ end
   end end)
 ```
 """
-function build_symbolic_loss_function(pinnrep::NamedTuple{names}, eq::Symbolics.Equation) where names
+function build_symbolic_loss_function(pinnrep::NamedTuple{names},
+                                      eq::Symbolics.Equation) where {names}
     (; depvars, dict_depvars, dict_depvar_input, derivative, multioutput, dict_indvars) = pinnrep
 
     loss_function, pos, values = parse_equation(pinnrep, eq)
     this_eq_pair = pair(eq, depvars, dict_depvar_input)
-    this_eq_indvars = unique(vcat([getindex(this_eq_pair, v)
-                                        for v in keys(this_eq_pair)]...))
+    this_eq_indvars = unique(vcat([getindex(this_eq_pair, v) for v in keys(this_eq_pair)]...))
 
     vars = :(cord, θ, pfs)
     ex = Expr(:block)
@@ -86,9 +86,17 @@ function build_symbolic_loss_function(pinnrep::NamedTuple{names}, eq::Symbolics.
         push!(ex.args, Expr(:(=), :deeponet, pinn.phi))
         push!(ex.args, Expr(:(=), :derivative, derivative))
         push!(ex.args, Expr(:(=), :cord_branch_net, cord_branch_net))
-        push!(ex.args, Expr(:(=), :(get_pfs_output(x::AbstractMatrix)), :(ChainRulesCore.ignore_derivatives(mapreduce(f -> f.(x), vcat, pfs)))))
-        push!(ex.args, Expr(:(=), :(get_pfs_output(x::AbstractVector...)), :(ChainRulesCore.ignore_derivatives(mapreduce(f -> reshape(f.(x...), 1, :), vcat, pfs)))))
-        push!(ex.args, Expr(:(=), :(branch_net_input), :(transpose(get_pfs_output(cord_branch_net...)))))
+        push!(ex.args,
+              Expr(:(=), :(get_pfs_output(x::AbstractMatrix)),
+                   :(ChainRulesCore.ignore_derivatives(mapreduce(f -> f.(x), vcat, pfs)))))
+        push!(ex.args,
+              Expr(:(=), :(get_pfs_output(x::AbstractVector...)),
+                   :(ChainRulesCore.ignore_derivatives(mapreduce(f -> reshape(f.(x...), 1,
+                                                                              :), vcat,
+                                                                 pfs)))))
+        push!(ex.args,
+              Expr(:(=), :(branch_net_input),
+                   :(transpose(get_pfs_output(cord_branch_net...)))))
         push!(ex.args, Expr(:(=), :(phi(x_, θ_)), :(deeponet((branch_net_input, x_), θ_))))
 
     else
@@ -141,11 +149,10 @@ function build_symbolic_loss_function(pinnrep::NamedTuple{names}, eq::Symbolics.
     vcat_expr = Expr(:block, :($(eq_pair_expr...)))
     vcat_expr_loss_functions = Expr(:block, vcat_expr, loss_function)
 
-
     indvars_ex = [:($:cord[[$i], :]) for (i, x) in enumerate(this_eq_indvars)]
     left_arg_pairs, right_arg_pairs = this_eq_indvars, indvars_ex
     vars_eq = Expr(:(=), NeuralPDE.build_expr(:tuple, left_arg_pairs),
-                    NeuralPDE.build_expr(:tuple, right_arg_pairs))
+                   NeuralPDE.build_expr(:tuple, right_arg_pairs))
 
     let_ex = Expr(:let, vars_eq, vcat_expr_loss_functions)
     push!(ex.args, let_ex)
@@ -155,7 +162,8 @@ end
 function build_loss_function(pinnrep::NamedTuple, eq::Symbolics.Equation, i)
     vars, ex = build_symbolic_loss_function(pinnrep, eq)
     expr = Expr(:function,
-                Expr(:call, Symbol(:residual_function_, i), vars.args[1], vars.args[2], :($(Expr(:kw, vars.args[3], :nothing)))), ex)
+                Expr(:call, Symbol(:residual_function_, i), vars.args[1], vars.args[2],
+                     :($(Expr(:kw, vars.args[3], :nothing)))), ex)
     return eval(expr)
 end
 
@@ -229,12 +237,14 @@ function parse_equation(pinnrep::NamedTuple, eq)
     end
 end
 
-function is_periodic_bc(bcs::Vector{<:Symbolics.Equation}, eq, depvars, left_expr::Expr, right_expr::Expr)
+function is_periodic_bc(bcs::Vector{<:Symbolics.Equation}, eq, depvars, left_expr::Expr,
+                        right_expr::Expr)
     eq ∉ bcs && return false
     return left_expr.args[1] ∈ depvars && left_expr.args[1] === right_expr.args[1]
 end
 
-function is_periodic_bc(bcs::Vector{<:Pair{<:Symbolics.Equation, <:DomainSets.Domain}}, eq, depvars, left_expr::Expr, right_expr::Expr)
+function is_periodic_bc(bcs::Vector{<:Pair{<:Symbolics.Equation, <:DomainSets.Domain}}, eq,
+                        depvars, left_expr::Expr, right_expr::Expr)
     eq ∉ bcs[1] && return false
     return left_expr.args[1] ∈ depvars && left_expr.args[1] === right_expr.args[1]
 end
@@ -260,10 +270,11 @@ function transform_expression(pinnrep::NamedTuple, ex)
     return ex
 end
 
-function _transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where names
+function _transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names}
     (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput, fdtype) = pinnrep
     fdtype = fdtype
-    dict_pmdepvars = :dict_pmdepvars in names ? pinnrep.dict_pmdepvars : Dict{Symbol, Symbol}()
+    dict_pmdepvars = :dict_pmdepvars in names ? pinnrep.dict_pmdepvars :
+                     Dict{Symbol, Symbol}()
     _args = ex.args
     for (i, e) in enumerate(_args)
         if !(e isa Expr)
@@ -368,23 +379,23 @@ function finitediff(phi, x, εs, order, θ)
 end
 
 @inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{1}, θ,
-                    h::T) where {T <: AbstractFloat}
+                            h::T) where {T <: AbstractFloat}
     return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* h ./ 2
 end
 
 @inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{2}, θ,
-                    h::T) where {T <: AbstractFloat}
+                            h::T) where {T <: AbstractFloat}
     return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* h^2
 end
 
 @inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{3}, θ,
-                    h::T) where {T <: AbstractFloat}
+                            h::T) where {T <: AbstractFloat}
     return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ) .+ 2 .* phi(x .- ε, θ) -
             phi(x .- 2 .* ε, θ)) .* h^3 ./ 2
 end
 
 @inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{4}, θ,
-                    h::T) where {T <: AbstractFloat}
+                            h::T) where {T <: AbstractFloat}
     return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
             4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* h^4
 end

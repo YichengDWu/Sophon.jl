@@ -85,3 +85,9 @@ end
 end
 
 ChainRulesCore.@non_differentiable init_normal(::Any...)
+
+function isongpu(nt::NamedTuple)
+    return any(x -> x isa AbstractGPUArray, Lux.fcollect(nt))
+end
+
+float64 = Base.Fix1(convert, AbstractArray{Float64})

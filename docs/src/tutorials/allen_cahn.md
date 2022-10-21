@@ -42,7 +42,7 @@ function train(allen, prob, sampler, strategy)
 
     for tmax in [0.5, 0.75, 1.0]
         allen.domain[2] = t ∈ 0.0..tmax
-        data = Sophon.sample(allen, sampler, strategy)
+        data = Sophon.sample(allen, sampler)
         prob = remake(prob; u0=res.u, p=data)
         res = Optimization.solve(prob, bfgs; maxiters=2000)
     end
