@@ -21,19 +21,19 @@ using Random
 rng = Random.default_rng()
 Random.seed!(rng, 0)
 ```
-  and pass `rng` to `PINN` as
+
+and pass `rng` to `PINN` as
+
 ```julia
 using Sophon
 
-chain = FullyConnected((1,6,6,1), sin);
+chain = FullyConnected((1, 6, 6, 1), sin);
 
 # sinple dependent varibale
 pinn = PINN(chain, rng);
 
 # multiple dependent varibales
-pinn = PINN(rng;
-            a = chain,
-            b = chain);
+pinn = PINN(rng; a=chain, b=chain);
 ```
 """
 struct PINN{PHI, P}
@@ -47,21 +47,20 @@ end
 
 function PINN(chain::NamedTuple, rng::AbstractRNG=Random.default_rng())
     phi = map(m -> ChainState(m, rng), chain)
-    init_params = ComponentArray(initialparameters(rng, phi)) .|> Float64
+    init_params = Lux.fmap(float, initialparameters(rng, phi))
 
     return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
 function PINN(chain::AbstractExplicitLayer, rng::AbstractRNG=Random.default_rng())
     phi = ChainState(chain, rng)
-    init_params = ComponentArray(initialparameters(rng, phi)) .|> Float64
+    init_params = Lux.fmap(float, initialparameters(rng, phi))
 
     return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
 function initialparameters(rng::AbstractRNG, pinn::PINN)
-    init_params = initialparameters(rng, pinn.phi)
-    init_params = ComponentArray(init_params) .|> Float64
+    init_params = fmap(float, initialparameters(rng, pinn.phi))
     return init_params
 end
 
@@ -212,7 +211,8 @@ struct ParametricPDESystem
     pvs::Vector
 end
 
-function ParametricPDESystem(eq::Pair{<:Symbolics.Equation, <:DomainSets.Domain}, bcs, ivs, dvs, pvs)
+function ParametricPDESystem(eq::Pair{<:Symbolics.Equation, <:DomainSets.Domain}, bcs, ivs,
+                             dvs, pvs)
     return PDESystem([eq], bcs, ivs, dvs, pvs)
 end
 
@@ -234,8 +234,8 @@ function Base.show(io::IO, ::MIME"text/plain", sys::ParametricPDESystem)
 end
 
 mutable struct PINOParameterHandler
-    cords
-    fs
+    cords::Any
+    fs::Any
 end
 
 get_local_ps(p::PINOParameterHandler) = p.cords

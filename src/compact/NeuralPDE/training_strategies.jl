@@ -43,8 +43,7 @@ function scalarize(weights::NTuple{N, <:Real}, datafree_loss_functions::Tuple) w
                 abs2.($(datafree_loss_functions[1])(local_ps[1], θ, gobal_ps))))
     for i in 2:N
         ex = :(mean($(weights[i]) .*
-                    abs2.($(datafree_loss_functions[i])(local_ps[$i], θ, gobal_ps))) +
-               $ex)
+                    abs2.($(datafree_loss_functions[i])(local_ps[$i], θ, gobal_ps))) + $ex)
     end
     push!(body.args, ex)
     loss_f = Expr(:function, Expr(:call, :(pinn_loss_function), :θ, :pp), body)

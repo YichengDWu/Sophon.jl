@@ -29,7 +29,7 @@ function QuasiRandomSampler(pde_points, bcs_points=pde_points; sampling_alg=Sobo
                                                                                             sampling_alg)
 end
 
-function sample(pde::NeuralPDE.PDESystem, sampler::QuasiRandomSampler, strategy)
+function sample(pde::NeuralPDE.PDESystem, sampler::QuasiRandomSampler, strategy=nothing)
     (; pde_points, bcs_points, sampling_alg) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
@@ -47,7 +47,7 @@ function sample(pde::NeuralPDE.PDESystem, sampler::QuasiRandomSampler, strategy)
     return [pde_datasets; boundary_datasets]
 end
 
-function sample(pde, sampler::QuasiRandomSampler, strategy)
+function sample(pde, sampler::QuasiRandomSampler, strategy=nothing)
     (; pde_points, bcs_points, sampling_alg) = sampler
     (; eqs, bcs) = pde
 
@@ -65,7 +65,7 @@ function sample(pde, sampler::QuasiRandomSampler, strategy)
 end
 
 function sample(pde::NeuralPDE.PDESystem, sampler::QuasiRandomSampler{P, B, SobolSample},
-                strategy) where {P, B}
+                strategy=nothing) where {P, B}
     (; pde_points, bcs_points) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
