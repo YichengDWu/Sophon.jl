@@ -1,7 +1,8 @@
 using Sophon, ModelingToolkit
 using DomainSets
 using DomainSets: ×
-using Optimization, OptimizationOptimJL, OptimizationFlux
+using Optimization, OptimizationOptimJL
+import OptimizationFlux: Adam
 using Interpolations, GaussianRandomFields
 using Setfield
 
