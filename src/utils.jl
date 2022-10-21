@@ -90,4 +90,4 @@ function isongpu(nt::NamedTuple)
     return any(x -> x isa AbstractGPUArray, Lux.fcollect(nt))
 end
 
-float64 = Base.Fix1(Broadcast.broadcast, Float64)
+float64 = Base.Fix1(convert, AbstractArray{Float64})
