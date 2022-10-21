@@ -19,7 +19,7 @@ The default element type of the parameters is `Float64`.
 ```julia
 using Random
 rng = Random.default_rng()
-Random.seed!(rng, 0)
+Random.seed!(rng, 0)d
 ```
 
 and pass `rng` to `PINN` as
@@ -60,7 +60,7 @@ function PINN(chain::AbstractExplicitLayer, rng::AbstractRNG=Random.default_rng(
 end
 
 function initialparameters(rng::AbstractRNG, pinn::PINN)
-    init_params = fmap(float, initialparameters(rng, pinn.phi))
+    init_params = Lux.fmap(float, initialparameters(rng, pinn.phi))
     return init_params
 end
 
