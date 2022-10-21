@@ -150,7 +150,7 @@ function discretize(pde_system, pinn::PINN, sampler::PINNSampler,
         return pde_and_bcs_loss_function(θ, p) + additional_loss(pinn.phi, θ)
     end
     f = OptimizationFunction(full_loss_function, adtype)
-    return Optimization.OptimizationProblem(f, pinn.init_params, datasets)
+    return Optimization.OptimizationProblem(f, init_params, datasets)
 end
 
 function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSampler,
@@ -174,5 +174,5 @@ function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSa
     f = OptimizationFunction(full_loss_function, adtype)
 
     p = PINOParameterHandler(datasets, pfs)
-    return Optimization.OptimizationProblem(f, pinn.init_params, p)
+    return Optimization.OptimizationProblem(f, init_params, p)
 end
