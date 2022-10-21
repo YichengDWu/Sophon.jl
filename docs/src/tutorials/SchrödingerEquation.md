@@ -84,7 +84,8 @@ save("phi.png", fig); nothing # hide
 
 ## Customize Sampling 
 
-Bascially any sampling method is supportted.
+Bascially any sampling method is supportted. For example we can sample data according to
+the predicted solution.
 
 ```@example Schrödinger
 using StatsBase
