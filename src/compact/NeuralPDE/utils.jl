@@ -1,3 +1,4 @@
+# aggressively rewrite some functionalities from NeuralPDE.jl for compatibility
 function get_bounds(domains::Vector{Symbolics.VarDomainPairing}, eqs, bcs, eltypeθ,
                     dict_indvars, dict_depvars)
     dict_span = Dict([Symbol(d.variables) => [infimum(d.domain), supremum(d.domain)]
