@@ -59,7 +59,7 @@ prob = Sophon.discretize(wave, pinn, sampler, strategy; additional_loss=addition
 @time res = Optimization.solve(prob, BFGS(), callback = callback, maxiters=1000)
 ```
 
-Let's visualize the predict solution and inferred velocity
+Let's visualize the predictted solution and inferred velocity
 
 ```@example wave
 using CairoMakie
