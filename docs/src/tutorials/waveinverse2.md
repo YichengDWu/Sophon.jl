@@ -38,12 +38,12 @@ sampler = QuasiRandomSampler(500,100)
 strategy = NonAdaptiveTraining(1, (10,10,1,1))
 ```
 
-Next we generate some data of ``u(x,t)``. Here we place two sensors at ``x=0`` and ``x=0.5``.
+Next we generate some data of ``u(x,t)``. Here we place two sensors at ``x=0.1`` and ``x=0.5``.
 
 ```@example wave
 ū(x,t) = sin(x) * cos(t)
 
-x_data = hcat(fill(0.0, 1, 50), fill(0.5, 1, 50))
+x_data = hcat(fill(0.1, 1, 50), fill(0.5, 1, 50))
 t_data = repeat(range(0.0, 1.0, length = 50),2)'
 input_data = [x_data; t_data]
 
@@ -76,7 +76,7 @@ c_true = 1 .+ abs2.(xs) |> vec
 axis = (xlabel="x", ylabel="t", title="Analytical Solution")
 fig, ax1, hm1 = heatmap(xs, ts, u_true, axis=axis; colormap=:jet)
 ax2, hm2= heatmap(fig[1, end+1], xs, ts, u_pred, axis= merge(axis, (;title = "Prediction")); colormap=:jet)
-ax3, hm3 = heatmap(fig[1, end+1], xs, ts, abs.(u_true-u_true), axis= merge(axis, (;title = "Absolute Error")); colormap=:jet)
+ax3, hm3 = heatmap(fig[1, end+1], xs, ts, abs.(u_true .- u_pred), axis= merge(axis, (;title = "Absolute Error")); colormap=:jet)
 Colorbar(fig[:, end+1], hm3)
 fig
 save("sol.png", fig); nothing # hide
