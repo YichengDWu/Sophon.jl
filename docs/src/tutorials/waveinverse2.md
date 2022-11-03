@@ -79,10 +79,15 @@ ax2, hm2= heatmap(fig[1, end+1], xs, ts, u_pred, axis= merge(axis, (;title = "Pr
 ax3, hm3 = heatmap(fig[1, end+1], xs, ts, abs.(u_true-u_true), axis= merge(axis, (;title = "Absolute Error")); colormap=:jet)
 Colorbar(fig[:, end+1], hm3)
 fig
+save("sol.png", fig); nothing # hide
 ```
+![](sol.png)
+
 
 ```@example wave
 fig, ax = lines(xs, c_pred)
 lines!(ax, xs, c_true)
 fig
+save("velocity.png", fig); nothing # hide
 ```
+![](velocity.png)
