@@ -30,7 +30,7 @@ domains = [t ∈ Interval(0.0, 1.0),
 
 Here the velocity field ``c(x)`` is unknown, we will approximate it with a neural network.
 
-```@example
+```@example wave
 pinn = PINN(u = FullyConnected((2,16,16,16,1), sin),
             c = FullyConnected((1,16,16,1), tanh))
 
