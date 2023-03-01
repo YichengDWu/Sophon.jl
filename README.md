@@ -14,6 +14,8 @@ Please star this repository if you find it useful.
 
 ## Installation
 
+To install Sophon, please open Julia's interactive session (REPL) and press ] key in the REPL to use the package mode, then type the following command
+
 ```julia
 pkg> add Sophon
 ```
