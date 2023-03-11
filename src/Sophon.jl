@@ -5,6 +5,7 @@ using Lux, Random, NNlib, NNlibCUDA
 import Lux: initialparameters, initialstates, parameterlength, statelength,
             AbstractExplicitLayer, AbstractExplicitContainerLayer, zeros32
 
+import ModelingToolkit
 using Optimisers, Optimization, OptimizationOptimisers
 import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, TriangleExp,
                             Sin, SinDecay2, SinExp, CosAnneal, Sequence, Loop, Interpolator,
