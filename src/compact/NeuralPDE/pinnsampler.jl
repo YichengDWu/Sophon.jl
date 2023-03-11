@@ -64,7 +64,7 @@ function sample(pde, sampler::QuasiRandomSampler, strategy=nothing)
     return [pde_datasets; boundary_datasets]
 end
 
-function sample(pde::.PDESystem, sampler::QuasiRandomSampler{P, B, SobolSample},
+function sample(pde::ModelingToolkit.PDESystem, sampler::QuasiRandomSampler{P, B, SobolSample},
                 strategy=nothing) where {P, B}
     (; pde_points, bcs_points) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
