@@ -15,9 +15,9 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
         eqs = [eqs]
     end
 
-    pde_indvars = NeuralPDE.get_variables(eqs, dict_indvars, dict_depvars)
+    pde_indvars = get_variables(eqs, dict_indvars, dict_depvars)
 
-    bc_indvars = NeuralPDE.get_variables(bcs, dict_indvars, dict_depvars)
+    bc_indvars = get_variables(bcs, dict_indvars, dict_depvars)
 
     pde_integration_vars = NeuralPDE.get_integration_variables(eqs, dict_indvars,
                                                                dict_depvars)
@@ -56,9 +56,9 @@ function build_loss_function(pde_system::PDESystem, pinn::PINN,
 
     multioutput = phi isa NamedTuple
 
-    pde_indvars = NeuralPDE.get_variables(map(first, eqs), dict_indvars, dict_depvars)
+    pde_indvars = get_variables(map(first, eqs), dict_indvars, dict_depvars)
 
-    bc_indvars = NeuralPDE.get_variables(map(first, bcs), dict_indvars, dict_depvars)
+    bc_indvars = get_variables(map(first, bcs), dict_indvars, dict_depvars)
 
     pde_integration_vars = NeuralPDE.get_integration_variables(map(first, eqs),
                                                                dict_indvars, dict_depvars)
@@ -99,7 +99,7 @@ function build_loss_function(pde_system::ParametricPDESystem, pinn::PINN,
 
     multioutput = false
 
-    pde_indvars = NeuralPDE.get_variables(map(first, eqs), dict_indvars, dict_depvars)
+    pde_indvars = get_variables(map(first, eqs), dict_indvars, dict_depvars)
     bc_indvars = pde_indvars
 
     pde_integration_vars = NeuralPDE.get_integration_variables(map(first, eqs),

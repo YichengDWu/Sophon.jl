@@ -188,6 +188,17 @@ function get_bounds(pde::ModelingToolkit.PDESystem)
     return bounds
 end
 
+function get_variables(eqs, _indvars::Array, _depvars::Array)
+    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(_indvars,
+                                                                               _depvars)
+    return get_variables(eqs, dict_indvars, dict_depvars)
+end
+
+function get_variables(eqs, dict_indvars, dict_depvars)
+    bc_args = get_argument(eqs, dict_indvars, dict_depvars)
+    return map(barg -> filter(x -> x isa Symbol, barg), bc_args)
+end
+
 """
 ```julia
 :((cord, θ) -> begin
