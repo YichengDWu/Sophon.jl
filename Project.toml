@@ -65,6 +65,8 @@ StaticArraysCore = "1"
 StatsBase = "0.33"
 Symbolics = "4"
 julia = "1.7"
+Requires = "1"
+ModelingToolkit = "8"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
