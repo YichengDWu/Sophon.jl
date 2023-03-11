@@ -57,7 +57,8 @@ function SciMLBase.__solve(prob::Optimization.OptimizationProblem, opt::Schedule
         elseif cb_call
             break
         end
-        progress && Optimization.ProgressLogging.@logprogress msg i/maxiters
+        #msg = OptimizationOptimisers.@sprintf("loss: %.3g", x[1])
+        #progress && Optimization.ProgressLogging.@logprogress msg i/maxiters
 
         if save_best
             if first(x) < first(min_err)  #found a better solution
