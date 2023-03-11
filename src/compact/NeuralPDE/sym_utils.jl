@@ -84,7 +84,7 @@ function get_vars(indvars_, depvars_)
     depvars = Symbol[]
     dict_depvar_input = Dict{Symbol, Vector{Symbol}}()
     for d in depvars_
-        if ModelingToolkit.value(d) isa Term
+        if ModelingToolkit.value(d) isa ModelingToolkit.Term
             dname = ModelingToolkit.getname(d)
             push!(depvars, dname)
             push!(dict_depvar_input,
@@ -118,7 +118,7 @@ function find_thing_in_expr(ex::Expr, thing; ans = [])
 end
 
 function get_argument(eqs, dict_indvars, dict_depvars)
-    exprs = toexpr.(eqs)
+    exprs = ModelingToolkit.toexpr.(eqs)
     vars = map(exprs) do expr
         _vars = map(depvar -> find_thing_in_expr(expr, depvar), collect(keys(dict_depvars)))
         f_vars = filter(x -> !isempty(x), _vars)
@@ -206,7 +206,7 @@ function get_integration_variables(eqs, _indvars::Array, _depvars::Array)
 end
 
 function get_integration_variables(eqs, dict_indvars, dict_depvars)
-    exprs = toexpr.(eqs)
+    exprs = ModelingToolkit.toexpr.(eqs)
     vars = map(exprs) do expr
         _vars = Symbol.(filter(indvar -> length(find_thing_in_expr(expr, indvar)) > 0,
                                sort(collect(keys(dict_indvars)))))
