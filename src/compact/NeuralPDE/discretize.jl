@@ -1,12 +1,12 @@
 
-function build_loss_function(pde_system::NeuralPDE.PDESystem, pinn::PINN,
+function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
                              strategy::AbstractTrainingAlg; derivative=finitediff)
     (; eqs, bcs, domain, ps, defaults, indvars, depvars) = pde_system
     (; phi, init_params) = pinn
 
     default_p = ps == SciMLBase.NullParameters() ? nothing : [defaults[ep] for ep in ps]
 
-    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = NeuralPDE.get_vars(indvars,
+    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(indvars,
                                                                                          depvars)
 
     multioutput = phi isa NamedTuple
@@ -15,13 +15,13 @@ function build_loss_function(pde_system::NeuralPDE.PDESystem, pinn::PINN,
         eqs = [eqs]
     end
 
-    pde_indvars = NeuralPDE.get_variables(eqs, dict_indvars, dict_depvars)
+    pde_indvars = get_variables(eqs, dict_indvars, dict_depvars)
 
-    bc_indvars = NeuralPDE.get_variables(bcs, dict_indvars, dict_depvars)
+    bc_indvars = get_variables(bcs, dict_indvars, dict_depvars)
 
-    pde_integration_vars = NeuralPDE.get_integration_variables(eqs, dict_indvars,
+    pde_integration_vars = get_integration_variables(eqs, dict_indvars,
                                                                dict_depvars)
-    bc_integration_vars = NeuralPDE.get_integration_variables(bcs, dict_indvars,
+    bc_integration_vars = get_integration_variables(bcs, dict_indvars,
                                                               dict_depvars)
 
     pinnrep = (; eqs, bcs, domain, ps, defaults, default_p, depvars, indvars, dict_indvars,
@@ -51,18 +51,18 @@ function build_loss_function(pde_system::PDESystem, pinn::PINN,
     (; eqs, bcs, ivs, dvs) = pde_system
     (; phi, init_params) = pinn
 
-    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = NeuralPDE.get_vars(ivs,
+    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(ivs,
                                                                                          dvs)
 
     multioutput = phi isa NamedTuple
 
-    pde_indvars = NeuralPDE.get_variables(map(first, eqs), dict_indvars, dict_depvars)
+    pde_indvars = get_variables(map(first, eqs), dict_indvars, dict_depvars)
 
-    bc_indvars = NeuralPDE.get_variables(map(first, bcs), dict_indvars, dict_depvars)
+    bc_indvars = get_variables(map(first, bcs), dict_indvars, dict_depvars)
 
-    pde_integration_vars = NeuralPDE.get_integration_variables(map(first, eqs),
+    pde_integration_vars = get_integration_variables(map(first, eqs),
                                                                dict_indvars, dict_depvars)
-    bc_integration_vars = NeuralPDE.get_integration_variables(map(first, bcs), dict_indvars,
+    bc_integration_vars = get_integration_variables(map(first, bcs), dict_indvars,
                                                               dict_depvars)
 
     pinnrep = (; eqs, bcs, depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input,
@@ -93,18 +93,18 @@ function build_loss_function(pde_system::ParametricPDESystem, pinn::PINN,
     (; eqs, bcs, ivs, dvs, pvs) = pde_system
     (; phi, init_params) = pinn
 
-    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = NeuralPDE.get_vars(ivs,
+    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(ivs,
                                                                                          dvs)
-    _, _, _, dict_pmdepvars, dict_pmdepvar_input = NeuralPDE.get_vars(ivs, pvs)
+    _, _, _, dict_pmdepvars, dict_pmdepvar_input = get_vars(ivs, pvs)
 
     multioutput = false
 
-    pde_indvars = NeuralPDE.get_variables(map(first, eqs), dict_indvars, dict_depvars)
+    pde_indvars = get_variables(map(first, eqs), dict_indvars, dict_depvars)
     bc_indvars = pde_indvars
 
-    pde_integration_vars = NeuralPDE.get_integration_variables(map(first, eqs),
+    pde_integration_vars = get_integration_variables(map(first, eqs),
                                                                dict_indvars, dict_depvars)
-    bc_integration_vars = NeuralPDE.get_integration_variables(map(first, bcs), dict_indvars,
+    bc_integration_vars = get_integration_variables(map(first, bcs), dict_indvars,
                                                               dict_depvars)
 
     pinnrep = (; eqs, bcs, depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input,

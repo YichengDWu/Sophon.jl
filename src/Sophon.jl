@@ -5,13 +5,13 @@ using Lux, Random, NNlib, NNlibCUDA
 import Lux: initialparameters, initialstates, parameterlength, statelength,
             AbstractExplicitLayer, AbstractExplicitContainerLayer, zeros32
 
+import ModelingToolkit
 using Optimisers, Optimization, OptimizationOptimisers
 import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, TriangleExp,
                             Sin, SinDecay2, SinExp, CosAnneal, Sequence, Loop, Interpolator,
                             Shifted, ComposedSchedule, Constant
 using ParameterSchedulers: AbstractSchedule
 using ComponentArrays
-import NeuralPDE
 import SciMLBase: parameterless_type, __solve, build_solution, NullParameters
 using StatsBase, QuasiMonteCarlo
 using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
@@ -31,11 +31,9 @@ include("layers/nets.jl")
 include("utils.jl")
 include("activations.jl")
 include("training/scheduler.jl")
-#include("training/rad.jl")
-#include("training/causal.jl")
-#include("training/evo.jl")
 include("compact/componentarrays.jl")
 include("compact/NeuralPDE/pinn_types.jl")
+include("compact/NeuralPDE/sym_utils.jl")
 include("compact/NeuralPDE/utils.jl")
 include("compact/NeuralPDE/training_strategies.jl")
 include("compact/NeuralPDE/pinnsampler.jl")
