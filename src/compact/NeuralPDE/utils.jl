@@ -37,7 +37,7 @@ function get_bounds(pde::Sophon.PDESystem)
     return pde_bounds, bcs_bounds
 end
 
-function get_bounds(pde::NeuralPDE.PDESystem)
+function get_bounds(pde::ModelingToolkit.PDESystem)
     (; eqs, bcs, domain, ivs, dvs) = pde
     _, _, dict_indvars, dict_depvars, _ = NeuralPDE.get_vars(ivs, dvs)
     bounds = get_bounds(domain, eqs, bcs, Float64, dict_indvars, dict_depvars)
