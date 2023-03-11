@@ -199,6 +199,20 @@ function get_variables(eqs, dict_indvars, dict_depvars)
     return map(barg -> filter(x -> x isa Symbol, barg), bc_args)
 end
 
+function get_integration_variables(eqs, _indvars::Array, _depvars::Array)
+    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(_indvars,
+                                                                               _depvars)
+    get_integration_variables(eqs, dict_indvars, dict_depvars)
+end
+
+function get_integration_variables(eqs, dict_indvars, dict_depvars)
+    exprs = toexpr.(eqs)
+    vars = map(exprs) do expr
+        _vars = Symbol.(filter(indvar -> length(find_thing_in_expr(expr, indvar)) > 0,
+                               sort(collect(keys(dict_indvars)))))
+    end
+end
+
 """
 ```julia
 :((cord, θ) -> begin
