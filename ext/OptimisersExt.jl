@@ -1,3 +1,14 @@
+
+module OptimisersExt
+
+if isdefined(Base, :get_extension)
+    using Optimisers
+else
+    using ..Optimisers
+end
+
+using Sophon, Optimization, SciMLBase
+
 struct Scheduler{O, S}
     opt::O
     schedule::S
@@ -14,7 +25,7 @@ end
 
 get_opt(s::Scheduler, state) = Optimisers.adjust(s.opt, s.schedule(state.t))
 
-function SciMLBase.__solve(prob::OptimizationProblem, opt::Scheduler,
+function SciMLBase.__solve(prob::Optimization.OptimizationProblem, opt::Scheduler,
                            data=Optimization.DEFAULT_DATA; maxiters::Number=0,
                            callback=(args...) -> (false), progress=false, save_best=true,
                            kwargs...)
@@ -70,4 +81,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Scheduler,
 
     return SciMLBase.build_solution(prob, opt, θ, x[1])
     # here should be build_solution to create the output message
+end
+
+export Scheduler
 end
