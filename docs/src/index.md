@@ -64,11 +64,3 @@ prob = Sophon.discretize(pde_system, pinn, sampler, strategy)
 ```julia
 res = Optimization.solve(prob, BFGS(); maxiters=2000)
 ```
-
-```@index
-```
-
-```@autodocs
-Modules = [Sophon]
-Private = false
-```
