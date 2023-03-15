@@ -1,4 +1,4 @@
-Q: How can I train the model using GPUs?
+## Q: How can I train the model using GPUs?
 
 A: To train the model on GPUs, invoke the gpu function on instances of PINN:
 
@@ -6,7 +6,7 @@ A: To train the model on GPUs, invoke the gpu function on instances of PINN:
 using Lux
 pinn = gpu(PINN(...))
 ```
-Q: How can I display the loss for each loss function?
+## Q: How can I display the loss for each loss function?
 
 A: Data points are stored in `prob.p`. Call `Sophon.residual_function_1` with the corresponding arguments to obtain the residual of each data point:
 ```julia
