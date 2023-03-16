@@ -7,7 +7,7 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
     default_p = ps == SciMLBase.NullParameters() ? nothing : [defaults[ep] for ep in ps]
 
     depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(indvars,
-                                                                                         depvars)
+                                                                               depvars)
 
     multioutput = phi isa NamedTuple
 
@@ -19,10 +19,8 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
 
     bc_indvars = get_variables(bcs, dict_indvars, dict_depvars)
 
-    pde_integration_vars = get_integration_variables(eqs, dict_indvars,
-                                                               dict_depvars)
-    bc_integration_vars = get_integration_variables(bcs, dict_indvars,
-                                                              dict_depvars)
+    pde_integration_vars = get_integration_variables(eqs, dict_indvars, dict_depvars)
+    bc_integration_vars = get_integration_variables(bcs, dict_indvars, dict_depvars)
 
     pinnrep = (; eqs, bcs, domain, ps, defaults, default_p, depvars, indvars, dict_indvars,
                dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
@@ -51,8 +49,7 @@ function build_loss_function(pde_system::PDESystem, pinn::PINN,
     (; eqs, bcs, ivs, dvs) = pde_system
     (; phi, init_params) = pinn
 
-    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(ivs,
-                                                                                         dvs)
+    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(ivs, dvs)
 
     multioutput = phi isa NamedTuple
 
@@ -60,10 +57,10 @@ function build_loss_function(pde_system::PDESystem, pinn::PINN,
 
     bc_indvars = get_variables(map(first, bcs), dict_indvars, dict_depvars)
 
-    pde_integration_vars = get_integration_variables(map(first, eqs),
-                                                               dict_indvars, dict_depvars)
+    pde_integration_vars = get_integration_variables(map(first, eqs), dict_indvars,
+                                                     dict_depvars)
     bc_integration_vars = get_integration_variables(map(first, bcs), dict_indvars,
-                                                              dict_depvars)
+                                                    dict_depvars)
 
     pinnrep = (; eqs, bcs, depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input,
                multioutput, init_params, phi, derivative, strategy, pde_indvars, bc_indvars,
@@ -93,8 +90,7 @@ function build_loss_function(pde_system::ParametricPDESystem, pinn::PINN,
     (; eqs, bcs, ivs, dvs, pvs) = pde_system
     (; phi, init_params) = pinn
 
-    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(ivs,
-                                                                                         dvs)
+    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(ivs, dvs)
     _, _, _, dict_pmdepvars, dict_pmdepvar_input = get_vars(ivs, pvs)
 
     multioutput = false
@@ -102,10 +98,10 @@ function build_loss_function(pde_system::ParametricPDESystem, pinn::PINN,
     pde_indvars = get_variables(map(first, eqs), dict_indvars, dict_depvars)
     bc_indvars = pde_indvars
 
-    pde_integration_vars = get_integration_variables(map(first, eqs),
-                                                               dict_indvars, dict_depvars)
+    pde_integration_vars = get_integration_variables(map(first, eqs), dict_indvars,
+                                                     dict_depvars)
     bc_integration_vars = get_integration_variables(map(first, bcs), dict_indvars,
-                                                              dict_depvars)
+                                                    dict_depvars)
 
     pinnrep = (; eqs, bcs, depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input,
                dict_pmdepvars, dict_pmdepvar_input, multioutput, pvs, init_params, pinn,

@@ -48,9 +48,7 @@ end
 
 function __init__()
     @static if !isdefined(Base, :get_extension)
-        @require Optimisers="3bd65402-5787-11e9-1adc-39752487f4e2" begin
-             include("../ext/OptimisersExt.jl")
-         end
+        @require Optimisers="3bd65402-5787-11e9-1adc-39752487f4e2" begin include("../ext/OptimisersExt.jl") end
     end
 end
 
