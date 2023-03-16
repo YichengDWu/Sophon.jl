@@ -29,16 +29,17 @@ RuntimeGeneratedFunctions.init(@__MODULE__)
 include("layers/basic.jl")
 include("layers/containers.jl")
 include("layers/nets.jl")
-include("utils.jl")
-include("activations.jl")
-include("compact/componentarrays.jl")
-include("compact/NeuralPDE/pinn_types.jl")
-include("compact/NeuralPDE/sym_utils.jl")
-include("compact/NeuralPDE/utils.jl")
-include("compact/NeuralPDE/training_strategies.jl")
-include("compact/NeuralPDE/pinnsampler.jl")
-include("compact/NeuralPDE/discretize.jl")
+include("layers/utils.jl")
+include("layers/activations.jl")
 include("layers/operators.jl")
+
+include("diff/componentarrays.jl")
+include("diff/pinn_types.jl")
+include("diff/sym_utils.jl")
+include("diff/utils.jl")
+include("diff/training_strategies.jl")
+include("diff/pinnsampler.jl")
+include("diff/discretize.jl")
 
 # Extensions
 if !isdefined(Base, :get_extension)
@@ -53,7 +54,6 @@ function __init__()
     end
 end
 
-export Scheduler
 export gaussian, quadratic, laplacian, expsin, multiquadratic
 export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature,
        ConstantFunction, ScalarLayer, SplitFunction, FactorizedDense
