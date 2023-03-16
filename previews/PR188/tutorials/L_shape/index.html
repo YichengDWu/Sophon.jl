@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Poisson equation over an L-shaped domain · Sophon.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://YichengDWu.github.io/Sophon.jl/tutorials/L_shape/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/indigo.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Sophon.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../discontinuous/">Fitting a nonlinear discontinuous function</a></li><li><a class="tocitem" href="../poisson/">1D Multi-scale Poisson&#39;s Equation</a></li><li><a class="tocitem" href="../convection/">1D Convection Equation</a></li><li><a class="tocitem" href="../helmholtz/">2D Helmholtz Equation</a></li><li><a class="tocitem" href="../allen_cahn/">Allen-Cahn Equation with Sequential Training</a></li><li><a class="tocitem" href="../SchrödingerEquation/">Schrödinger Equation: A PDE System with Resampling</a></li><li class="is-active"><a class="tocitem" href>Poisson equation over an L-shaped domain</a></li><li><a class="tocitem" href="../waveinverse2/">Inverse problem for the wave equation with unknown velocity field</a></li></ul></li><li><a class="tocitem" href="../../qa/">Q&amp;A</a></li><li><a class="tocitem" href="../../api/">API Reference</a></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Poisson equation over an L-shaped domain</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Poisson equation over an L-shaped domain</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/YichengDWu/Sophon.jl/blob/main/docs/src/tutorials/L_shape.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Poisson-equation-over-an-L-shaped-domain"><a class="docs-heading-anchor" href="#Poisson-equation-over-an-L-shaped-domain">Poisson equation over an L-shaped domain</a><a id="Poisson-equation-over-an-L-shaped-domain-1"></a><a class="docs-heading-anchor-permalink" href="#Poisson-equation-over-an-L-shaped-domain" title="Permalink"></a></h1><p>The example is taken from <a href="https://arxiv.org/pdf/1907.04502.pdf">here</a>. We showcase define a PDE on an L-shaped domain</p><pre><code class="language-julia hljs">using ModelingToolkit, DomainSets, Optimization, OptimizationOptimJL
+using DomainSets: ×
+using Sophon
+
+@parameters x y
+@variables u(..)
+Dxx = Differential(x)^2
+Dyy = Differential(y)^2
+
+eq = Dxx(u(x,y)) + Dyy(u(x,y)) ~ -1.0
+eqs = [eq =&gt; (-1..0) × (-1..0),
+       eq =&gt; (-1..0) × (0..1),
+       eq =&gt; (0..1) × (-1..0)]
+
+bc = u(x,y) ~ 0.0
+boundaries = [(-1 .. -1) × (-1..1),
+              (-1..0) × (1..1),
+              (0..0) × (0..1),
+              (0..1) × (0..0),
+              (1..1) × (-1..0),
+              (-1..1) × (-1 .. -1)]
+
+bcs = [bc =&gt; boundary for boundary in boundaries]
+
+pde_system = Sophon.PDESystem(eqs, bcs, [x,y], [u(x,y)])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">PDESystem
+Equations: 
+  Differential(x)(Differential(x)(u(x, y))) + Differential(y)(Differential(y)(u(x, y))) ~ -1.0 on (-1..0) × (-1..0)
+  Differential(x)(Differential(x)(u(x, y))) + Differential(y)(Differential(y)(u(x, y))) ~ -1.0 on (-1..0) × (0..1)
+  Differential(x)(Differential(x)(u(x, y))) + Differential(y)(Differential(y)(u(x, y))) ~ -1.0 on (0..1) × (-1..0)
+Boundary Conditions: 
+  u(x, y) ~ 0.0 on (-1..-1) × (-1..1)
+  u(x, y) ~ 0.0 on (-1..0) × (1..1)
+  u(x, y) ~ 0.0 on (0..0) × (0..1)
+  u(x, y) ~ 0.0 on (0..1) × (0..0)
+  u(x, y) ~ 0.0 on (1..1) × (-1..0)
+  u(x, y) ~ 0.0 on (-1..1) × (-1..-1)
+Dependent Variables: Symbolics.Num[u(x, y)]
+Independent Variables: Symbolics.Num[x, y]
+</code></pre><pre><code class="language-julia hljs">chain = FullyConnected((2,16,16,16,1), tanh)
+pinn = PINN(chain)
+sampler = QuasiRandomSampler(300, 30)
+strategy = NonAdaptiveTraining()
+
+prob = Sophon.discretize(pde_system, pinn, sampler, strategy)
+
+res = Optimization.solve(prob, BFGS(); maxiters=1000)
+
+using CairoMakie
+
+xs = -1:0.01:1
+ys = -1:0.01:1
+
+u_pred = [ifelse(x&gt;0.0 &amp;&amp; y&gt;0.0, NaN, pinn.phi([x,y], res.u)[1]) for x in xs, y in ys]
+fig, ax, hm = heatmap(xs, ys, u_pred, colormap=:jet)
+Colorbar(fig[:, end+1], hm)
+fig</code></pre><p><img src="../Lshape.png" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../SchrödingerEquation/">« Schrödinger Equation: A PDE System with Resampling</a><a class="docs-footer-nextpage" href="../waveinverse2/">Inverse problem for the wave equation with unknown velocity field »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Thursday 16 March 2023 04:17">Thursday 16 March 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
