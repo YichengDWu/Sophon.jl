@@ -63,7 +63,6 @@ function get_limits(domain)
     end
 end
 
-
 """
 Finds which dependent variables are being used in an equation.
 """
@@ -102,7 +101,7 @@ function get_vars(indvars_, depvars_)
     return depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input
 end
 
-function find_thing_in_expr(ex::Expr, thing; ans = [])
+function find_thing_in_expr(ex::Expr, thing; ans=[])
     if thing in ex.args
         push!(ans, ex)
     end
@@ -111,7 +110,7 @@ function find_thing_in_expr(ex::Expr, thing; ans = [])
             if thing in e.args
                 push!(ans, e)
             end
-            find_thing_in_expr(e, thing; ans = ans)
+            find_thing_in_expr(e, thing; ans=ans)
         end
     end
     return collect(Set(ans))
@@ -122,7 +121,7 @@ function get_argument(eqs, dict_indvars, dict_depvars)
     vars = map(exprs) do expr
         _vars = map(depvar -> find_thing_in_expr(expr, depvar), collect(keys(dict_depvars)))
         f_vars = filter(x -> !isempty(x), _vars)
-        map(x -> first(x), f_vars)
+        return map(x -> first(x), f_vars)
     end
     args_ = map(vars) do _vars
         ind_args_ = map(var -> var.args[2:end], _vars)
@@ -202,14 +201,14 @@ end
 function get_integration_variables(eqs, _indvars::Array, _depvars::Array)
     depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(_indvars,
                                                                                _depvars)
-    get_integration_variables(eqs, dict_indvars, dict_depvars)
+    return get_integration_variables(eqs, dict_indvars, dict_depvars)
 end
 
 function get_integration_variables(eqs, dict_indvars, dict_depvars)
     exprs = ModelingToolkit.toexpr.(eqs)
     vars = map(exprs) do expr
-        _vars = Symbol.(filter(indvar -> length(find_thing_in_expr(expr, indvar)) > 0,
-                               sort(collect(keys(dict_indvars)))))
+        return _vars = Symbol.(filter(indvar -> length(find_thing_in_expr(expr, indvar)) > 0,
+                                      sort(collect(keys(dict_indvars)))))
     end
 end
 
@@ -330,7 +329,6 @@ function build_loss_function(pinnrep::NamedTuple, eq::Symbolics.Equation, i)
                      :($(Expr(:kw, vars.args[3], :nothing)))), ex)
     return eval(expr)
 end
-
 
 function parse_equation(pinnrep::NamedTuple, eq)
     eq_lhs = isequal(ModelingToolkit.expand_derivatives(eq.lhs), 0) ? eq.lhs :
