@@ -35,7 +35,7 @@ makedocs(bib; modules=[Sophon], sitename="Sophon.jl",
                  "Inverse problem for the wave equation with unknown velocity field" => "tutorials/waveinverse2.md",
                  #"1D Wave Equation" => "tutorials/wave.md",
              ],
-             "Q&A" => "qa.md",
+             "FAQ" => "qa.md",
              "API Reference" => "api.md",
              "References" => "references.md",
          ])
