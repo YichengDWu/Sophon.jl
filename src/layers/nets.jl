@@ -250,12 +250,14 @@ end
 
 """
     FullyConnected(layer_sizes::NTuple{N, Int}, activation; outermost = true,
-                   init_weight = kaiming_uniform(activation),
-                   init_bias = zeros32)
+                   init_weight=kaiming_uniform(activation),
+                   init_bias=zeros32,
+                   allow_fast_activation=false)
     FullyConnected(in_dims::Int, out_dims::Int, activation::Function;
                    hidden_dims::Int, num_layers::Int, outermost=true,
-                   init_weight = kaiming_uniform(activation),
-                   init_bias = zeros32)
+                   init_weight=kaiming_uniform(activation),
+                   init_bias=zeros32,
+                   allow_fast_activation=false)
 
 Create fully connected layers.
 
@@ -271,6 +273,8 @@ Create fully connected layers.
   - `outermost`: Whether to use activation function for the last layer. If `false`, the activation function is applied
     to the output of the last layer.
   - `init_weight`: Initialization method for the weights.
+  - `allow_fast_activation`: If true, then certain activations can be approximated with a
+    faster version. The new activation function will be given by NNlib.fast_act(activation)
 
 ## Example
 
@@ -295,52 +299,56 @@ Chain(
 """
 function FullyConnected(layer_sizes::NTuple{N, T}, activation::Function;
                         outermost::Bool=true, init_bias=zeros32,
-                        init_weight::Function=kaiming_uniform(activation)) where {N,
-                                                                                  T <: Int}
+                        init_weight::Function=kaiming_uniform(activation),
+                        allow_fast_activation::Bool=false) where {N, T <: Int}
     return FullyConnected(layer_sizes, activation, Val(outermost); init_weight=init_weight,
-                          init_bias=init_bias)
+                          init_bias=init_bias, allow_fast_activation=allow_fast_activation)
 end
 
 function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
                         num_layers::Int, outermost::Bool=true,
                         init_weight::Function=kaiming_uniform(activation),
-                        init_bias=zeros32)
+                        init_bias=zeros32, allow_fast_activation::Bool=false)
     return FullyConnected((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims),
                           activation, Val(outermost); init_weight=init_weight,
-                          init_bias=init_bias)
+                          init_bias=init_bias, allow_fast_activation=allow_fast_activation)
 end
 
 @generated function FullyConnected(layer_sizes::NTuple{N, T}, activation::Function,
-                                   ::Val{F}; init_weight, init_bias) where {N, T <: Int, F}
+                                   ::Val{F}; init_weight, init_bias,
+                                   allow_fast_activation) where {N, T <: Int, F}
     N == 2 &&
         return :(Dense(layer_sizes[1], layer_sizes[2], activation; init_weight=init_weight,
-                       init_bias=init_bias))
+                       init_bias=init_bias, allow_fast_activation=allow_fast_activation))
     function get_layer(i)
         return :(Dense(layer_sizes[$i] => layer_sizes[$(i + 1)], activation;
-                       init_weight=init_weight, init_bias=init_bias))
+                       init_weight=init_weight, init_bias=init_bias,
+                       allow_fast_activation=allow_fast_activation))
     end
     layers = [
         :(Dense(layer_sizes[1] => layer_sizes[2], activation; init_weight=init_weight,
-                init_bias=init_bias)),
+                init_bias=init_bias, allow_fast_activation=allow_fast_activation)),
     ]
     append!(layers, [get_layer(i) for i in 2:(N - 2)])
     append!(layers,
             F ?
             [
                 :(Dense(layer_sizes[$(N - 1)] => layer_sizes[$N]; init_weight=init_weight,
-                        init_bias=init_bias)),
+                        init_bias=init_bias, allow_fast_activation=allow_fast_activation)),
             ] : [get_layer(N - 1)])
     return :(Chain($(layers...)))
 end
 
 """
-    ResNet(layer_sizes::NTuple{N, Int}, activation; outermost = true,
-                   init_weight = kaiming_uniform(activation),
-                   init_bias = zeros32)
+    ResNet(layer_sizes::NTuple{N, Int}, activation; outermost=true,
+                   init_weight=kaiming_uniform(activation),
+                   init_bias=zeros32,
+                   allow_fast_activation=false)
     ResNet(in_dims::Int, out_dims::Int, activation::Function;
                    hidden_dims::Int, num_layers::Int, outermost=true,
-                   init_weight = kaiming_uniform(activation),
-                   init_bias = zeros32)
+                   init_weight=kaiming_uniform(activation),
+                   init_bias=zeros32,
+                   allow_fast_activation=false)
 
 Create fully connected layers.
 
@@ -356,6 +364,8 @@ Create fully connected layers.
   - `outermost`: Whether to use activation function for the last layer. If `false`, the activation function is applied
     to the output of the last layer.
   - `init_weight`: Initialization method for the weights.
+  - `allow_fast_activation`: If true, then certain activations can be approximated with a
+    faster version. The new activation function will be given by NNlib.fast_act(activation)
 
 ## Example
 
@@ -388,38 +398,42 @@ Chain(
 ```
 """
 function ResNet(layer_sizes::NTuple{N, T}, activation::Function; outermost::Bool=true,
-                init_bias=zeros32,
-                init_weight::Function=kaiming_uniform(activation)) where {N, T <: Int}
+                init_bias=zeros32, init_weight::Function=kaiming_uniform(activation),
+                allow_fast_activation::Bool=false) where {N, T <: Int}
     return ResNet(layer_sizes, activation, Val(outermost); init_weight=init_weight,
-                  init_bias=init_bias)
+                  init_bias=init_bias, allow_fast_activation=allow_fast_activation)
 end
 
 function ResNet(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
                 num_layers::Int, outermost::Bool=true,
-                init_weight::Function=kaiming_uniform(activation), init_bias=zeros32)
+                init_weight::Function=kaiming_uniform(activation), init_bias=zeros32,
+                allow_fast_activation::Bool=false)
     return ResNet((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims), activation,
-                  Val(outermost); init_weight=init_weight, init_bias=init_bias)
+                  Val(outermost); init_weight=init_weight, init_bias=init_bias,
+                  allow_fast_activation=allow_fast_activation)
 end
 
 @generated function ResNet(layer_sizes::NTuple{N, T}, activation::Function, ::Val{F};
-                           init_weight, init_bias) where {N, T <: Int, F}
+                           init_weight, init_bias,
+                           allow_fast_activation) where {N, T <: Int, F}
     N == 2 &&
         return :(Dense(layer_sizes[1], layer_sizes[2], activation; init_weight=init_weight,
-                       init_bias=init_bias))
+                       init_bias=init_bias, allow_fast_activation=allow_fast_activation))
     function get_layer(i)
         return :(SkipConnection(Dense(layer_sizes[$i] => layer_sizes[$(i + 1)], activation;
-                                      init_weight=init_weight, init_bias=init_bias), +))
+                                      init_weight=init_weight, init_bias=init_bias,
+                                      allow_fast_activation=allow_fast_activation), +))
     end
     layers = [
         :(Dense(layer_sizes[1] => layer_sizes[2], activation; init_weight=init_weight,
-                init_bias=init_bias)),
+                init_bias=init_bias, allow_fast_activation=allow_fast_activation)),
     ]
     append!(layers, [get_layer(i) for i in 2:(N - 2)])
     append!(layers,
             F ?
             [
                 :(Dense(layer_sizes[$(N - 1)] => layer_sizes[$N]; init_weight=init_weight,
-                        init_bias=init_bias)),
+                        init_bias=init_bias, allow_fast_activation=allow_fast_activation)),
             ] : [get_layer(N - 1)])
     return :(Chain($(layers...)))
 end
