@@ -189,7 +189,7 @@ rng = Random.default_rng()
             @testset "Constructors" begin
                 model = DeepONet((3, 5, 4), relu, (2, 6, 4, 4), tanh)
                 @test model.branch_net.layers[end].activation == identity
-                @test model.trunk_net.layers[end].activation == tanh_fast
+                @test model.trunk_net.layers[end].activation == tanh
 
                 branch = Chain(Dense(2, 3), Dense(3, 4))
                 trunk = Chain(Dense(3, 4), Dense(4, 5))
