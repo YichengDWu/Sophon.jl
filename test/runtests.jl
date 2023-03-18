@@ -51,6 +51,7 @@ rng = Random.default_rng()
                                      outermost=false)
                 @test fc5.layers[end].activation == sin
             end
+
             @testset "Sine" begin
                 # first layer
                 s = Sine(2, 3; omega=30.0f0)

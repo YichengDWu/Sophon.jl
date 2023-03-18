@@ -338,6 +338,97 @@ end
     return :(Chain($(layers...)))
 end
 
+"""
+    ResNet(layer_sizes::NTuple{N, Int}, activation; outermost = true,
+                   init_weight = kaiming_uniform(activation),
+                   init_bias = zeros32)
+    ResNet(in_dims::Int, out_dims::Int, activation::Function;
+                   hidden_dims::Int, num_layers::Int, outermost=true,
+                   init_weight = kaiming_uniform(activation),
+                   init_bias = zeros32)
+
+Create fully connected layers.
+
+## Arguments
+
+  - `layer_sizes`: Number of dimensions of each layer.
+  - `hidden_dims`: Number of hidden dimensions.
+  - `num_layers`: Number of layers.
+  - `activation`: Activation function.
+
+## Keyword Arguments
+
+  - `outermost`: Whether to use activation function for the last layer. If `false`, the activation function is applied
+    to the output of the last layer.
+  - `init_weight`: Initialization method for the weights.
+
+## Example
+
+```julia
+julia> ResNet((1, 12, 24, 32), relu)
+Chain(
+    layer_1 = Dense(1 => 12, relu),     # 24 parameters
+    layer_2 = SkipConnection(
+        Dense(12 => 24, relu),          # 312 parameters
+        +
+    ),
+    layer_3 = Dense(24 => 32),          # 800 parameters
+)         # Total: 1_136 parameters,
+          #        plus 0 states, summarysize 48 bytes.
+
+julia> ResNet(1, 10, relu; hidden_dims=20, num_layers=3)
+Chain(
+    layer_1 = Dense(1 => 20, relu),     # 40 parameters
+    layer_2 = SkipConnection(
+        Dense(20 => 20, relu),          # 420 parameters
+        +
+    ),
+    layer_3 = SkipConnection(
+        Dense(20 => 20, relu),          # 420 parameters
+        +
+    ),
+    layer_4 = Dense(20 => 10),          # 210 parameters
+)         # Total: 1_090 parameters,
+          #        plus 0 states, summarysize 64 bytes.
+```
+"""
+function ResNet(layer_sizes::NTuple{N, T}, activation::Function; outermost::Bool=true,
+                init_bias=zeros32,
+                init_weight::Function=kaiming_uniform(activation)) where {N, T <: Int}
+    return ResNet(layer_sizes, activation, Val(outermost); init_weight=init_weight,
+                  init_bias=init_bias)
+end
+
+function ResNet(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
+                num_layers::Int, outermost::Bool=true,
+                init_weight::Function=kaiming_uniform(activation), init_bias=zeros32)
+    return ResNet((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims), activation,
+                  Val(outermost); init_weight=init_weight, init_bias=init_bias)
+end
+
+@generated function ResNet(layer_sizes::NTuple{N, T}, activation::Function, ::Val{F};
+                           init_weight, init_bias) where {N, T <: Int, F}
+    N == 2 &&
+        return :(Dense(layer_sizes[1], layer_sizes[2], activation; init_weight=init_weight,
+                       init_bias=init_bias))
+    function get_layer(i)
+        return :(SkipConnection(Dense(layer_sizes[$i] => layer_sizes[$(i + 1)], activation;
+                                      init_weight=init_weight, init_bias=init_bias), +))
+    end
+    layers = [
+        :(Dense(layer_sizes[1] => layer_sizes[2], activation; init_weight=init_weight,
+                init_bias=init_bias)),
+    ]
+    append!(layers, [get_layer(i) for i in 2:(N - 2)])
+    append!(layers,
+            F ?
+            [
+                :(Dense(layer_sizes[$(N - 1)] => layer_sizes[$N]; init_weight=init_weight,
+                        init_bias=init_bias)),
+            ] : [get_layer(N - 1)])
+    return :(Chain($(layers...)))
+end
+
 struct MultiplicativeFilterNet{F, L, O} <:
        AbstractExplicitContainerLayer{(:filters, :linear_layers, :output_layer)}
     filters::F
