@@ -53,8 +53,8 @@ function __init__()
 end
 
 export gaussian, quadratic, laplacian, expsin, multiquadratic
-export FourierFeature, TriplewiseFusion, FullyConnected, Sine, RBF, DiscreteFourierFeature,
-       ConstantFunction, ScalarLayer, SplitFunction, FactorizedDense
+export FourierFeature, TriplewiseFusion, FullyConnected, ResNet, Sine, RBF,
+       DiscreteFourierFeature, ConstantFunction, ScalarLayer, SplitFunction, FactorizedDense
 export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON
 export DeepONet
 export PINN, symbolic_discretize, discretize, QuasiRandomSampler, NonAdaptiveTraining,

@@ -74,13 +74,13 @@ function AdaptiveTraining(pde_weights::Function, bcs_weights::NTuple{N, <:Real})
                                                                        _bcs_weights)
 end
 
-function AdaptiveTraining(pde_weights::Tuple{Vararg{<:Function}}, bcs_weights::Int)
+function AdaptiveTraining(pde_weights::Tuple{Vararg{Function}}, bcs_weights::Int)
     _bcs_weights = (phi, cord, θ) -> bcs_weights
     return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights,
                                                                        _bcs_weights)
 end
 
-function AdaptiveTraining(pde_weights::Tuple{Vararg{<:Function}},
+function AdaptiveTraining(pde_weights::Tuple{Vararg{Function}},
                           bcs_weights::NTuple{N, <:Real}) where {N}
     _bcs_weights = map(w -> (phi, cord, θ) -> w, bcs_weights)
     return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights,
@@ -103,7 +103,7 @@ function scalarize(strategy::AdaptiveTraining, phi, datafree_pde_loss_function,
     return f
 end
 
-function scalarize(phi, weights::Tuple{Vararg{<:Function}}, datafree_loss_function::Tuple)
+function scalarize(phi, weights::Tuple{Vararg{Function}}, datafree_loss_function::Tuple)
     N = length(datafree_loss_function)
     body = Expr(:block)
     push!(body.args, Expr(:(=), :local_ps, :(get_local_ps(pp))))
