@@ -322,7 +322,8 @@ end
                        init_bias=init_bias, allow_fast_activation=allow_fast_activation))
     function get_layer(i)
         return :(Dense(layer_sizes[$i] => layer_sizes[$(i + 1)], activation;
-                       init_weight=init_weight, init_bias=init_bias))
+                       init_weight=init_weight, init_bias=init_bias,
+                       allow_fast_activation=allow_fast_activation))
     end
     layers = [
         :(Dense(layer_sizes[1] => layer_sizes[2], activation; init_weight=init_weight,
@@ -406,9 +407,10 @@ end
 function ResNet(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
                 num_layers::Int, outermost::Bool=true,
                 init_weight::Function=kaiming_uniform(activation), init_bias=zeros32,
-                allow_fast_activation=allow_fast_activation)
+                allow_fast_activation::Bool=false)
     return ResNet((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims), activation,
-                  Val(outermost); init_weight=init_weight, init_bias=init_bias)
+                  Val(outermost); init_weight=init_weight, init_bias=init_bias,
+                  allow_fast_activation=allow_fast_activation)
 end
 
 @generated function ResNet(layer_sizes::NTuple{N, T}, activation::Function, ::Val{F};
