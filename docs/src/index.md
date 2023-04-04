@@ -42,10 +42,7 @@ Next, we define the physics-informed neural network (PINN) using Sophon.jl. In t
 
 ```julia
 pinn = PINN(u = Siren(2,1; hidden_dims=16,num_layers=4, omega = 1.0),
-            v = Siren(2,1; hidden_dims=16,num_layers=4, omega = 1.0))
-            
-sampler = QuasiRandomSampler(500, (200,200,20,20))
-strategy = NonAdaptiveTraining(1,(10,10,1,1))
+            v = Siren(2,1; hidden_dims=16,num_layers=4, omega = 1.0))            
 ```
 We define a physics-informed neural network (PINN) with the pinn variable. The PINN macro takes a dictionary that maps the dependent variables to their corresponding neural network architecture. In this case, we use the Siren architecture for both u and v with 2 input dimensions, 1 output dimension, 16 hidden dimensions, and 4 layers. We also set the frequency of the sine activation functions to 1.0.
 
@@ -53,8 +50,16 @@ We define a physics-informed neural network (PINN) with the pinn variable. The P
 Here, we create a QuasiRandomSampler object with 500 sample points, where the first argument corresponds to the number of data points for each equation, and the second 
 argument corresponds to the number of data points for each boundary condition.
 
+```julia
+sampler = QuasiRandomSampler(500, (200,200,20,20))
+```
+
 ## Step 5: Define a training strategy
 Here, we use a NonAdaptiveTraining strategy with `1` as the weight of all equations, and `(10,10,1,1)` for the four boundary conditions.
+
+```julia
+strategy = NonAdaptiveTraining(1,(10,10,1,1))
+```
 
 ## Step 6: Discretize the PDE system using Sophon
 ```julia
