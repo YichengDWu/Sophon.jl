@@ -186,6 +186,10 @@ function PDESystem(eq::Pair{Symbolics.Equation, <:DomainSets.Domain}, bcs, ivs, 
     return PDESystem([eq], bcs, ivs, dvs)
 end
 
+function PDESystem(eq::Tuple{Symbolics.Equation, <:DomainSets.Domain}, bcs, ivs, dvs)
+    return PDESystem([eq], bcs, ivs, dvs)
+end
+
 Base.summary(prob::PDESystem) = string(nameof(typeof(prob)))
 function Base.show(io::IO, ::MIME"text/plain", sys::PDESystem)
     println(io, summary(sys))
