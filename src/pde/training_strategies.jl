@@ -37,13 +37,13 @@ end
 function scalarize(weights::NTuple{N, <:Real}, datafree_loss_functions::Tuple) where {N}
     body = Expr(:block)
     push!(body.args, Expr(:(=), :local_ps, :(get_local_ps(pp))))
-    push!(body.args, Expr(:(=), :gobal_ps, :(get_global_ps(pp))))
+    push!(body.args, Expr(:(=), :global_ps, :(get_global_ps(pp))))
 
     ex = :(mean($(weights[1]) .*
-                abs2.($(datafree_loss_functions[1])(local_ps[1], θ, gobal_ps))))
+                abs2.($(datafree_loss_functions[1])(local_ps[1], θ, global_ps))))
     for i in 2:N
         ex = :(mean($(weights[i]) .*
-                    abs2.($(datafree_loss_functions[i])(local_ps[$i], θ, gobal_ps))) + $ex)
+                    abs2.($(datafree_loss_functions[i])(local_ps[$i], θ, global_ps))) + $ex)
     end
     push!(body.args, ex)
     loss_f = Expr(:function, Expr(:call, :(pinn_loss_function), :θ, :pp), body)
@@ -107,13 +107,13 @@ function scalarize(phi, weights::Tuple{Vararg{Function}}, datafree_loss_function
     N = length(datafree_loss_function)
     body = Expr(:block)
     push!(body.args, Expr(:(=), :local_ps, :(get_local_ps(pp))))
-    push!(body.args, Expr(:(=), :gobal_ps, :(get_global_ps(pp))))
+    push!(body.args, Expr(:(=), :global_ps, :(get_global_ps(pp))))
 
     ex = :(mean($(weights[1])($phi, local_ps[1], θ) .*
-                abs2.($(datafree_loss_function[1])(local_ps[1], θ, gobal_ps))))
+                abs2.($(datafree_loss_function[1])(local_ps[1], θ, global_ps))))
     for i in 2:N
         ex = :(mean($(weights[i])($phi, local_ps[$i], θ) .*
-                    abs2.($(datafree_loss_function[i])(local_ps[$i], θ, gobal_ps))) + $ex)
+                    abs2.($(datafree_loss_function[i])(local_ps[$i], θ, global_ps))) + $ex)
     end
     push!(body.args, ex)
     loss_f = Expr(:function, Expr(:call, :(pinn_loss_function), :θ, :pp), body)
