@@ -40,8 +40,8 @@ function scalarize(weights::NTuple{N, <:Real}, datafree_loss_functions::Tuple) w
     push!(body.args, Expr(:(=), :global_ps, :(get_global_ps(pp))))
 
     ex = :(mean($(weights[1]) .*
-                abs2.($(datafree_loss_functions[1])(local_ps[1], θ, global_ps))))
-    for i in 2:N
+                abs2.($(datafree_loss_functions[1])(local_ps[1], θ, global_ps)))) # ugly hack to be compatible with PI-Neural Operators
+    for i in 2:N                                                                  # local_ps is just cord
         ex = :(mean($(weights[i]) .*
                     abs2.($(datafree_loss_functions[i])(local_ps[$i], θ, global_ps))) + $ex)
     end
