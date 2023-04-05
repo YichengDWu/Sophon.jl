@@ -371,6 +371,10 @@ function is_periodic_bc(bcs, eq, depvars, left_expr::Number, right_expr::Expr)
     return false
 end
 
+function is_periodic_bc(bcs, eq, depvars, left_expr::Expr, right_expr::Symbol)
+    return false
+end
+
 function is_periodic_bc(bcs, eq, depvars, left_expr::Expr, right_expr::Number)
     return false
 end
