@@ -15,14 +15,14 @@ r = 0.2
 l = 1.0
 
 eq = (Dxx(T(x, y)) + Dyy(T(x, y)) - 4) * sqrt(abs2(x) + abs2(y)) + 2r ~ 0.0
-eq = (eq, (-l .. l) × (-l .. l) \ Disk(r))
+eq = eq => (-l .. l) × (-l .. l) \ Disk(r)
 
 bcs = [
-    (T(x, y) ~ 0.0, r * UnitCircle()),
-    (T(x, y) ~ abs2(sqrt(abs2(l) + abs2(y)) - r), (-l .. -l) × (-l .. l)),
-    (T(x, y) ~ abs2(sqrt(abs2(l) + abs2(y)) - r), (l .. l) × (-l .. l)),
-    (Dy(T(x, y)) ~ 2l * (2r / sqrt(abs2(l) + abs2(x)) - 1), (-l .. l) × (-l .. -l)),
-    (Dy(T(x, y)) ~ -2l * (2r / sqrt(abs2(l) + abs2(x)) - 1), (-l .. l) × (l .. l)),
+    T(x, y) ~ 0.0 => r * UnitCircle(),
+    T(x, y) ~ abs2(sqrt(abs2(l) + abs2(y)) - r) => (-l .. -l) × (-l .. l),
+    T(x, y) ~ abs2(sqrt(abs2(l) + abs2(y)) - r) => (l .. l) × (-l .. l),
+    Dy(T(x, y)) ~ 2l * (2r / sqrt(abs2(l) + abs2(x)) - 1) => (-l .. l) × (-l .. -l),
+    Dy(T(x, y)) ~ -2l * (2r / sqrt(abs2(l) + abs2(x)) - 1) => (-l .. l) × (l .. l),
 ]
 
 pde = Sophon.PDESystem(eq, bcs, [x, y], [T(x, y)])
