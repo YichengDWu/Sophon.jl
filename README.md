@@ -32,3 +32,7 @@ pkg> add Sophon
 - [MindScience](https://gitee.com/mindspore/mindscience)
 - [Modulus](https://docs.nvidia.com/deeplearning/modulus/index.html#)
 - [DeepXDE](https://deepxde.readthedocs.io/en/latest/index.html#)
+
+## What's the difference between this package and NeuralPDE.jl?
+
+The biggest difference is the explicit control over data sampling. Note that we have an example of an L-shape domain, and there is an example of a disk with a hole in this [file](https://github.com/YichengDWu/Sophon.jl/blob/main/docs/src/tutorials/hole.jl).
