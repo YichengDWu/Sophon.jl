@@ -1,4 +1,3 @@
-
 function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
                              strategy::AbstractTrainingAlg; derivative=finitediff)
     (; eqs, bcs, domain, ps, defaults, indvars, depvars) = pde_system
