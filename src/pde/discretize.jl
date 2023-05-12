@@ -85,7 +85,7 @@ function build_loss_function(pde_system::PDESystem, pinn::PINN,
 end
 
 function build_loss_function(pde_system::ParametricPDESystem, pinn::PINN,
-                             strategy::AbstractTrainingAlg, cord_branch_net;
+                             strategy::AbstractTrainingAlg, coord_branch_net;
                              derivative=finitediff)
     (; eqs, bcs, ivs, dvs, pvs) = pde_system
     (; phi, init_params) = pinn
@@ -106,7 +106,7 @@ function build_loss_function(pde_system::ParametricPDESystem, pinn::PINN,
     pinnrep = (; eqs, bcs, depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input,
                dict_pmdepvars, dict_pmdepvar_input, multioutput, pvs, init_params, pinn,
                derivative, strategy, pde_indvars, bc_indvars, pde_integration_vars,
-               bc_integration_vars, fdtype=Float64, cord_branch_net,
+               bc_integration_vars, fdtype=Float64, coord_branch_net,
                eq_params=SciMLBase.NullParameters())
 
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, first(eq), i)
@@ -151,7 +151,7 @@ end
 
 function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSampler,
                     strategy::AbstractTrainingAlg, functionsampler::FunctionSampler,
-                    cord_branch_net::AbstractArray;
+                    coord_branch_net::AbstractArray;
                     additional_loss=Sophon.null_additional_loss, derivative=finitediff,
                     adtype=Optimization.AutoZygote())
     datasets = sample(pde_system, sampler, strategy)
@@ -160,10 +160,10 @@ function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSa
                map(Base.Fix1(adapt, CuArray), datasets) : datasets
 
     pfs = sample(functionsampler)
-    cord_branch_net = cord_branch_net isa Union{AbstractVector, StepRangeLen} ?
-                      [cord_branch_net] : cord_branch_net
+    coord_branch_net = coord_branch_net isa Union{AbstractVector, StepRangeLen} ?
+                      [coord_branch_net] : coord_branch_net
     pde_and_bcs_loss_function = build_loss_function(pde_system, pinn, strategy,
-                                                    cord_branch_net; derivative=derivative)
+                                                    coord_branch_net; derivative=derivative)
     function full_loss_function(θ, p)
         return pde_and_bcs_loss_function(θ, p) + additional_loss(pinn.phi, θ)
     end

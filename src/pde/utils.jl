@@ -14,12 +14,12 @@ end
 function get_numeric_integral(pinnrep::NamedTuple)
     (; strategy, indvars, depvars, derivative, depvars, indvars, dict_indvars, dict_depvars) = pinnrep
 
-    integral = (u, cord, phi, integrating_var_id, integrand_func, lb, ub, θ; strategy=strategy, indvars=indvars, depvars=depvars, dict_indvars=dict_indvars, dict_depvars=dict_depvars) -> begin
-        function integration_(cord, lb, ub, θ)
-            cord_ = cord
+    integral = (u, coord, phi, integrating_var_id, integrand_func, lb, ub, θ; strategy=strategy, indvars=indvars, depvars=depvars, dict_indvars=dict_indvars, dict_depvars=dict_depvars) -> begin
+        function integration_(coord, lb, ub, θ)
+            coord_ = coord
             function integrand_(x, p)
-                ChainRulesCore.@ignore_derivatives @views(cord_[integrating_var_id]) .= x
-                return integrand_func(cord_, p, phi, derivative, nothing, u, nothing)
+                ChainRulesCore.@ignore_derivatives @views(coord_[integrating_var_id]) .= x
+                return integrand_func(coord_, p, phi, derivative, nothing, u, nothing)
             end
             prob_ = IntegralProblem(integrand_, lb, ub, θ)
             sol = solve(prob_, CubatureJLh(); reltol=1e-3, abstol=1e-3)[1]
@@ -27,30 +27,30 @@ function get_numeric_integral(pinnrep::NamedTuple)
             return sol
         end
 
-        lb_ = zeros(size(lb)[1], size(cord)[2])
-        ub_ = zeros(size(ub)[1], size(cord)[2])
+        lb_ = zeros(size(lb)[1], size(coord)[2])
+        ub_ = zeros(size(ub)[1], size(coord)[2])
         for (i, l) in enumerate(lb)
             if l isa Number
-                ChainRulesCore.@ignore_derivatives lb_[i, :] = fill(l, 1, size(cord)[2])
+                ChainRulesCore.@ignore_derivatives lb_[i, :] = fill(l, 1, size(coord)[2])
             else
-                ChainRulesCore.@ignore_derivatives lb_[i, :] = l(cord, θ, phi, derivative,
+                ChainRulesCore.@ignore_derivatives lb_[i, :] = l(coord, θ, phi, derivative,
                                                                  nothing, u, nothing)
             end
         end
         for (i, u_) in enumerate(ub)
             if u_ isa Number
-                ChainRulesCore.@ignore_derivatives ub_[i, :] = fill(u_, 1, size(cord)[2])
+                ChainRulesCore.@ignore_derivatives ub_[i, :] = fill(u_, 1, size(coord)[2])
             else
-                ChainRulesCore.@ignore_derivatives ub_[i, :] = u_(cord, θ, phi, derivative,
+                ChainRulesCore.@ignore_derivatives ub_[i, :] = u_(coord, θ, phi, derivative,
                                                                   nothing, u, nothing)
             end
         end
         integration_arr = Matrix{Float64}(undef, 1, 0)
-        for i in 1:size(cord)[2]
+        for i in 1:size(coord)[2]
             # ub__ = @Zygote.ignore getindex(ub_, :,  i)
             # lb__ = @Zygote.ignore getindex(lb_, :,  i)
             integration_arr = hcat(integration_arr,
-                                   integration_(cord[:, i], lb_[:, i], ub_[:, i], θ))
+                                   integration_(coord[:, i], lb_[:, i], ub_[:, i], θ))
         end
         return integration_arr
     end
