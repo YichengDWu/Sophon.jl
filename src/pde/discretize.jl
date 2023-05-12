@@ -23,8 +23,6 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
                dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
                strategy, pde_indvars, bc_indvars, pde_integration_vars, bc_integration_vars,
                fdtype=Float64, eq_params=SciMLBase.NullParameters())
-    integral = get_numeric_integral(pinnrep)
-    pinnrep = merge(pinnrep, (; integral))
 
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, eq, i)
                                         for (i, (eq, integration_indvar)) in enumerate(zip(eqs,
@@ -63,8 +61,6 @@ function build_loss_function(pde_system::PDESystem, pinn::PINN,
                multioutput, init_params, phi, derivative, strategy, pde_indvars, bc_indvars,
                pde_integration_vars, bc_integration_vars, fdtype=Float64,
                eq_params=SciMLBase.NullParameters())
-    integral = nothing
-    pinnrep = merge(pinnrep, (; integral))
 
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, first(eq), i)
                                         for (i, (eq, integration_indvar)) in enumerate(zip(eqs,
