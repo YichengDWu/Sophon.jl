@@ -186,20 +186,6 @@ function get_variables(eqs, dict_indvars, dict_depvars)
     return map(barg -> filter(x -> x isa Symbol, barg), bc_args)
 end
 
-function get_integration_variables(eqs, _indvars::Array, _depvars::Array)
-    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(_indvars,
-                                                                               _depvars)
-    return get_integration_variables(eqs, dict_indvars, dict_depvars)
-end
-
-function get_integration_variables(eqs, dict_indvars, dict_depvars)
-    exprs = ModelingToolkit.toexpr.(eqs)
-    vars = map(exprs) do expr
-        return _vars = Symbol.(filter(indvar -> length(find_thing_in_expr(expr, indvar)) > 0,
-                                      sort(collect(keys(dict_indvars)))))
-    end
-end
-
 """
 [Dx(u1(x,y)) + 4*Dy(u2(x,y)) ~ 0,
  Dx(u2(x,y)) + 9*Dy(u1(x,y)) ~ 0]
