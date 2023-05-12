@@ -3,8 +3,6 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
     (; eqs, bcs, domain, ps, defaults, indvars, depvars) = pde_system
     (; phi, init_params) = pinn
 
-    default_p = ps == SciMLBase.NullParameters() ? nothing : [defaults[ep] for ep in ps]
-
     depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(indvars,
                                                                                depvars)
 
@@ -21,7 +19,7 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
     pde_integration_vars = get_integration_variables(eqs, dict_indvars, dict_depvars)
     bc_integration_vars = get_integration_variables(bcs, dict_indvars, dict_depvars)
 
-    pinnrep = (; eqs, bcs, domain, ps, defaults, default_p, depvars, indvars, dict_indvars,
+    pinnrep = (; eqs, bcs, domain, ps, defaults, depvars, indvars, dict_indvars,
                dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
                strategy, pde_indvars, bc_indvars, pde_integration_vars, bc_integration_vars,
                fdtype=Float64, eq_params=SciMLBase.NullParameters())
