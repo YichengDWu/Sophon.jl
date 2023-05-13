@@ -30,6 +30,12 @@ function taylordiff(phi, x::AbstractMatrix, θ, εs_dnv, direction::Tuple{NTuple
 end
 
 for N in 1:5
+    @eval @inline function taylordiff(phi, x::AbstractVector, θ, ε::AbstractVector,
+                                      ::Val{$N})
+        return let θ = θ
+            TaylorDiff.derivative(i->sum(phi(i,θ)), x, ε, Val{$(N+1)}())
+        end
+    end
     @eval @inline function taylordiff(phi, x::AbstractMatrix, θ, ε::AbstractVector,
                                       ::Val{$N})
         return let phi = phi, ε = ε, θ = θ
