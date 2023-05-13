@@ -215,6 +215,9 @@ function build_symbolic_loss_function(pinnrep::NamedTuple{names},
     loss_function, pos, values = parse_equation(pinnrep, eq)
     this_eq_pair = pair(eq, depvars, dict_depvar_input)
     this_eq_indvars = unique(vcat([getindex(this_eq_pair, v) for v in keys(this_eq_pair)]...))
+    this_eq_indvars_locations = Dict([depvar => [findfirst(==(indvar), this_eq_indvars)
+                                                 for indvar in this_eq_pair[depvar]]
+                                      for depvar in keys(this_eq_pair)])
 
     vars = :(coord, θ, pfs)
     ex = Expr(:block)
@@ -281,18 +284,18 @@ function build_symbolic_loss_function(pinnrep::NamedTuple{names},
     else
         for v in keys(this_eq_pair)
             push!(eq_pair_expr,
-                  :($(Symbol(:coord, :_, :($v))) = vcat($(this_eq_pair[v]...))))
+                  :($(Symbol(:coord, :_, :($v))) = view(coord, $(this_eq_indvars_locations[v]), :)))
         end
     end
-    vcat_expr = Expr(:block, :($(eq_pair_expr...)))
-    vcat_expr_loss_functions = Expr(:block, vcat_expr, loss_function)
+    view_expr = Expr(:block, :($(eq_pair_expr...)))
+    view_expr_loss_functions = Expr(:block, view_expr, loss_function)
 
-    indvars_ex = [:($:coord[[$i], :]) for (i, x) in enumerate(this_eq_indvars)]
+    indvars_ex = [:(view(coord, [$i], :)) for (i, x) in enumerate(this_eq_indvars)]
     left_arg_pairs, right_arg_pairs = this_eq_indvars, indvars_ex
     vars_eq = Expr(:(=), ModelingToolkit.build_expr(:tuple, left_arg_pairs),
                    ModelingToolkit.build_expr(:tuple, right_arg_pairs))
 
-    let_ex = Expr(:let, vars_eq, vcat_expr_loss_functions)
+    let_ex = Expr(:let, vars_eq, view_expr_loss_functions)
     push!(ex.args, let_ex)
     return vars, ex
 end
