@@ -41,7 +41,7 @@ function scalarize(weights::NTuple{N, <:Real}, datafree_loss_functions::Tuple) w
 
     ex = :(mean($(weights[1]) .*
                 abs2.($(datafree_loss_functions[1])(local_ps[1], θ, global_ps)))) # ugly hack to be compatible with PI-Neural Operators
-    for i in 2:N                                                                  # local_ps is just cord
+    for i in 2:N                                                                  # local_ps is just coord
         ex = :(mean($(weights[i]) .*
                     abs2.($(datafree_loss_functions[i])(local_ps[$i], θ, global_ps))) + $ex)
     end
@@ -63,26 +63,26 @@ struct AdaptiveTraining{P, B} <: AbstractTrainingAlg
 end
 
 function AdaptiveTraining(pde_weights::Function, bcs_weights::Real)
-    _bcs_weights = (phi, cord, θ) -> bcs_weights
+    _bcs_weights = (phi, coord, θ) -> bcs_weights
     return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights,
                                                                        _bcs_weights)
 end
 
 function AdaptiveTraining(pde_weights::Function, bcs_weights::NTuple{N, <:Real}) where {N}
-    _bcs_weights = map(w -> (phi, cord, θ) -> w, bcs_weights)
+    _bcs_weights = map(w -> (phi, coord, θ) -> w, bcs_weights)
     return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights,
                                                                        _bcs_weights)
 end
 
 function AdaptiveTraining(pde_weights::Tuple{Vararg{Function}}, bcs_weights::Int)
-    _bcs_weights = (phi, cord, θ) -> bcs_weights
+    _bcs_weights = (phi, coord, θ) -> bcs_weights
     return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights,
                                                                        _bcs_weights)
 end
 
 function AdaptiveTraining(pde_weights::Tuple{Vararg{Function}},
                           bcs_weights::NTuple{N, <:Real}) where {N}
-    _bcs_weights = map(w -> (phi, cord, θ) -> w, bcs_weights)
+    _bcs_weights = map(w -> (phi, coord, θ) -> w, bcs_weights)
     return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights,
                                                                        _bcs_weights)
 end

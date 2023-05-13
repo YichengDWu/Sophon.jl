@@ -1,18 +1,6 @@
 # aggressively rewrite some functionalities from NeuralPDE.jl for stability
 using Base.Broadcast
 
-"""
-Override `Broadcast.__dot__` with `Broadcast.dottable(x::Function) = true`
-# Example
-```julia
-julia> e = :(1 + $sin(x))
-:(1 + (sin)(x))
-julia> Broadcast.__dot__(e)
-:((+).(1, (sin)(x)))
-julia> _dot_(e)
-:((+).(1, (sin).(x)))
-```
-"""
 dottable_(x) = Broadcast.dottable(x)
 dottable_(x::Function) = true
 
@@ -198,29 +186,17 @@ function get_variables(eqs, dict_indvars, dict_depvars)
     return map(barg -> filter(x -> x isa Symbol, barg), bc_args)
 end
 
-function get_integration_variables(eqs, _indvars::Array, _depvars::Array)
-    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(_indvars,
-                                                                               _depvars)
-    return get_integration_variables(eqs, dict_indvars, dict_depvars)
-end
-
-function get_integration_variables(eqs, dict_indvars, dict_depvars)
-    exprs = ModelingToolkit.toexpr.(eqs)
-    vars = map(exprs) do expr
-        return _vars = Symbol.(filter(indvar -> length(find_thing_in_expr(expr, indvar)) > 0,
-                                      sort(collect(keys(dict_indvars)))))
-    end
-end
-
 """
-```julia
-:((cord, θ) -> begin
+[Dx(u1(x,y)) + 4*Dy(u2(x,y)) ~ 0,
+ Dx(u2(x,y)) + 9*Dy(u1(x,y)) ~ 0]
+
+:((coord, θ) -> begin
   #= ... =#
   #= ... =#
   begin
       (θ_depvar_1, θ_depvar_2) = (θ.depvar_1, θ.depvar_2)
       (phi_depvar_1, phi_depvar_2) = (phi.depvar_1, phi.depvar_2)
-      let (x, y) = (cord[1], cord[2])
+      let (x, y) = (coord[1], coord[2])
           [
               (+)(derivative(phi_depvar_1, u, [x, y], [[ε, 0.0]], 1, θ_depvar_1),
                   (*)(4, derivative(phi_depvar_1, u, [x, y], [[0.0, ε]], 1, θ_depvar_2))) -
@@ -231,7 +207,6 @@ end
           ]
       end
   end end)
-```
 """
 function build_symbolic_loss_function(pinnrep::NamedTuple{names},
                                       eq::Symbolics.Equation) where {names}
@@ -240,15 +215,20 @@ function build_symbolic_loss_function(pinnrep::NamedTuple{names},
     loss_function, pos, values = parse_equation(pinnrep, eq)
     this_eq_pair = pair(eq, depvars, dict_depvar_input)
     this_eq_indvars = unique(vcat([getindex(this_eq_pair, v) for v in keys(this_eq_pair)]...))
+    this_eq_indvars_locations = Dict([depvar => [findfirst(==(indvar), this_eq_indvars)
+                                                 for indvar in this_eq_pair[depvar]]
+                                      for depvar in keys(this_eq_pair)])
+    maybe_vcat = Dict([depvar => length(this_eq_indvars_locations[depvar]) == length(this_eq_indvars)
+                       for depvar in keys(this_eq_pair)])
 
-    vars = :(cord, θ, pfs)
+    vars = :(coord, θ, pfs)
     ex = Expr(:block)
     if :pvs ∈ names
-        (; pinn, cord_branch_net) = pinnrep
+        (; pinn, coord_branch_net) = pinnrep
 
         push!(ex.args, Expr(:(=), :deeponet, pinn.phi))
         push!(ex.args, Expr(:(=), :derivative, derivative))
-        push!(ex.args, Expr(:(=), :cord_branch_net, cord_branch_net))
+        push!(ex.args, Expr(:(=), :coord_branch_net, coord_branch_net))
         push!(ex.args,
               Expr(:(=), :(get_pfs_output(x::AbstractMatrix)),
                    :(ChainRulesCore.ignore_derivatives(mapreduce(f -> f.(x), vcat, pfs)))))
@@ -259,7 +239,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple{names},
                                                                  pfs)))))
         push!(ex.args,
               Expr(:(=), :(branch_net_input),
-                   :(transpose(get_pfs_output(cord_branch_net...)))))
+                   :(transpose(get_pfs_output(coord_branch_net...)))))
         push!(ex.args, Expr(:(=), :(phi(x_, θ_)), :(deeponet((branch_net_input, x_), θ_))))
 
     else
@@ -298,21 +278,24 @@ function build_symbolic_loss_function(pinnrep::NamedTuple{names},
         v = first(keys(this_eq_pair))
         ivars_l = convert(Vector{Any}, deepcopy(this_eq_pair[v]))
         ivars_r = convert(Vector{Any}, deepcopy(this_eq_pair[v]))
-        ivars_l[pos] = :(zero(cord[[1], :]) .+ $(values[1]))
-        ivars_r[pos] = :(zero(cord[[1], :]) .+ $(values[2]))
-        push!(eq_pair_expr, :($(Symbol(:cord, :_, :($v), :_l)) = vcat($(ivars_l...))))
-        push!(eq_pair_expr, :($(Symbol(:cord, :_, :($v), :_r)) = vcat($(ivars_r...))))
+        ivars_l[pos] = :(zero(coord[[1], :]) .+ $(values[1]))
+        ivars_r[pos] = :(zero(coord[[1], :]) .+ $(values[2]))
+        push!(eq_pair_expr, :($(Symbol(:coord, :_, :($v), :_l)) = vcat($(ivars_l...))))
+        push!(eq_pair_expr, :($(Symbol(:coord, :_, :($v), :_r)) = vcat($(ivars_r...))))
         this_eq_indvars = this_eq_indvars[setdiff(1:length(this_eq_indvars), pos)]
     else
         for v in keys(this_eq_pair)
             push!(eq_pair_expr,
-                  :($(Symbol(:cord, :_, :($v))) = vcat($(this_eq_pair[v]...))))
+                  :($(Symbol(:coord, :_, :($v))) = $(ifelse(maybe_vcat[v],
+                                                     :coord,
+                                                     :(vcat($(this_eq_pair[v]...)))))))
+                  #view(coord, $(this_eq_indvars_locations[v]), :)))
         end
     end
     vcat_expr = Expr(:block, :($(eq_pair_expr...)))
     vcat_expr_loss_functions = Expr(:block, vcat_expr, loss_function)
 
-    indvars_ex = [:($:cord[[$i], :]) for (i, x) in enumerate(this_eq_indvars)]
+    indvars_ex = [:(coord[[$i], :]) for (i, x) in enumerate(this_eq_indvars)]
     left_arg_pairs, right_arg_pairs = this_eq_indvars, indvars_ex
     vars_eq = Expr(:(=), ModelingToolkit.build_expr(:tuple, left_arg_pairs),
                    ModelingToolkit.build_expr(:tuple, right_arg_pairs))
@@ -402,11 +385,11 @@ function _transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {name
         if !(e isa Expr)
             if e in keys(dict_depvars)
                 ex.args = if !multioutput
-                    [:($(Expr(:$, :phi))), Symbol(:cord, :_, e), :θ]
+                    [:($(Expr(:$, :phi))), Symbol(:coord, :_, e), :θ]
                 else
                     [
                         :($(Expr(:$, Symbol(:phi, :_, e)))),
-                        Symbol(:cord, :_, e),
+                        Symbol(:coord, :_, e),
                         Symbol(:θ, :_, e),
                     ]
                 end
@@ -420,7 +403,7 @@ function _transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {name
                 while (_args[1] isa ModelingToolkit.Differential)
                     order += 1
                     push!(derivative_variables, ModelingToolkit.toexpr(_args[1].x))
-                    _args = _args[2].args
+                    _args = _args[2].args # handle Dx(Dy(u)) case order = 2
                 end
                 depvar = _args[1]
                 num_depvar = dict_depvars[depvar]
@@ -437,7 +420,7 @@ function _transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {name
                     [
                         :($(Expr(:$, :derivative))),
                         :phi,
-                        Symbol(:cord, :_, depvar),
+                        Symbol(:coord, :_, depvar),
                         εs_dnv,
                         order,
                         :θ,
@@ -446,7 +429,7 @@ function _transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {name
                     [
                         :($(Expr(:$, :derivative))),
                         Symbol(:phi, :_, depvar),
-                        Symbol(:cord, :_, depvar),
+                        Symbol(:coord, :_, depvar),
                         εs_dnv,
                         order,
                         Symbol(:θ, :_, depvar),
