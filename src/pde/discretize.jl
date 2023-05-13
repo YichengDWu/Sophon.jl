@@ -1,5 +1,5 @@
 function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
-                             strategy::AbstractTrainingAlg; derivative=finitediff)
+                             strategy::AbstractTrainingAlg; derivative=taylordiff)
     (; eqs, bcs, domain, ps, defaults, indvars, depvars) = pde_system
     (; phi, init_params) = pinn
 
@@ -34,7 +34,7 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
 end
 
 function build_loss_function(pde_system::PDESystem, pinn::PINN,
-                             strategy::AbstractTrainingAlg; derivative=finitediff)
+                             strategy::AbstractTrainingAlg; derivative=taylordiff)
     (; eqs, bcs, ivs, dvs) = pde_system
     (; phi, init_params) = pinn
 
@@ -65,7 +65,7 @@ end
 
 function build_loss_function(pde_system::ParametricPDESystem, pinn::PINN,
                              strategy::AbstractTrainingAlg, coord_branch_net;
-                             derivative=finitediff)
+                             derivative=taylordiff)
     (; eqs, bcs, ivs, dvs, pvs) = pde_system
     (; phi, init_params) = pinn
 
@@ -104,7 +104,7 @@ Convert the PDESystem into an `OptimizationProblem`. You will have access to eac
 """
 function discretize(pde_system, pinn::PINN, sampler::PINNSampler,
                     strategy::AbstractTrainingAlg;
-                    additional_loss=Sophon.null_additional_loss, derivative=finitediff,
+                    additional_loss=Sophon.null_additional_loss, derivative=taylordiff,
                     adtype=Optimization.AutoZygote())
     datasets = sample(pde_system, sampler, strategy)
     init_params = _ComponentArray(pinn.init_params)
@@ -123,7 +123,7 @@ end
 function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSampler,
                     strategy::AbstractTrainingAlg, functionsampler::FunctionSampler,
                     coord_branch_net::AbstractArray;
-                    additional_loss=Sophon.null_additional_loss, derivative=finitediff,
+                    additional_loss=Sophon.null_additional_loss, derivative=taylordiff,
                     adtype=Optimization.AutoZygote())
     datasets = sample(pde_system, sampler, strategy)
     init_params = _ComponentArray(pinn.init_params)

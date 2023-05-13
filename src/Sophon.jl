@@ -22,7 +22,8 @@ using Memoize, LRUCache
 using RuntimeGeneratedFunctions
 using DomainSets, StaticArraysCore
 import Symbolics
-using ForwardDiff
+using Static
+using ForwardDiff, TaylorDiff
 
 RuntimeGeneratedFunctions.init(@__MODULE__)
 

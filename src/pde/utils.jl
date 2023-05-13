@@ -16,62 +16,34 @@ This function is only used for the first order derivative.
 """
 forwarddiff(phi, t, εs, order, θ) = ForwardDiff.gradient(sum ∘ Base.Fix2(phi, θ), t)
 
-function finitediff(phi, x, εs, order, θ)
-    ε = εs[order]
-    _epsilon = inv(first(ε[ε .!= zero(ε)]))
-    ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(x), ε)
+function taylordiff(phi, x::AbstractMatrix, θ, εs_dnv, direction::NTuple{M, StaticInt{N}}) where {M, N}
+    ε = ChainRulesCore.@ignore_derivatives first(εs_dnv)
+    return taylordiff(phi, x, θ, ε, Val(M))
+end
 
-    if any(x -> x != εs[1], εs)
-        return (finitediff(phi, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ) .-
-                finitediff(phi, x .- ε, @view(εs[1:(end - 1)]), order - 1, θ)) .*
-               _epsilon ./ 2
-    else
-        finitediff(phi, x, ε, Val(order), θ, _epsilon)
+function taylordiff(phi, x::AbstractMatrix, θ, εs_dnv, direction::Tuple{NTuple{M1, StaticInt{N1}}, NTuple{M2,StaticInt{N2}}}) where {M1,N1,M2,N2}
+    ε1 = ChainRulesCore.@ignore_derivatives first(εs_dnv)
+    ε2 = ChainRulesCore.@ignore_derivatives last(εs_dnv)
+    return let phi=phi, ε1=ε1, M1=M1
+        taylordiff((x,θ)->taylordiff(phi, x, θ, ε1, Val(M1)), x, θ, ε2, Val(M2))
     end
 end
 
-@inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{1}, θ,
-                            h::T) where {T <: AbstractFloat}
-    return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* h ./ 2
-end
-
-@inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{2}, θ,
-                            h::T) where {T <: AbstractFloat}
-    return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* h^2
-end
-
-@inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{3}, θ,
-                            h::T) where {T <: AbstractFloat}
-    return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ) .+ 2 .* phi(x .- ε, θ) -
-            phi(x .- 2 .* ε, θ)) .* h^3 ./ 2
-end
-
-@inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{4}, θ,
-                            h::T) where {T <: AbstractFloat}
-    return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
-            4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* h^4
-end
-
-function finitediff(phi, x, θ, dim::Int, order::Int)
-    ε = ChainRulesCore.@ignore_derivatives get_ε(size(x, 1), dim, eltype(θ), order)
-    _type = parameterless_type(ComponentArrays.getdata(θ))
-    _epsilon = inv(first(ε[ε .!= zero(ε)]))
-
-    ε = adapt(_type, ε)
-
-    if order == 4
-        return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
-                4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* _epsilon^4
-    elseif order == 3
-        return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ, phi) .+ 2 .* phi(x .- ε, θ) -
-                phi(x .- 2 .* ε, θ)) .* _epsilon^3 ./ 2
-    elseif order == 2
-        return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* _epsilon^2
-    elseif order == 1
-        return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* _epsilon ./ 2
-    else
-        error("The order $order is not supported!")
+for N in 1:5
+    @eval @inline function taylordiff(phi, x::AbstractMatrix, θ, ε::AbstractVector,
+                                      ::Val{$N})
+        return let phi = phi, ε = ε, θ = θ
+            d = map(c -> TaylorDiff.derivative(i->sum(phi(i,θ)), c, ε, Val{$(N+1)}()), eachcol(x))
+            return reshape(d, 1, :)
+        end
     end
+end
+
+@inline function TaylorDiff.derivative(f, x::V1, l::V2,
+                            vN::Val{N}) where {V1 <: AbstractVector{<:Number},
+                                               V2 <: AbstractVector{<:Number}, N}
+    t = map((t0, t1) -> TaylorDiff.make_taylor(t0, t1, vN), x, l)
+    return TaylorDiff.extract_derivative(f(t), N)
 end
 
 function Base.getproperty(d::Symbolics.VarDomainPairing, var::Symbol)

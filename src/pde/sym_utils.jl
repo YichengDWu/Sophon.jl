@@ -35,10 +35,9 @@ function _dot_(x::Expr)
     end
 end
 
-function get_ε(dim, der_num, fdtype, order)
-    epsilon = ^(eps(fdtype), one(fdtype) / (2 + order))
+function get_ε(dim, der_num, fdtype)
     ε = zeros(fdtype, dim)
-    ε[der_num] = epsilon
+    ε[der_num] = one(fdtype)
     return ε
 end
 
@@ -406,33 +405,33 @@ function _transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {name
                     _args = _args[2].args # handle Dx(Dy(u)) case order = 2
                 end
                 depvar = _args[1]
-                num_depvar = dict_depvars[depvar]
                 indvars = _args[2:end]
                 dict_interior_indvars = Dict([indvar .=> j
                                               for (j, indvar) in enumerate(dict_depvar_input[depvar])])
                 dim_l = length(dict_interior_indvars)
 
-                εs = [get_ε(dim_l, d, fdtype, order) for d in 1:dim_l]
-                undv = [dict_interior_indvars[d_p] for d_p in derivative_variables]
+                εs = [get_ε(dim_l, d, fdtype) for d in 1:dim_l]
+                undv = reverse([dict_interior_indvars[d_p] for d_p in derivative_variables])
                 εs_dnv = [εs[d] for d in undv]
+                direction = ntuple(i->static(undv[i]), length(undv)) # innermost derivative first
 
                 ex.args = if !multioutput
                     [
                         :($(Expr(:$, :derivative))),
                         :phi,
                         Symbol(:coord, :_, depvar),
-                        εs_dnv,
-                        order,
                         :θ,
+                        εs_dnv,
+                        direction
                     ]
                 else
                     [
                         :($(Expr(:$, :derivative))),
                         Symbol(:phi, :_, depvar),
                         Symbol(:coord, :_, depvar),
-                        εs_dnv,
-                        order,
                         Symbol(:θ, :_, depvar),
+                        εs_dnv,
+                        direction,
                     ]
                 end
                 break
