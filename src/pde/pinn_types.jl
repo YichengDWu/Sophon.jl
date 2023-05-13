@@ -3,7 +3,7 @@
     PINN(rng::AbstractRNG=Random.default_rng(); kwargs...)
 
 A container for a neural network, its states and its initial parameters. Call `gpu` and `cpu` to move the neural network to the GPU and CPU respectively.
-The default element type of the parameters is `Float64`.
+The default element type of the parameters is `Float32`.
 
 ## Fields
 
@@ -47,20 +47,20 @@ end
 
 function PINN(chain::NamedTuple, rng::AbstractRNG=Random.default_rng())
     phi = map(m -> ChainState(m, rng), chain)
-    init_params = Lux.fmap(float64, initialparameters(rng, phi))
+    init_params = Lux.fmap(float32, initialparameters(rng, phi))
 
     return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
 function PINN(chain::AbstractExplicitLayer, rng::AbstractRNG=Random.default_rng())
     phi = ChainState(chain, rng)
-    init_params = Lux.fmap(float64, initialparameters(rng, phi))
+    init_params = Lux.fmap(float32, initialparameters(rng, phi))
 
     return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
 function initialparameters(rng::AbstractRNG, pinn::PINN)
-    return Lux.fmap(float64, initialparameters(rng, pinn.phi))
+    return Lux.fmap(float32, initialparameters(rng, pinn.phi))
 end
 
 """

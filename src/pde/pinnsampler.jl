@@ -15,7 +15,7 @@ function sample end
 
 Sampler to generate the datasets for PDE and boundary conditions using a quisa-random sampling algorithm.
 You can call `sample(pde, sampler, strategy)` on it to generate all the datasets. See [QuasiMonteCarlo.jl](https://github.com/SciML/QuasiMonteCarlo.jl)
-for available sampling algorithms. The default element type of the sampled data is `Float64`. The initial
+for available sampling algorithms. The default element type of the sampled data is `Float32`. The initial
 sampled data lives on GPU if [`PINN`](@ref) is. You will need manually move the data to GPU if you want to resample.
 
 ## Arguments

@@ -2,7 +2,7 @@ function isongpu(nt::NamedTuple)
     return any(x -> x isa AbstractGPUArray, Lux.fcollect(nt))
 end
 
-float64 = Base.Fix1(convert, AbstractArray{Float64})
+float32 = Base.Fix1(convert, AbstractArray{Float32})
 
 function get_l2_loss_function(loss_function, dataset)
     loss(θ) = mean(abs2, loss_function(dataset, θ))

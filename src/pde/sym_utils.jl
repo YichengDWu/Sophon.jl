@@ -170,7 +170,7 @@ end
 function get_bounds(pde::ModelingToolkit.PDESystem)
     (; eqs, bcs, domain, ivs, dvs) = pde
     _, _, dict_indvars, dict_depvars, _ = get_vars(ivs, dvs)
-    bounds = get_bounds(domain, eqs, bcs, Float64, dict_indvars, dict_depvars)
+    bounds = get_bounds(domain, eqs, bcs, Float32, dict_indvars, dict_depvars)
     return bounds
 end
 

@@ -1,5 +1,5 @@
 function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
-                             strategy::AbstractTrainingAlg; derivative=taylordiff)
+                             strategy::AbstractTrainingAlg; derivative=taylordiff, fdtype=Float32)
     (; eqs, bcs, domain, ps, defaults, indvars, depvars) = pde_system
     (; phi, init_params) = pinn
 
@@ -18,7 +18,7 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
 
     pinnrep = (; eqs, bcs, domain, ps, defaults, depvars, indvars, dict_indvars,
                dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
-               strategy, pde_indvars, bc_indvars, fdtype=Float64, eq_params=SciMLBase.NullParameters())
+               strategy, pde_indvars, bc_indvars, fdtype=fdtype, eq_params=SciMLBase.NullParameters())
 
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, eq, i)
                                         for (i, eq) in enumerate(eqs))
@@ -34,7 +34,7 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
 end
 
 function build_loss_function(pde_system::PDESystem, pinn::PINN,
-                             strategy::AbstractTrainingAlg; derivative=taylordiff)
+                             strategy::AbstractTrainingAlg; derivative=taylordiff,fdtype=Float32)
     (; eqs, bcs, ivs, dvs) = pde_system
     (; phi, init_params) = pinn
 
@@ -48,7 +48,7 @@ function build_loss_function(pde_system::PDESystem, pinn::PINN,
 
     pinnrep = (; eqs, bcs, depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input,
                multioutput, init_params, phi, derivative, strategy, pde_indvars, bc_indvars,
-               fdtype=Float64, eq_params=SciMLBase.NullParameters())
+               fdtype=Float32, eq_params=SciMLBase.NullParameters())
 
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, first(eq), i)
                                         for (i, eq) in enumerate(eqs))
@@ -65,7 +65,7 @@ end
 
 function build_loss_function(pde_system::ParametricPDESystem, pinn::PINN,
                              strategy::AbstractTrainingAlg, coord_branch_net;
-                             derivative=taylordiff)
+                             derivative=taylordiff, fdtype=Float32)
     (; eqs, bcs, ivs, dvs, pvs) = pde_system
     (; phi, init_params) = pinn
 
@@ -79,7 +79,7 @@ function build_loss_function(pde_system::ParametricPDESystem, pinn::PINN,
 
     pinnrep = (; eqs, bcs, depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input,
                dict_pmdepvars, dict_pmdepvar_input, multioutput, pvs, init_params, pinn,
-               derivative, strategy, pde_indvars, bc_indvars, fdtype=Float64, coord_branch_net,
+               derivative, strategy, pde_indvars, bc_indvars, fdtype=Float32, coord_branch_net,
                eq_params=SciMLBase.NullParameters())
 
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, first(eq), i)
@@ -105,13 +105,14 @@ Convert the PDESystem into an `OptimizationProblem`. You will have access to eac
 function discretize(pde_system, pinn::PINN, sampler::PINNSampler,
                     strategy::AbstractTrainingAlg;
                     additional_loss=Sophon.null_additional_loss, derivative=taylordiff,
-                    adtype=Optimization.AutoZygote())
+                    adtype=Optimization.AutoZygote(), fdtype=Float32)
     datasets = sample(pde_system, sampler, strategy)
     init_params = _ComponentArray(pinn.init_params)
     datasets = init_params isa AbstractGPUComponentVector ?
                map(Base.Fix1(adapt, CuArray), datasets) : datasets
     pde_and_bcs_loss_function = build_loss_function(pde_system, pinn, strategy;
-                                                    derivative=derivative)
+                                                    derivative=derivative,
+                                                    fdtype = fdtype)
 
     function full_loss_function(θ, p)
         return pde_and_bcs_loss_function(θ, p) + additional_loss(pinn.phi, θ)
@@ -124,7 +125,8 @@ function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSa
                     strategy::AbstractTrainingAlg, functionsampler::FunctionSampler,
                     coord_branch_net::AbstractArray;
                     additional_loss=Sophon.null_additional_loss, derivative=taylordiff,
-                    adtype=Optimization.AutoZygote())
+                    adtype=Optimization.AutoZygote(),
+                    fdtype=Float32)
     datasets = sample(pde_system, sampler, strategy)
     init_params = _ComponentArray(pinn.init_params)
     datasets = init_params isa AbstractGPUComponentVector ?
@@ -134,7 +136,8 @@ function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSa
     coord_branch_net = coord_branch_net isa Union{AbstractVector, StepRangeLen} ?
                       [coord_branch_net] : coord_branch_net
     pde_and_bcs_loss_function = build_loss_function(pde_system, pinn, strategy,
-                                                    coord_branch_net; derivative=derivative)
+                                                    coord_branch_net; derivative=derivative,
+                                                    fdtype = fdtype)
     function full_loss_function(θ, p)
         return pde_and_bcs_loss_function(θ, p) + additional_loss(pinn.phi, θ)
     end
