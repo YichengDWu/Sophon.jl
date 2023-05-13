@@ -55,11 +55,11 @@ function Sophon.sample(sampler::MyFuncSampler)
     return ys
 end
 
-cord_branch_net = range(0.0, 1.0; length=50)
+coord_branch_net = range(0.0, 1.0; length=50)
 
-fsampler = MyFuncSampler(cord_branch_net, 10)
+fsampler = MyFuncSampler(coord_branch_net, 10)
 
-prob = Sophon.discretize(Burgers, pinn, sampler, strategy, fsampler, cord_branch_net)
+prob = Sophon.discretize(Burgers, pinn, sampler, strategy, fsampler, coord_branch_net)
 
 function callback(p, l)
     println("Loss: $l")
@@ -82,7 +82,7 @@ end
 adam = Adam()
 for i in 1:k
     fs = Sophon.sample(fsampler)
-    p = Sophon.PINOParameterHandler(prob.p.cords, fs)
+    p = Sophon.PINOParameterHandler(prob.p.coords, fs)
     prob = remake(prob; u0=res.u, p=p)
     res = Optimization.solve(prob, adam; maxiters=n ÷ k, callback=callback)
 end
@@ -94,7 +94,7 @@ xs = 0.0:0.01:1.0
 ts = 0.0:0.01:1.0
 
 f_test(x) = sinpi(2x)
-u0 = reshape(f_test.(cord_branch_net), :, 1)
+u0 = reshape(f_test.(coord_branch_net), :, 1)
 axis = (xlabel="t", ylabel="x", title="Prediction")
 u_pred = [sum(pinn.phi((u0, [x, t]), res.u)) for x in xs, t in ts]
 fig, ax, hm = heatmap(ts, xs, u_pred'; axis=axis, colormap=:jet)
