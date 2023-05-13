@@ -40,7 +40,7 @@ for N in 1:5
                                       ::Val{$N})
         return let phi = phi, ε = ε, θ = θ
             d = map(c -> TaylorDiff.derivative(i->sum(phi(i,θ)), c, ε, Val{$(N+1)}()), eachcol(x))
-            return reshape(d, 1, :)
+            reshape(d, 1, :)
         end
     end
 end
