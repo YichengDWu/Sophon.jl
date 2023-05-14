@@ -25,7 +25,8 @@ import Symbolics
 using Static
 using ForwardDiff, TaylorDiff
 using ChainRulesCore: @thunk, NoTangent
-using TaylorDiff: contract
+using TaylorDiff: contract, raise
+using NNlib
 
 RuntimeGeneratedFunctions.init(@__MODULE__)
 

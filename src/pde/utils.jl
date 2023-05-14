@@ -86,3 +86,23 @@ function Base.getproperty(d::Symbolics.VarDomainPairing, var::Symbol)
         return Interval(infimum(domain)[idx], supremum(domain)[idx])
     end
 end
+
+function NNlib.tanh_fast(t::TaylorScalar{T,2}) where {T}
+    t0, t1 = t.value
+    return TaylorScalar{T,2}(frule((NoTangent(), t1), tanh_fast, t0))
+end
+function NNlib.tanh_fast(t::TaylorScalar{T,N}) where {T,N}
+    t1 = TaylorScalar{T,N-1}(t)
+    df = 1 - tanh_fast(t1)^2
+    return raise(tanh_fast(t.value[1]), df, t)
+end
+
+# relax to AbstractMatrix
+function rrule(::typeof(*), A::AbstractMatrix{S},
+               t::Vector{TaylorScalar{T, N}}) where {N, S <: Number, T}
+    project_A = ProjectTo(A)
+    function gemv_pullback(x̄)
+        NoTangent(), @thunk(project_A(contract.(x̄, transpose(t)))), @thunk(transpose(A)*x̄)
+    end
+    return A * t, gemv_pullback
+end
