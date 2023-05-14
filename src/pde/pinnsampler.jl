@@ -76,7 +76,7 @@ function sample(pde::ModelingToolkit.PDESystem, sampler::QuasiRandomSampler{fals
 
     pde_dataset = QuasiMonteCarlo.sample(pde_points, pde_bounds[1][1], pde_bounds[1][2],
                                          sampling_alg)
-    pde_datasets = [copy(pde_dataset) for _ in 1:length(pde_bounds)]
+    pde_datasets = [pde_dataset for _ in 1:length(pde_bounds)]
 
     boundary_datasets = [QuasiMonteCarlo.sample(points, bound[1], bound[2], sampling_alg)
                          for (points, bound) in zip(bcs_points, bcs_bounds)]
