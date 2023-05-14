@@ -414,7 +414,7 @@ function _transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {name
 
                 εs = [get_ε(dim_l, d, fdtype, order) for d in 1:dim_l]
                 undv = [dict_interior_indvars[d_p] for d_p in derivative_variables]
-                εs_dnv = [εs[d] for d in undv]
+                εs_dnv = [εs[d] for d in reverse(undv)]
 
                 ex.args = if !multioutput
                     [
