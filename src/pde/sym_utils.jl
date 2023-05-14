@@ -414,25 +414,31 @@ function _transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {name
 
                 εs = [get_ε(dim_l, d, fdtype, order) for d in 1:dim_l]
                 undv = [dict_interior_indvars[d_p] for d_p in derivative_variables]
+                mixed = any(!=(first(undv)), undv)
                 εs_dnv = [εs[d] for d in reverse(undv)]
+                epsilon = [inv(first(ε[ε .!= zero(ε)])) for ε in εs_dnv]
 
                 ex.args = if !multioutput
                     [
                         :($(Expr(:$, :derivative))),
                         :phi,
                         Symbol(:coord, :_, depvar),
-                        εs_dnv,
-                        order,
                         :θ,
+                        εs_dnv,
+                        epsilon,
+                        Val{order}(),
+                        Val{mixed}()
                     ]
                 else
                     [
                         :($(Expr(:$, :derivative))),
                         Symbol(:phi, :_, depvar),
                         Symbol(:coord, :_, depvar),
-                        εs_dnv,
-                        order,
                         Symbol(:θ, :_, depvar),
+                        εs_dnv,
+                        epsilon,
+                        Val{order}(),
+                        Val{mixed}()
                     ]
                 end
                 break
