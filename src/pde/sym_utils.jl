@@ -170,7 +170,8 @@ end
 function get_bounds(pde::ModelingToolkit.PDESystem)
     (; eqs, bcs, domain, ivs, dvs) = pde
     _, _, dict_indvars, dict_depvars, _ = get_vars(ivs, dvs)
-    bounds = get_bounds(domain, eqs, bcs, Float32, dict_indvars, dict_depvars)
+    _eltype = Base.promote_eltype(domain[1].domain.left, domain[1].domain.right)
+    bounds = get_bounds(domain, eqs, bcs, _eltype, dict_indvars, dict_depvars)
     return bounds
 end
 

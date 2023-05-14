@@ -107,7 +107,7 @@ function discretize(pde_system, pinn::PINN, sampler::PINNSampler,
                     additional_loss=Sophon.null_additional_loss, derivative=taylordiff,
                     adtype=Optimization.AutoZygote(), fdtype=Float32)
     datasets = sample(pde_system, sampler, strategy)
-    init_params = _ComponentArray(pinn.init_params)
+    init_params = _ComponentArray(pinn.init_params, fdtype)
     datasets = init_params isa AbstractGPUComponentVector ?
                map(Base.Fix1(adapt, CuArray), datasets) : datasets
     pde_and_bcs_loss_function = build_loss_function(pde_system, pinn, strategy;
