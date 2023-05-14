@@ -32,15 +32,15 @@ end
 for N in 1:5
     @eval @inline function taylordiff(phi, x::AbstractVector, θ, ε::AbstractVector,
                                       ::Val{$N})
-        return let θ = θ
-            TaylorDiff.derivative(i->sum(phi(i,θ)), x, ε, Val{$(N+1)}())
+        return let phi = phi, θ = θ
+            TaylorDiff.derivative(i->first(phi(i,θ)), x, ε, Val{$(N+1)}())
         end
     end
+
     @eval @inline function taylordiff(phi, x::AbstractMatrix, θ, ε::AbstractVector,
                                       ::Val{$N})
-        return let phi = phi, ε = ε, θ = θ
-            d = map(c -> TaylorDiff.derivative(i->sum(phi(i,θ)), c, ε, Val{$(N+1)}()), eachcol(x))
-            reshape(d, 1, :)
+        return let phi = phi, θ = θ
+            TaylorDiff.derivative(i->phi(i,θ), x, ε, Val{$(N+1)}())
         end
     end
 end
@@ -50,6 +50,29 @@ end
                                                V2 <: AbstractVector{<:Number}, N}
     t = map((t0, t1) -> TaylorDiff.make_taylor(t0, t1, vN), x, l)
     return TaylorDiff.extract_derivative(f(t), N)
+end
+
+@inline function TaylorDiff.derivative(f, x::V1, l::V2,
+                            vN::Val{N}) where {V1 <: AbstractMatrix{<:Number},
+                                               V2 <: AbstractVector{<:Number}, N}
+    t = broadcast((t0, t1) -> TaylorDiff.make_taylor(t0, t1, vN), x, l)
+    o = f(t) # (1,N) matrix
+    return map(Base.Fix2(TaylorDiff.extract_derivative, N), o)
+end
+
+function ChainRulesCore.rrule(::typeof(*), A::AbstractMatrix{S},
+                              t::AbstractMatrix{TaylorScalar{T, N}}) where {N, S <: Number, T}
+    project_A = ProjectTo(A)
+    project_t = ProjectTo(t)
+    function gemv_pullback(x̄)
+        X̄ = unthunk(x̄)
+        dA = @thunk(project_A(broadcast(axes(X̄, 1), axes(t, 1)') do i, j
+            mapreduce(contract, +, @view(X̄[i, :]), @view(t[j, :]))
+        end))
+        dB = @thunk(project_t(transpose(A)*X̄))
+        NoTangent(), dA, dB
+    end
+    return A * t, gemv_pullback
 end
 
 function Base.getproperty(d::Symbolics.VarDomainPairing, var::Symbol)

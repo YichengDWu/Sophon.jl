@@ -24,6 +24,8 @@ using DomainSets, StaticArraysCore
 import Symbolics
 using Static
 using ForwardDiff, TaylorDiff
+using ChainRulesCore: @thunk, NoTangent
+using TaylorDiff: contract
 
 RuntimeGeneratedFunctions.init(@__MODULE__)
 
