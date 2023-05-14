@@ -252,12 +252,12 @@ end
     FullyConnected(layer_sizes::NTuple{N, Int}, activation; outermost = true,
                    init_weight=kaiming_uniform(activation),
                    init_bias=zeros32,
-                   allow_fast_activation=false)
+                   allow_fast_activation=true)
     FullyConnected(in_dims::Int, out_dims::Int, activation::Function;
                    hidden_dims::Int, num_layers::Int, outermost=true,
                    init_weight=kaiming_uniform(activation),
                    init_bias=zeros32,
-                   allow_fast_activation=false)
+                   allow_fast_activation=true)
 
 Create fully connected layers.
 
@@ -343,12 +343,12 @@ end
     ResNet(layer_sizes::NTuple{N, Int}, activation; outermost=true,
                    init_weight=kaiming_uniform(activation),
                    init_bias=zeros32,
-                   allow_fast_activation=false)
+                   allow_fast_activation=true)
     ResNet(in_dims::Int, out_dims::Int, activation::Function;
                    hidden_dims::Int, num_layers::Int, outermost=true,
                    init_weight=kaiming_uniform(activation),
                    init_bias=zeros32,
-                   allow_fast_activation=false)
+                   allow_fast_activation=true)
 
 Create fully connected layers.
 
