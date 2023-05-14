@@ -71,7 +71,7 @@ function get_vars(indvars_, depvars_)
     depvars = Symbol[]
     dict_depvar_input = Dict{Symbol, Vector{Symbol}}()
     for d in depvars_
-        if ModelingToolkit.value(d) isa ModelingToolkit.Term
+        if ModelingToolkit.value(d) isa ModelingToolkit.Term || ModelingToolkit.value(d) isa ModelingToolkit.BasicSymbolic
             dname = ModelingToolkit.getname(d)
             push!(depvars, dname)
             push!(dict_depvar_input,
