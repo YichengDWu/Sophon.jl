@@ -300,7 +300,7 @@ Chain(
 function FullyConnected(layer_sizes::NTuple{N, T}, activation::Function;
                         outermost::Bool=true, init_bias=zeros32,
                         init_weight::Function=kaiming_uniform(activation),
-                        allow_fast_activation::Bool=false) where {N, T <: Int}
+                        allow_fast_activation::Bool=true) where {N, T <: Int}
     return FullyConnected(layer_sizes, activation, Val(outermost); init_weight=init_weight,
                           init_bias=init_bias, allow_fast_activation=allow_fast_activation)
 end
@@ -308,7 +308,7 @@ end
 function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
                         num_layers::Int, outermost::Bool=true,
                         init_weight::Function=kaiming_uniform(activation),
-                        init_bias=zeros32, allow_fast_activation::Bool=false)
+                        init_bias=zeros32, allow_fast_activation::Bool=true)
     return FullyConnected((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims),
                           activation, Val(outermost); init_weight=init_weight,
                           init_bias=init_bias, allow_fast_activation=allow_fast_activation)
@@ -399,7 +399,7 @@ Chain(
 """
 function ResNet(layer_sizes::NTuple{N, T}, activation::Function; outermost::Bool=true,
                 init_bias=zeros32, init_weight::Function=kaiming_uniform(activation),
-                allow_fast_activation::Bool=false) where {N, T <: Int}
+                allow_fast_activation::Bool=true) where {N, T <: Int}
     return ResNet(layer_sizes, activation, Val(outermost); init_weight=init_weight,
                   init_bias=init_bias, allow_fast_activation=allow_fast_activation)
 end
@@ -407,7 +407,7 @@ end
 function ResNet(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
                 num_layers::Int, outermost::Bool=true,
                 init_weight::Function=kaiming_uniform(activation), init_bias=zeros32,
-                allow_fast_activation::Bool=false)
+                allow_fast_activation::Bool=true)
     return ResNet((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims), activation,
                   Val(outermost); init_weight=init_weight, init_bias=init_bias,
                   allow_fast_activation=allow_fast_activation)
