@@ -16,38 +16,36 @@ This function is only used for the first order derivative.
 """
 forwarddiff(phi, t, εs, order, θ) = ForwardDiff.gradient(sum ∘ Base.Fix2(phi, θ), t)
 
-function finitediff(phi, x, εs, order, θ)
-    ε = εs[order]
-    _epsilon = inv(first(ε[ε .!= zero(ε)]))
+function finitediff(phi, x, θ, εs, epsilon, order::Val{N}, ::Val{false}) where {N}
+    ε = εs[N]
+    _epsilon = ChainRulesCore.@ignore_derivatives epsilon[N]
     ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(x), ε)
-
-    if any(x -> x != εs[1], εs)
-        return (finitediff(phi, x .+ ε, @view(εs[1:(end - 1)]), order - 1, θ) .-
-                finitediff(phi, x .- ε, @view(εs[1:(end - 1)]), order - 1, θ)) .*
-               _epsilon ./ 2
-    else
-        finitediff(phi, x, ε, Val(order), θ, _epsilon)
-    end
+    return finitediff(phi, x, θ, ε, order, _epsilon)
 end
 
-@inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{1}, θ,
-                            h::T) where {T <: AbstractFloat}
+function finitediff(phi, x, θ, εs, epsilon, order::Val{N}, mixed::Val{true}) where {N}
+    ε = εs[N]
+    _epsilon = ChainRulesCore.@ignore_derivatives epsilon[N]
+    ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(x), ε)
+
+    return (finitediff(phi, x .+ ε, θ, @view(εs[1:(end - 1)]), @view(epsilon[1:(end - 1)]), Val(N-1), mixed) .-
+            finitediff(phi, x .- ε, θ, @view(εs[1:(end - 1)]), @view(epsilon[1:(end - 1)]), Val(N-1), mixed)) .* _epsilon ./ 2
+end
+
+@inline function finitediff(phi, x, θ, ε::AbstractVector{T}, ::Val{1}, h::T) where {T<:AbstractFloat}
     return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* h ./ 2
 end
 
-@inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{2}, θ,
-                            h::T) where {T <: AbstractFloat}
+@inline function finitediff(phi, x, θ, ε::AbstractVector{T}, ::Val{2}, h::T) where {T<:AbstractFloat}
     return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* h^2
 end
 
-@inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{3}, θ,
-                            h::T) where {T <: AbstractFloat}
+@inline function finitediff(phi, x, θ, ε::AbstractVector{T}, ::Val{3}, h::T) where {T<:AbstractFloat}
     return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ) .+ 2 .* phi(x .- ε, θ) -
             phi(x .- 2 .* ε, θ)) .* h^3 ./ 2
 end
 
-@inline function finitediff(phi, x, ε::AbstractVector{T}, ::Val{4}, θ,
-                            h::T) where {T <: AbstractFloat}
+@inline function finitediff(phi, x, θ, ε::AbstractVector{T}, ::Val{4}, h::T) where {T<:AbstractFloat}
     return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
             4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* h^4
 end
