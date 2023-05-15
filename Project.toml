@@ -1,7 +1,7 @@
 name = "Sophon"
 uuid = "077df616-1c15-4d29-b519-7542a62df138"
 authors = ["YichengDWu <yicheng.wu@ucalgary.ca> and contributors"]
-version = "0.3.11"
+version = "0.3.12"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
