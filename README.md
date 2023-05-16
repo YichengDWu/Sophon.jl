@@ -25,6 +25,11 @@ pkg> add Sophon
 | [Function Fitting](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/discontinuous/) | [Multi-scale Poisson Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/poisson/) | [Convection Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/convection/) | [Helmholtz Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/helmholtz/) |
 | ![](assets/allen.png)     | ![](assets/Schrödinger.png)                 | ![](assets/Lshape.png)                |    ![](assets/sod.png)     |
 | [Allen-Cahn Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/allen_cahn/) | [Schrödinger Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/Schr%C3%B6dingerEquation/) | [L-shaped Domain](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/L_shape/) | [SOD Shock Tube](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/sod/) |
+
+## Examples
+
+More examples can be found in [Sophon-Examples](https://github.com/YichengDWu/Sophon-Examples)
+
 ## Related Libraries
 
 - [NeuralPDE](https://github.com/SciML/NeuralPDE.jl)
