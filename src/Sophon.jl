@@ -27,10 +27,10 @@ using ForwardDiff
 RuntimeGeneratedFunctions.init(@__MODULE__)
 
 include("layers/basic.jl")
+include("layers/activations.jl")
 include("layers/containers.jl")
 include("layers/nets.jl")
 include("layers/utils.jl")
-include("layers/activations.jl")
 include("layers/operators.jl")
 
 include("pde/componentarrays.jl")
@@ -52,7 +52,7 @@ function __init__()
     end
 end
 
-export gaussian, quadratic, laplacian, expsin, multiquadratic
+export gaussian, quadratic, laplacian, expsin, multiquadratic, stan
 export FourierFeature, TriplewiseFusion, FullyConnected, ResNet, Sine, RBF,
        DiscreteFourierFeature, ConstantFunction, ScalarLayer, SplitFunction, FactorizedDense
 export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON

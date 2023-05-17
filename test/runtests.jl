@@ -4,6 +4,27 @@ using Test
 rng = Random.default_rng()
 
 @testset "Sophon.jl" begin
+    @testset "Activation" begin
+        @testset "stan" begin
+            chain = FullyConnected((2, 4, 5, 6), stan)
+            ps, st = Lux.setup(rng, chain)
+            @test ps.layer_1.β == ones(Float32, 4, 1)
+            @test chain[1].init_bias == Lux.zeros32
+            @test chain[1].init_weight == Sophon.kaiming_uniform(tanh)
+            x = rand(Float32, 2, 5)
+            y, st = chain(x, ps, st)
+            @test size(y) == (6, 5)
+
+            chain2 = FullyConnected(2, 4, stan; hidden_dims=4, num_layers=2)
+            ps, st = Lux.setup(rng, chain2)
+            @test ps.layer_1.β == ones(Float32, 4, 1)
+            @test chain[1].init_bias == Lux.zeros32
+            @test chain[1].init_weight == Sophon.kaiming_uniform(tanh)
+            x = rand(Float32, 2, 5)
+            y, st = chain2(x, ps, st)
+            @test size(y) == (4, 5)
+        end
+    end
     @testset "layers" begin
         @testset "basic" begin
             @testset "FourierFeature" begin

@@ -28,3 +28,44 @@ function wu(x, a=1)
     x = NNlib.oftf(x, a) * x
     return x * (5 * x^2 - 1) / (1 + x^2)^4
 end
+
+@doc raw"""
+    stan()
+
+Self-scalable Tanh.
+
+```math
+\sigma(x^i) = tanh(x^i) + \beta^i * x^i * tanh(x^i)
+```
+
+## Reference
+
+[gnanasambandam2022self](@cite)
+"""
+function stan end
+
+function initialparameters(rng::AbstractRNG, d::Dense{true, typeof(stan)})
+    return (weight=d.init_weight(rng, d.out_dims, d.in_dims),
+            bias=d.init_bias(rng, d.out_dims, 1),
+            β=Lux.ones32(rng, d.out_dims, 1))
+end
+
+function initialparameters(rng::AbstractRNG, d::Dense{false, typeof(stan)})
+    return (weight=d.init_weight(rng, d.out_dims, d.in_dims),
+            β=Lux.ones32(rng, d.out_dims, 1))
+end
+
+@inline function (d::Dense{false, typeof(stan)})(x::AbstractVecOrMat, ps, st::NamedTuple)
+    z = ps.weight * x
+    return tanh.(z) .* (1 .+ ps.β .* z), st
+end
+
+@inline function (d::Dense{true, typeof(stan)})(x::AbstractVector, ps, st::NamedTuple)
+    z = ps.weight * x .+ vec(ps.bias)
+    return tanh.(z) .* (1 .+ ps.β .* z), st
+end
+
+@inline function (d::Dense{true, typeof(stan)})(x::AbstractMatrix, ps, st::NamedTuple)
+    z = ps.weight * x .+ ps.bias
+    return tanh.(z) .* (1 .+ ps.β .* z), st
+end
