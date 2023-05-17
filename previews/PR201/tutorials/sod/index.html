@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>SOD Shock Tube Problem · Sophon.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://YichengDWu.github.io/Sophon.jl/tutorials/sod/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/indigo.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Sophon.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../discontinuous/">Fitting a nonlinear discontinuous function</a></li><li><a class="tocitem" href="../poisson/">1D Multi-scale Poisson&#39;s Equation</a></li><li><a class="tocitem" href="../convection/">1D Convection Equation</a></li><li><a class="tocitem" href="../helmholtz/">2D Helmholtz Equation</a></li><li><a class="tocitem" href="../allen_cahn/">Allen-Cahn Equation with Sequential Training</a></li><li><a class="tocitem" href="../SchrödingerEquation/">Schrödinger Equation: A PDE System with Resampling</a></li><li><a class="tocitem" href="../L_shape/">Poisson equation over an L-shaped domain</a></li><li><a class="tocitem" href="../waveinverse2/">Inverse problem for the wave equation with unknown velocity field</a></li><li class="is-active"><a class="tocitem" href>SOD Shock Tube Problem</a><ul class="internal"><li><a class="tocitem" href="#Sod-shock-tube-with-adaptive-weights"><span>Sod shock tube with adaptive weights</span></a></li></ul></li></ul></li><li><a class="tocitem" href="../../qa/">FAQ</a></li><li><a class="tocitem" href="../../api/">API Reference</a></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>SOD Shock Tube Problem</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>SOD Shock Tube Problem</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/YichengDWu/Sophon.jl/blob/main/docs/src/tutorials/sod.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h2 id="Sod-shock-tube-with-adaptive-weights"><a class="docs-heading-anchor" href="#Sod-shock-tube-with-adaptive-weights">Sod shock tube with adaptive weights</a><a id="Sod-shock-tube-with-adaptive-weights-1"></a><a class="docs-heading-anchor-permalink" href="#Sod-shock-tube-with-adaptive-weights" title="Permalink"></a></h2><p>This example showcases how to use adaptive weights in <code>Sophon</code>. There is nothing special about the adaptive algorithm itself here, it is just for demonstration purposes.</p><pre><code class="language-julia hljs">using Optimization, OptimizationOptimJL, Plots
+using ModelingToolkit, IntervalSets
+using Sophon
+using ChainRulesCore
+
+@parameters t, x
+@variables u(..), ρ(..), p(..)
+Dₓ = Differential(x)
+Dₜ = Differential(t)
+
+u₀(x) = 0.0
+ρ₀(x) = ifelse(x &lt; 0.5, 1.0, 0.125)
+@register ρ₀(x)
+p₀(x) = ifelse(x &lt; 0.5, 1.0, 0.1)
+@register p₀(x)
+
+bcs = [ρ(0, x) ~ ρ₀(x), u(0, x) ~ u₀(x), p(0, x) ~ p₀(x), u(t, 0) ~ 0.0, u(t, 1) ~ 0.0]
+
+γ = 1.4
+E(t, x) = p(t, x) / (γ - 1) + 0.5 * ρ(t, x) * abs2(u(t, x))
+
+eqs = [
+    Dₜ(ρ(t, x)) + Dₓ(ρ(t, x) * u(t, x)) ~ 0.0,
+    Dₜ(ρ(t, x) * u(t, x)) + Dₓ(ρ(t, x) * u(t, x) * u(t, x) + p(t, x)) ~ 0.0,
+    Dₜ(E(t, x)) + Dₓ(u(t, x) * (E(t, x) + p(t, x))) ~ 0.0,
+]
+
+t_min, t_max = 0.0, 0.2
+x_min, x_max = 0.0, 1.0
+domains = [t ∈ Interval(t_min, t_max), x ∈ Interval(x_min, x_max)]
+
+@named pde_system = PDESystem(eqs, bcs, domains, [t, x], [u(t, x), ρ(t, x), p(t, x)])</code></pre><p class="math-container">\[ \begin{align}
+\frac{\mathrm{d}}{\mathrm{d}x} u\left( t, x \right) \rho\left( t, x \right) + \frac{\mathrm{d}}{\mathrm{d}t} \rho\left( t, x \right) =&amp; 0 \\
+\frac{\mathrm{d}}{\mathrm{d}x} \left( \left( u\left( t, x \right) \right)^{2} \rho\left( t, x \right) + p\left( t, x \right) \right) + \frac{\mathrm{d}}{\mathrm{d}t} u\left( t, x \right) \rho\left( t, x \right) =&amp; 0 \\
+\frac{\mathrm{d}}{\mathrm{d}t} \left( 2.5 p\left( t, x \right) + 0.5 \left|u\left( t, x \right)\right|^{2} \rho\left( t, x \right) \right) + \frac{\mathrm{d}}{\mathrm{d}x} \left( 3.5 p\left( t, x \right) + 0.5 \left|u\left( t, x \right)\right|^{2} \rho\left( t, x \right) \right) u\left( t, x \right) =&amp; 0
+\end{align}
+ \]</p><pre><code class="language-julia hljs">pinn = PINN(; u=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
+            ρ=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
+            p=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16))
+
+sampler = QuasiRandomSampler(1000, 400)
+
+function pde_weights(phi, x, θ)
+    ux = Sophon.finitediff(phi.u, x, θ.u, 1, 1)
+    return ChainRulesCore.@ignore_derivatives inv.(0.2 .* (abs.(ux) .- ux) .+ 1)
+end
+
+strategy = AdaptiveTraining(pde_weights, Returns(10))
+
+prob = Sophon.discretize(pde_system, pinn, sampler, strategy)
+
+function callback(p, l)
+    println(&quot;loss: &quot;, l)
+    return false
+end
+
+res = Optimization.solve(prob, BFGS(); maxiters=1000, callback=callback)
+
+θ = res.u
+phi = pinn.phi
+xs = x_min:0.01:x_max |&gt; collect
+
+phi = pinn.phi
+p1 = plot(xs, [first(phi.u([t_max, x], θ.u)) for x in xs]; label=&quot;u(t=1,x)&quot;)
+p2 = plot!(xs, [first(phi.ρ([t_max, x], θ.ρ)) for x in xs]; label=&quot;ρ(t=1,x)&quot;)
+p3 = plot!(xs, [first(phi.p([t_max, x], θ.p)) for x in xs]; label=&quot;p(t=1,x)&quot;)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../waveinverse2/">« Inverse problem for the wave equation with unknown velocity field</a><a class="docs-footer-nextpage" href="../../qa/">FAQ »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Wednesday 17 May 2023 09:39">Wednesday 17 May 2023</span>. Using Julia version 1.9.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
