@@ -113,23 +113,6 @@ savefig("result10.svg"); nothing # hide
 ```
 ![](result10.svg)
 
-## Self-scalable Tanh (Stan)
-
-[`stan`](@ref) is also a good choice. It is particularly useful for unnormalized data.
-
-```@example ds
-model = FullyConnected((1,50,50,50,50,1), stan)
-```
-
-```@example ds
-@time ps, st = train(model, x_train, y_train)
-y_pred = model(x_test,ps,st)[1]
-Plots.plot(vec(x_test), vec(y_pred),label="Prediction",line = (:dot, 4))
-Plots.plot!(vec(x_test), vec(y_test),label="Exact",legend=:topleft)
-savefig("result011.svg"); nothing # hide
-```
-![](result011.svg)
-
 ## Gaussian activation function
 
 We can also try using a fully connected net with the [`gaussian`](@ref) activation function.
