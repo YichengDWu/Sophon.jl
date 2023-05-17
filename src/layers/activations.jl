@@ -44,6 +44,8 @@ Self-scalable Tanh.
 """
 function stan end
 
+kaiming_normal(::typeof(stan)) = Lux.glorot_uniform
+
 function initialparameters(rng::AbstractRNG, d::Dense{true, typeof(stan)})
     return (weight=d.init_weight(rng, d.out_dims, d.in_dims),
             bias=d.init_bias(rng, d.out_dims, 1),

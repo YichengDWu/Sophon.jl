@@ -314,25 +314,6 @@ function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidde
                           init_bias=init_bias, allow_fast_activation=allow_fast_activation)
 end
 
-function FullyConnected(layer_sizes::NTuple{N, T}, activation::typeof(stan);
-                        outermost::Bool=true,
-                        allow_fast_activation::Bool=false) where {N, T <: Int}
-    init_bias = Lux.zeros32
-    init_weight = Lux.glorot_uniform
-    return FullyConnected(layer_sizes, activation, Val(outermost); init_weight=init_weight,
-                          init_bias=init_bias, allow_fast_activation=allow_fast_activation)
-end
-
-function FullyConnected(in_dims::Int, out_dims::Int, activation::typeof(stan); hidden_dims::Int,
-                        num_layers::Int, outermost::Bool=true,
-                        allow_fast_activation::Bool=false)
-    init_bias = Lux.zeros32
-    init_weight = Lux.glorot_uniform
-    return FullyConnected((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims),
-                          activation, Val(outermost); init_weight=init_weight,
-                          init_bias=init_bias, allow_fast_activation=allow_fast_activation)
-end
-
 @generated function FullyConnected(layer_sizes::NTuple{N, T}, activation::Function,
                                    ::Val{F}; init_weight, init_bias,
                                    allow_fast_activation) where {N, T <: Int, F}
