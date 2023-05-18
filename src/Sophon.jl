@@ -18,6 +18,7 @@ using StatsBase, QuasiMonteCarlo
 using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
 import QuasiMonteCarlo
 import Sobol
+using Distributions: Beta
 using Memoize, LRUCache
 using RuntimeGeneratedFunctions
 using DomainSets, StaticArraysCore
@@ -58,7 +59,7 @@ export FourierFeature, TriplewiseFusion, FullyConnected, ResNet, Sine, RBF,
 export PINNAttention, FourierNet, FourierAttention, Siren, FourierFilterNet, BACON
 export DeepONet
 export PINN, symbolic_discretize, discretize, QuasiRandomSampler, NonAdaptiveTraining,
-       AdaptiveTraining, ChainState
+       AdaptiveTraining, ChainState, BetaRandomSampler
 
 export get_global_ps, get_local_ps
 end

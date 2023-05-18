@@ -310,3 +310,6 @@ rng = Random.default_rng()
     end
     =#
 end
+
+
+@testset "BetaSampler" begin include("betasampler.jl") end

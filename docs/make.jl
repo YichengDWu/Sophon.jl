@@ -25,6 +25,7 @@ makedocs(bib; modules=[Sophon], sitename="Sophon.jl",
          pages=[
              "Home" => "index.md",
              "Tutorials" => [
+                 "Introduction with Lotka-Volterra System"=> "tutorials/ode.md",
                  "Fitting a nonlinear discontinuous function" => "tutorials/discontinuous.md",
                  "1D Multi-scale Poisson's Equation" => "tutorials/poisson.md",
                  "1D Convection Equation" => "tutorials/convection.md",

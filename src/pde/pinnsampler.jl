@@ -31,7 +31,7 @@ sampled data lives on GPU if [`PINN`](@ref) is. You will need manually move the 
 
   - `sampling_alg`: The sampling algorithm to use. The default is `SobolSample()`.
 
-  - `resample`: Whether to resample the data for each PDE. The default is `false`, which can save a lot of memory
+  - `resample`: Whether to resample the data for each equation. The default is `false`, which can save a lot of memory
     if you are solving a large number of PDEs. In this case, `pde_points` has to be a integer. If you want to resample the data, you will need to manually move
     the data to GPU if you want to use GPU to solve the PDEs.
 """
@@ -47,8 +47,7 @@ function QuasiRandomSampler(pde_points, bcs_points=pde_points; sampling_alg=Sobo
                               typeof(sampling_alg)}(pde_points, bcs_points, sampling_alg)
 end
 
-function sample(pde::ModelingToolkit.PDESystem, sampler::QuasiRandomSampler{true},
-                strategy=nothing)
+function sample(pde::ModelingToolkit.PDESystem, sampler::QuasiRandomSampler{true})
     (; pde_points, bcs_points, sampling_alg) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
@@ -66,8 +65,7 @@ function sample(pde::ModelingToolkit.PDESystem, sampler::QuasiRandomSampler{true
     return [pde_datasets; boundary_datasets]
 end
 
-function sample(pde::ModelingToolkit.PDESystem, sampler::QuasiRandomSampler{false, <:Int},
-                strategy=nothing)
+function sample(pde::ModelingToolkit.PDESystem, sampler::QuasiRandomSampler{false, <:Int})
     (; pde_points, bcs_points, sampling_alg) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
@@ -84,7 +82,7 @@ function sample(pde::ModelingToolkit.PDESystem, sampler::QuasiRandomSampler{fals
     return [pde_datasets; boundary_datasets]
 end
 
-function sample(pde, sampler::QuasiRandomSampler, strategy=nothing)
+function sample(pde::Sophon.PDESystem, sampler::QuasiRandomSampler)
     (; pde_points, bcs_points, sampling_alg) = sampler
     (; eqs, bcs) = pde
 
@@ -102,8 +100,7 @@ function sample(pde, sampler::QuasiRandomSampler, strategy=nothing)
 end
 
 function sample(pde::ModelingToolkit.PDESystem,
-                sampler::QuasiRandomSampler{P, B, SobolSample},
-                strategy=nothing) where {P, B}
+                sampler::QuasiRandomSampler{P, B, SobolSample}) where {P, B}
     (; pde_points, bcs_points) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
@@ -117,6 +114,63 @@ function sample(pde::ModelingToolkit.PDESystem,
                     for (points, bound) in zip(pde_points, pde_bounds)]
 
     boundary_datasets = [sobolsample(points, bound[1], bound[2])
+                         for (points, bound) in zip(bcs_points, bcs_bounds)]
+
+    return [pde_datasets; boundary_datasets]
+end
+
+
+"""
+    BetaRandomSampler(pde_points, bcs_points=pde_points; sampling_alg=SobolSample(),
+                      resample::Bool=false, α=0.4, β=1.0)
+Same as `QuasiRandomSampler`, but use `Beta` distribution along time on the domain.
+"""
+struct BetaRandomSampler{R,P,B,S,A,L} <: PINNSampler
+    pde_points::P
+    bcs_points::B
+    sampling_alg::S
+    α::A
+    β::L
+end
+
+function BetaRandomSampler(pde_points, bcs_points=pde_points; sampling_alg=SobolSample(),
+                            resample::Bool=false, α=0.4, β=1.0)
+    return BetaRandomSampler{resample, typeof(pde_points), typeof(bcs_points),
+                              typeof(sampling_alg), typeof(α), typeof(β)}(pde_points, bcs_points,
+                                                                          sampling_alg, α, β)
+end
+
+function SciMLBase.remake(sampler::BetaRandomSampler{resample}; α) where {resample}
+    (; pde_points, bcs_points, sampling_alg, β) = sampler
+    return BetaRandomSampler{resample, typeof(pde_points), typeof(bcs_points),
+                              typeof(sampling_alg), typeof(α), typeof(β)}(pde_points, bcs_points,
+                                                                          sampling_alg, α, β)
+end
+
+function sample(pde::ModelingToolkit.PDESystem, sampler::BetaRandomSampler{false, <:Int})
+    t_pos = get_where_t_is(pde)
+    (; pde_points, bcs_points, sampling_alg, α, β) = sampler
+    pde_bounds, bcs_bounds = get_bounds(pde)
+
+    tspan = pde.domain[t_pos].domain.left, pde.domain[t_pos].domain.right
+    pde_bounds = [(deleteat!(lb,t_pos),  deleteat!(ub,t_pos)) for (lb, ub) in pde_bounds]
+
+    bcs_points = length(bcs_points) == 1 ?
+                 ntuple(_ -> first(bcs_points), length(bcs_bounds)) : Tuple(bcs_points)
+
+    pde_dataset = if isempty(pde_bounds[1][1])
+        zeros(0, pde_points)
+    else
+        QuasiMonteCarlo.sample(pde_points, pde_bounds[1][1], pde_bounds[1][2],
+                                            sampling_alg)
+    end
+
+    ts = rand(Beta(α, β), (1, pde_points))
+    ts = tspan[1] .+ (tspan[2] .- tspan[1]) .* ts
+    pde_dataset = insert_row(pde_dataset, ts, t_pos)
+    pde_datasets = [pde_dataset for _ in 1:length(pde_bounds)]
+
+    boundary_datasets = [QuasiMonteCarlo.sample(points, bound[1], bound[2], sampling_alg)
                          for (points, bound) in zip(bcs_points, bcs_bounds)]
 
     return [pde_datasets; boundary_datasets]
@@ -220,5 +274,3 @@ end
     s = Sobol.skip(s, n)
     return s
 end
-
-logrange(x1, x2, n) = exp10.(range(log10(x1), log10(x2); length=n))

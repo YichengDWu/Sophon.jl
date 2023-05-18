@@ -83,3 +83,15 @@ function Base.getproperty(d::Symbolics.VarDomainPairing, var::Symbol)
         return Interval(infimum(domain)[idx], supremum(domain)[idx])
     end
 end
+
+function insert_row(matrix, vector, index)
+    if index > size(matrix, 1) + 1 || index < 1
+        error("Index out of bounds.")
+    end
+
+    if size(matrix, 2) != size(vector, 2)
+        error("Dimensions mismatch.")
+    end
+
+    return vcat(@view(matrix[1:index-1, :]), vector, @view(matrix[index:end, :]))
+end
