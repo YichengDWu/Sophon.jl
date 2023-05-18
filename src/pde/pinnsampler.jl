@@ -140,7 +140,7 @@ function BetaRandomSampler(pde_points, bcs_points=pde_points; sampling_alg=Sobol
                                                                           sampling_alg, α, β)
 end
 
-function SciMLBase.remake(::BetaRandomSampler{resample}; α) where {resample}
+function SciMLBase.remake(sampler::BetaRandomSampler{resample}; α) where {resample}
     (; pde_points, bcs_points, sampling_alg, β) = sampler
     return BetaRandomSampler{resample, typeof(pde_points), typeof(bcs_points),
                               typeof(sampling_alg), typeof(α), typeof(β)}(pde_points, bcs_points,
