@@ -70,7 +70,7 @@ plot!(true_sol)
 
 While the initial results are encouraging, we can further refine our model. By remaking the sampler, we can gradually transition to the uniform distribution for improved results.
 
-```@example ODE
+```julia
 # Adjusting the sampler to uniform distribution and re-solving the problem
 for α in [0.6, 0.8, 1.0] # when α = 1.0, it is equivalent to uniform sampling
     sampler = remake(sampler; α=α)
