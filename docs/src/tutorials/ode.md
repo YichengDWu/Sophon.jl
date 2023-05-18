@@ -6,6 +6,7 @@ This tutorial provides a step-by-step guide to solve the Lotka-Volterra system o
 using ModelingToolkit
 using Sophon, IntervalSets
 using Optimization, OptimizationOptimJL
+using Plots
 
 # Defining parameters and variables
 @parameters t
@@ -25,7 +26,6 @@ domain = [t ∈ 0 .. 3.0]
 # Defining the initial conditions
 bcs = [x(0.0) ~ 1.0, y(0.0) ~ 1.0]
 
-# Formulating the PDE system
 @named lotka_volterra = PDESystem(eqs, bcs, domain, [t], [x(t), y(t)])
 ```
 
@@ -57,8 +57,6 @@ p = [1.5, 1.0, 3.0, 1.0]
 u0 = [1.0, 1.0]
 prob_oop = ODEProblem{false}(f, u0, (0.0, 3.0), p)
 true_sol = solve(prob_oop, Tsit5(), saveat=0.01)
-
-using Plots
 
 phi = pinn.phi
 ts = [true_sol.t...;;]
