@@ -106,7 +106,7 @@ function discretize(pde_system, pinn::PINN, sampler::PINNSampler,
                     strategy::AbstractTrainingAlg;
                     additional_loss=Sophon.null_additional_loss, derivative=finitediff,
                     adtype=Optimization.AutoZygote())
-    datasets = sample(pde_system, sampler, strategy)
+    datasets = sample(pde_system, sampler)
     init_params = _ComponentArray(pinn.init_params)
     datasets = init_params isa AbstractGPUComponentVector ?
                map(Base.Fix1(adapt, CuArray), datasets) : datasets
@@ -125,7 +125,7 @@ function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSa
                     coord_branch_net::AbstractArray;
                     additional_loss=Sophon.null_additional_loss, derivative=finitediff,
                     adtype=Optimization.AutoZygote())
-    datasets = sample(pde_system, sampler, strategy)
+    datasets = sample(pde_system, sampler)
     init_params = _ComponentArray(pinn.init_params)
     datasets = init_params isa AbstractGPUComponentVector ?
                map(Base.Fix1(adapt, CuArray), datasets) : datasets

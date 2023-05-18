@@ -310,3 +310,6 @@ rng = Random.default_rng()
     end
     =#
 end
+
+
+include("betasampler.jl")

@@ -449,3 +449,11 @@ function _transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {name
     end
     return ex
 end
+
+
+function get_where_t_is(pde_system)
+    (; indvars, depvars) = pde_system
+    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(indvars,
+                                                                               depvars)
+    return  dict_indvars[:t]
+end
