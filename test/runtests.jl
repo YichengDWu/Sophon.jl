@@ -312,4 +312,4 @@ rng = Random.default_rng()
 end
 
 
-include("betasampler.jl")
+@testset "BetaSampler" begin include("betasampler.jl") end

@@ -1,4 +1,4 @@
-using Sophon, Test, ModelingToolkit, IntervalSets
+using Sophon, Test, ModelingToolkit, DomainSets
 using Optimization, OptimizationOptimJL
 
 @parameters x,t

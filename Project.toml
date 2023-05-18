@@ -45,8 +45,8 @@ Adapt = "3"
 CUDA = "3, 4"
 ChainRulesCore = "1"
 ComponentArrays = "0.13"
-DomainSets = "0.5, 0.6"
 Distributions = "0.25"
+DomainSets = "0.5, 0.6"
 ForwardDiff = "0.10"
 GPUArrays = "8"
 GPUArraysCore = "0.1"
@@ -71,10 +71,12 @@ Symbolics = "4, 5"
 julia = "1.7"
 
 [extras]
+DomainSets = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
-ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
 
 [targets]
-test = ["Test", "Zygote","ModelingToolkit"]
+test = ["Test", "Zygote", "ModelingToolkit", "DomainSets","OptimizationOptimJL"]
