@@ -1,8 +1,8 @@
 ## Sod shock tube with adaptive weights
 
-This example showcases how to use adaptive weights in `Sophon`. There is nothing special about the adaptive algorithm itself here, it is just for demonstration purposes.
+This example showcases how to use adaptive weights in `Sophon`. 
 
-```@example
+```@example SOD
 using Optimization, OptimizationOptimJL, Plots
 using ModelingToolkit, IntervalSets
 using Sophon
@@ -37,8 +37,8 @@ domains = [t ∈ Interval(t_min, t_max), x ∈ Interval(x_min, x_max)]
 @named pde_system = PDESystem(eqs, bcs, domains, [t, x], [u(t, x), ρ(t, x), p(t, x)])
 ```
 
-```julia
-pinn = PINN(; u=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
+```@example SOD
+pinn = PINN(u=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
             ρ=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
             p=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16))
 
@@ -46,23 +46,21 @@ sampler = QuasiRandomSampler(1000, 400)
 
 function pde_weights(phi, x, θ)
     ux = Sophon.finitediff(phi.u, x, θ.u, 1, 1)
-    return ChainRulesCore.@ignore_derivatives inv.(0.2 .* (abs.(ux) .- ux) .+ 1)
+    ρx = Sophon.finitediff(phi.ρ, x, θ.ρ, 1, 1)
+    px = Sophon.finitediff(phi.p, x, θ.p, 1, 1)
+    d = ux .+ ρx .+ px
+
+    return ChainRulesCore.@ignore_derivatives inv.(0.2 .* abs.(d) .+ 1)
 end
 
 strategy = AdaptiveTraining(pde_weights, Returns(10))
-
 prob = Sophon.discretize(pde_system, pinn, sampler, strategy)
 
-function callback(p, l)
-    println("loss: ", l)
-    return false
-end
-
-res = Optimization.solve(prob, BFGS(); maxiters=1000, callback=callback)
+res = Optimization.solve(prob, BFGS(); maxiters=2000)
 
 θ = res.u
 phi = pinn.phi
-xs = x_min:0.01:x_max |> collect
+xs = x_min:0.01:x_max
 
 phi = pinn.phi
 p1 = plot(xs, [first(phi.u([t_max, x], θ.u)) for x in xs]; label="u(t=1,x)")
