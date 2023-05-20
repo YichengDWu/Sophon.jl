@@ -116,8 +116,8 @@ function get_bounds(pde::ModelingToolkit.PDESystem)
     return bounds
 end
 
-function build_symbolic_loss_function(pinnrep::NamedTuple{names},
-                                      eq::Symbolics.Equation) where {names}
+function build_symbolic_loss_function(pinnrep::NamedTuple,
+                                      eq::Symbolics.Equation)
     (; indvars, depvars, dict_depvar_input, derivative, multioutput, dict_indvars) = pinnrep
 
     vars = :(coord, θ)
