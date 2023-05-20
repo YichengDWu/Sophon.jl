@@ -1,67 +1,8 @@
-# aggressively rewrite some functionalities from NeuralPDE.jl for stability
-using Base.Broadcast
-
-dottable_(x) = Broadcast.dottable(x)
-dottable_(x::Function) = true
-
-_dot_(x) = x
-function _dot_(x::Expr)
-    dotargs = Base.mapany(_dot_, x.args)
-    if x.head === :call && dottable_(x.args[1])
-        Expr(:., dotargs[1], Expr(:tuple, dotargs[2:end]...))
-    elseif x.head === :comparison
-        Expr(:comparison,
-             (iseven(i) && dottable_(arg) && arg isa Symbol && isoperator(arg) ?
-              Symbol('.', arg) : arg for (i, arg) in pairs(dotargs))...)
-    elseif x.head === :$
-        x.args[1]
-    elseif x.head === :let # don't add dots to `let x=...` assignments
-        Expr(:let, undot(dotargs[1]), dotargs[2])
-    elseif x.head === :for # don't add dots to for x=... assignments
-        Expr(:for, undot(dotargs[1]), dotargs[2])
-    elseif (x.head === :(=) || x.head === :function || x.head === :macro) &&
-           Meta.isexpr(x.args[1], :call) # function or macro definition
-        Expr(x.head, x.args[1], dotargs[2])
-    elseif x.head === :(<:) || x.head === :(>:)
-        tmp = x.head === :(<:) ? :.<: : :.>:
-        Expr(:call, tmp, dotargs...)
-    else
-        head = String(x.head)::String
-        if last(head) == '=' && first(head) != '.' || head == "&&" || head == "||"
-            Expr(Symbol('.', head), dotargs...)
-        else
-            Expr(x.head, dotargs...)
-        end
-    end
-end
-
-function get_ε(dim, der_num, fdtype, order)
+function get_ε_h(dim, der_num, fdtype, order)
     epsilon = ^(eps(fdtype), one(fdtype) / (2 + order))
     ε = zeros(fdtype, dim)
     ε[der_num] = epsilon
-    return ε
-end
-
-function get_limits(domain)
-    if domain isa AbstractInterval
-        return [leftendpoint(domain)], [rightendpoint(domain)]
-    elseif domain isa ProductDomain
-        return collect(map(leftendpoint, DomainSets.components(domain))),
-               collect(map(rightendpoint, DomainSets.components(domain)))
-    end
-end
-
-"""
-Finds which dependent variables are being used in an equation.
-"""
-function pair(eq, depvars, dict_depvar_input)
-    expr = ModelingToolkit.toexpr(eq)
-    pair_ = map(depvars) do depvar
-        if !isempty(find_thing_in_expr(expr, depvar))
-            depvar => dict_depvar_input[depvar]
-        end
-    end
-    return Dict(filter(p -> p !== nothing, pair_))
+    return ε, inv(epsilon)
 end
 
 get_dict_vars(vars) = Dict([Symbol(v) .=> i for (i, v) in enumerate(vars)])
@@ -175,279 +116,171 @@ function get_bounds(pde::ModelingToolkit.PDESystem)
     return bounds
 end
 
-function get_variables(eqs, _indvars::Array, _depvars::Array)
-    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(_indvars,
-                                                                               _depvars)
-    return get_variables(eqs, dict_indvars, dict_depvars)
-end
+function build_symbolic_loss_function(pinnrep::NamedTuple,
+                                      eq::Symbolics.Equation)
+    (; indvars, depvars, dict_depvar_input, derivative, multioutput, dict_indvars) = pinnrep
 
-function get_variables(eqs, dict_indvars, dict_depvars)
-    bc_args = get_argument(eqs, dict_indvars, dict_depvars)
-    return map(barg -> filter(x -> x isa Symbol, barg), bc_args)
-end
-
-"""
-[Dx(u1(x,y)) + 4*Dy(u2(x,y)) ~ 0,
- Dx(u2(x,y)) + 9*Dy(u1(x,y)) ~ 0]
-
-:((coord, θ) -> begin
-  #= ... =#
-  #= ... =#
-  begin
-      (θ_depvar_1, θ_depvar_2) = (θ.depvar_1, θ.depvar_2)
-      (phi_depvar_1, phi_depvar_2) = (phi.depvar_1, phi.depvar_2)
-      let (x, y) = (coord[1], coord[2])
-          [
-              (+)(derivative(phi_depvar_1, u, [x, y], [[ε, 0.0]], 1, θ_depvar_1),
-                  (*)(4, derivative(phi_depvar_1, u, [x, y], [[0.0, ε]], 1, θ_depvar_2))) -
-              0,
-              (+)(derivative(phi_depvar_2, u, [x, y], [[ε, 0.0]], 1, θ_depvar_2),
-                  (*)(9, derivative(phi_depvar_2, u, [x, y], [[0.0, ε]], 1, θ_depvar_1))) -
-              0,
-          ]
-      end
-  end end)
-"""
-function build_symbolic_loss_function(pinnrep::NamedTuple{names},
-                                      eq::Symbolics.Equation) where {names}
-    (; depvars, dict_depvars, dict_depvar_input, derivative, multioutput, dict_indvars) = pinnrep
-
-    loss_function, pos, values = parse_equation(pinnrep, eq)
-    this_eq_pair = pair(eq, depvars, dict_depvar_input)
-    this_eq_indvars = unique(vcat([getindex(this_eq_pair, v) for v in keys(this_eq_pair)]...))
-    this_eq_indvars_locations = Dict([depvar => [findfirst(==(indvar), this_eq_indvars)
-                                                 for indvar in this_eq_pair[depvar]]
-                                      for depvar in keys(this_eq_pair)])
-    maybe_vcat = Dict([depvar => length(this_eq_indvars_locations[depvar]) == length(this_eq_indvars)
-                       for depvar in keys(this_eq_pair)])
-
-    vars = :(coord, θ, pfs)
+    vars = :(coord, θ)
     ex = Expr(:block)
-    if :pvs ∈ names
-        (; pinn, coord_branch_net) = pinnrep
 
-        push!(ex.args, Expr(:(=), :deeponet, pinn.phi))
-        push!(ex.args, Expr(:(=), :derivative, derivative))
-        push!(ex.args, Expr(:(=), :coord_branch_net, coord_branch_net))
-        push!(ex.args,
-              Expr(:(=), :(get_pfs_output(x::AbstractMatrix)),
-                   :(ChainRulesCore.ignore_derivatives(mapreduce(f -> f.(x), vcat, pfs)))))
-        push!(ex.args,
-              Expr(:(=), :(get_pfs_output(x::AbstractVector...)),
-                   :(ChainRulesCore.ignore_derivatives(mapreduce(f -> reshape(f.(x...), 1,
-                                                                              :), vcat,
-                                                                 pfs)))))
-        push!(ex.args,
-              Expr(:(=), :(branch_net_input),
-                   :(transpose(get_pfs_output(coord_branch_net...)))))
-        push!(ex.args, Expr(:(=), :(phi(x_, θ_)), :(deeponet((branch_net_input, x_), θ_))))
+    # Step 1: interpolate phi and derivative in the expression
+    phi = pinnrep.phi
+    push!(ex.args, Expr(:(=), :phi, phi))
+    push!(ex.args, Expr(:(=), :derivative, derivative))
 
-    else
-        phi = pinnrep.phi
-        push!(ex.args, Expr(:(=), :phi, phi))
-        push!(ex.args, Expr(:(=), :derivative, derivative))
-    end
-
+    # Step 2: assign phi and θ to each depvar
     if multioutput
-        θs = Symbol[]
-        phis = Symbol[]
-        for v in depvars
-            push!(θs, :($(Symbol(:θ, :_, v))))
-            push!(phis, :($(Symbol(:phi, :_, v))))
-        end
-
-        expr_θ = Expr[]
-        expr_phi = Expr[]
-
-        for u in depvars
-            push!(expr_θ, :(θ.$(u)))
-            push!(expr_phi, :(phi.$(u)))
-        end
-
-        vars_θ = Expr(:(=), ModelingToolkit.build_expr(:tuple, θs),
-                      ModelingToolkit.build_expr(:tuple, expr_θ))
-        push!(ex.args, vars_θ)
-
-        vars_phi = Expr(:(=), ModelingToolkit.build_expr(:tuple, phis),
-                        ModelingToolkit.build_expr(:tuple, expr_phi))
-        push!(ex.args, vars_phi)
-    end
-
-    eq_pair_expr = Expr[]
-    if pos isa Int
-        v = first(keys(this_eq_pair))
-        ivars_l = convert(Vector{Any}, deepcopy(this_eq_pair[v]))
-        ivars_r = convert(Vector{Any}, deepcopy(this_eq_pair[v]))
-        ivars_l[pos] = :(zero(coord[[1], :]) .+ $(values[1]))
-        ivars_r[pos] = :(zero(coord[[1], :]) .+ $(values[2]))
-        push!(eq_pair_expr, :($(Symbol(:coord, :_, :($v), :_l)) = vcat($(ivars_l...))))
-        push!(eq_pair_expr, :($(Symbol(:coord, :_, :($v), :_r)) = vcat($(ivars_r...))))
-        this_eq_indvars = this_eq_indvars[setdiff(1:length(this_eq_indvars), pos)]
+        push!(ex.args, Expr(:(=),
+                            Expr(:tuple, [Symbol(:phi_, i) for i in depvars]...),
+                            Expr(:tuple, [:(phi.$(i)) for i in depvars]...)))
+        push!(ex.args, Expr(:(=),
+                            Expr(:tuple, [Symbol(:θ_, i) for i in depvars]...),
+                            Expr(:tuple, [:(θ.$(i)) for i in depvars]...)))
     else
-        for v in keys(this_eq_pair)
-            push!(eq_pair_expr,
-                  :($(Symbol(:coord, :_, :($v))) = $(ifelse(maybe_vcat[v],
-                                                     :coord,
-                                                     :(vcat($(this_eq_pair[v]...)))))))
-                  #view(coord, $(this_eq_indvars_locations[v]), :)))
-        end
+        push!(ex.args, Expr(:(=), Symbol(:phi_, depvars[1]), :phi))
+        push!(ex.args, Expr(:(=), Symbol(:θ_, depvars[1]), :θ))
     end
-    vcat_expr = Expr(:block, :($(eq_pair_expr...)))
-    vcat_expr_loss_functions = Expr(:block, vcat_expr, loss_function)
 
-    indvars_ex = [:(coord[[$i], :]) for (i, x) in enumerate(this_eq_indvars)]
-    left_arg_pairs, right_arg_pairs = this_eq_indvars, indvars_ex
-    vars_eq = Expr(:(=), ModelingToolkit.build_expr(:tuple, left_arg_pairs),
-                   ModelingToolkit.build_expr(:tuple, right_arg_pairs))
+    # Step 3: split coord into all indvars
+    this_eq_expr = eq_to_expr(eq)
+    this_eq_depvars = Symbol[]
+    this_eq_indvars = Symbol[]
+    postwalk(this_eq_expr) do x
+        if @capture(x, f_(args__))
+            if f in depvars
+                push!(this_eq_depvars, f)
+            end
+            push!(this_eq_indvars, filter(Base.Fix2(in, indvars), args)...)
+        end
+        return x
+    end
+    this_eq_depvars = unique(this_eq_depvars)
+    this_eq_indvars = unique(this_eq_indvars)
 
-    let_ex = Expr(:let, vars_eq, vcat_expr_loss_functions)
-    push!(ex.args, let_ex)
+    let_block = Expr(:let)
+    push!(let_block.args, Expr(:(=),
+                               Expr(:tuple, this_eq_indvars...),
+                               Expr(:tuple, [:(coord[[$(dict_indvars[x])], :]) for x in this_eq_indvars]...)))
+
+    # Step 4: build coord for each depvar
+    coord_block = Expr(:block)
+    for d in this_eq_depvars
+        coord_expr = if length(dict_depvar_input[d]) == length(indvars)
+                        :coord
+                     elseif length(dict_depvar_input[d]) == 1
+                        :($(dict_depvar_input[d][1]))
+                     else
+                        :(vcat($(dict_depvar_input[d]...)))
+                     end
+        push!(coord_block.args, Expr(:(=),
+                                   Symbol(:coord_, d),
+                                   coord_expr))
+    end
+
+    # Step 5: build loss function for this equation
+    loss_function = expr_to_residual_function(pinnrep, this_eq_expr)
+    push!(let_block.args, Expr(:block, coord_block, loss_function))
+
+    push!(ex.args, let_block)
     return vars, ex
 end
 
 function build_loss_function(pinnrep::NamedTuple, eq::Symbolics.Equation, i)
     vars, ex = build_symbolic_loss_function(pinnrep, eq)
     expr = Expr(:function,
-                Expr(:call, Symbol(:residual_function_, i), vars.args[1], vars.args[2],
-                     :($(Expr(:kw, vars.args[3], :nothing)))), ex)
+                Expr(:call, Symbol(:residual_function_, i), vars.args[1], vars.args[2]), ex)
     return eval(expr)
 end
 
-function parse_equation(pinnrep::NamedTuple, eq)
-    eq_lhs = isequal(ModelingToolkit.expand_derivatives(eq.lhs), 0) ? eq.lhs :
-             ModelingToolkit.expand_derivatives(eq.lhs)
-    eq_rhs = isequal(ModelingToolkit.expand_derivatives(eq.rhs), 0) ? eq.rhs :
-             ModelingToolkit.expand_derivatives(eq.rhs)
-    left_expr = ModelingToolkit.toexpr(eq_lhs)
-    right_expr = ModelingToolkit.toexpr(eq_rhs)
-
-    tran_left_expr = transform_expression(pinnrep, ModelingToolkit.toexpr(eq_lhs))
-    tran_right_expr = transform_expression(pinnrep, ModelingToolkit.toexpr(eq_rhs))
-    dot_left_expr = _dot_(tran_left_expr)
-    dot_right_expr = _dot_(tran_right_expr)
-
-    if is_periodic_bc(pinnrep.bcs, eq, pinnrep.depvars, left_expr, right_expr)
-        pos = findfirst((left_expr.args[2:end] .!== right_expr.args[2:end])) # Assume the pericity is defined on n-1 hyperplanes with one depvar
-        values = (left_expr.args[pos + 1], right_expr.args[pos + 1])
-
-        dot_left_expr, dot_right_expr = parse_periodic_condition(dot_left_expr,
-                                                                 dot_right_expr)
-        return loss_function = :($dot_left_expr .- $dot_right_expr), pos, values
-    else
-        return loss_function = :($dot_left_expr .- $dot_right_expr), nothing, nothing
-    end
+function eq_to_expr(eq)
+    eq = eq.lhs - eq.rhs
+    #eq = ModelingToolkit.expand_derivatives(eq)
+    return ModelingToolkit.toexpr(eq)
 end
 
-function is_periodic_bc(bcs::Vector{<:Symbolics.Equation}, eq, depvars, left_expr::Expr,
-                        right_expr::Expr)
-    eq ∉ bcs && return false
-    return left_expr.args[1] ∈ depvars && left_expr.args[1] === right_expr.args[1]
-end
-
-function is_periodic_bc(bcs::Vector{<:Pair{<:Symbolics.Equation, <:DomainSets.Domain}}, eq,
-                        depvars, left_expr::Expr, right_expr::Expr)
-    eq ∉ bcs[1] && return false
-    return left_expr.args[1] ∈ depvars && left_expr.args[1] === right_expr.args[1]
-end
-
-function is_periodic_bc(bcs, eq, depvars, left_expr::Number, right_expr::Expr)
-    return false
-end
-
-function is_periodic_bc(bcs, eq, depvars, left_expr::Expr, right_expr::Symbol)
-    return false
-end
-
-function is_periodic_bc(bcs, eq, depvars, left_expr::Expr, right_expr::Number)
-    return false
-end
-
-function parse_periodic_condition(left_expr, right_expr)
-    left_expr.args[2] = Symbol(left_expr.args[2], :_l)
-    right_expr.args[2] = Symbol(right_expr.args[2], :_r)
-    return left_expr, right_expr
-end
-
-function transform_expression(pinnrep::NamedTuple, ex)
-    if ex isa Expr
-        ex = _transform_expression(pinnrep, ex)
-    end
-    return ex
-end
-
-function _transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names}
-    (; indvars, depvars, dict_indvars, dict_depvars, dict_depvar_input, multioutput, fdtype) = pinnrep
-    fdtype = fdtype
-    dict_pmdepvars = :dict_pmdepvars in names ? pinnrep.dict_pmdepvars :
-                     Dict{Symbol, Symbol}()
-    _args = ex.args
-    for (i, e) in enumerate(_args)
-        if !(e isa Expr)
-            if e in keys(dict_depvars)
-                ex.args = if !multioutput
-                    [:($(Expr(:$, :phi))), Symbol(:coord, :_, e), :θ]
-                else
-                    [
-                        :($(Expr(:$, Symbol(:phi, :_, e)))),
-                        Symbol(:coord, :_, e),
-                        Symbol(:θ, :_, e),
-                    ]
-                end
-                break
-            elseif e in keys(dict_pmdepvars)
-                ex.args[1] = :($(Expr(:$, :get_pfs_output)))
-                break
-            elseif e isa ModelingToolkit.Differential
-                derivative_variables = Symbol[]
-                order = 0
-                while (_args[1] isa ModelingToolkit.Differential)
-                    order += 1
-                    push!(derivative_variables, ModelingToolkit.toexpr(_args[1].x))
-                    _args = _args[2].args # handle Dx(Dy(u)) case order = 2
-                end
-                depvar = _args[1]
-                num_depvar = dict_depvars[depvar]
-                indvars = _args[2:end]
-                dict_interior_indvars = Dict([indvar .=> j
-                                              for (j, indvar) in enumerate(dict_depvar_input[depvar])])
-                dim_l = length(dict_interior_indvars)
-
-                εs = [get_ε(dim_l, d, fdtype, order) for d in 1:dim_l]
-                undv = [dict_interior_indvars[d_p] for d_p in derivative_variables]
-                mixed = any(!=(first(undv)), undv)
-                εs_dnv = [εs[d] for d in reverse(undv)]
-                epsilon = [inv(first(ε[ε .!= zero(ε)])) for ε in εs_dnv]
-
-                ex.args = if !multioutput
-                    [
-                        :($(Expr(:$, :derivative))),
-                        :phi,
-                        Symbol(:coord, :_, depvar),
-                        :θ,
-                        εs_dnv,
-                        epsilon,
-                        Val{order}(),
-                        Val{mixed}()
-                    ]
-                else
-                    [
-                        :($(Expr(:$, :derivative))),
-                        Symbol(:phi, :_, depvar),
-                        Symbol(:coord, :_, depvar),
-                        Symbol(:θ, :_, depvar),
-                        εs_dnv,
-                        epsilon,
-                        Val{order}(),
-                        Val{mixed}()
-                    ]
-                end
-                break
+function expr_to_residual_function(pinnrep::NamedTuple, expr::Expr)
+    # turn :($(Differential(t))) into :(Differential(t))
+    expr = postwalk(expr) do x
+        if @capture(x, f_(xs__))
+            if f isa Differential
+                :(Differential($(Symbol(f.x)))($(xs...)))
+            else
+                :($f($(xs...)))
             end
         else
-            ex.args[i] = _transform_expression(pinnrep, ex.args[i])
+            x
         end
     end
-    return ex
+
+    expr = transform_expression(pinnrep, expr)
+    return expr
+end
+
+const mixed_derivative_patterns = (
+    ((1,1), :((Differential(dr1_))((Differential(dr2_))(ff_(args__))))),
+    ((2,1), :((Differential(dr1_))((Differential(dr1_))((Differential(dr2_))(ff_(args__)))))),
+    ((2,2), :((Differential(dr1_))((Differential(dr1_))((Differential(dr2_))((Differential(dr2_))(ff_(args__))))))),
+)
+
+const derivative_patterns = (
+    (1,:((Differential(dr_))(ff_(args__)))),
+    (2,:((Differential(dr_))((Differential(dr_))(ff_(args__))))),
+    (3,:((Differential(dr_))((Differential(dr_))((Differential(dr_))(ff_(args__)))))),
+    (4,:((Differential(dr_))((Differential(dr_))((Differential(dr_))((Differential(x))(ff_(args__)))))))
+)
+
+function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names}
+    (; indvars, dict_depvars, dict_depvar_input, fdtype, init_params) = pinnrep
+    use_gpu = isongpu(init_params)
+
+    # Step 1: Replace all the derivatives with the derivative function
+    ex = prewalk(ex) do x
+        quoted_x = Meta.quot(x)
+
+        for ((order1, order2), pattern) in reverse(mixed_derivative_patterns)
+            if @eval @capture($quoted_x, $pattern) && dr1 !== dr2
+                ε1, h1 = get_ε_h(length(args), findfirst(==(dr1), dict_depvar_input[ff]), fdtype, order1)
+                ε2, h2 = get_ε_h(length(args), findfirst(==(dr2), dict_depvar_input[ff]), fdtype, order2)
+                ε1 = use_gpu ? adapt(CuArray, ε1) : ε1
+                ε2 = use_gpu ? adapt(CuArray, ε2) : ε2
+
+                return :(derivative((x,ps)->derivative(phi_u, x, ps, $ε2, $h2, $(Val(order2))),
+                                     coord_u, θ, $ε1, $h1, $(Val(order1))))
+            end
+        end
+
+        for (order, pattern) in reverse(derivative_patterns)
+            if @eval @capture($quoted_x, $pattern)
+                ε, h = get_ε_h(length(args), findfirst(==(dr), dict_depvar_input[ff]), fdtype, order)
+                ε = use_gpu ? adapt(CuArray, ε) : ε
+                return :(derivative($(Symbol(:phi, :_, ff)), $(Symbol(:coord, :_, ff)), $(Symbol(:θ, :_, ff)), $ε, $h, $(Val(order))))
+            end
+        end
+        return x
+    end
+
+    # Step 2: Convert u(x,t) to phi_u(coord_u, θ_u), u(x, 1.0) to phi_u(vcat(x, zero(view(coord,[1],:)) .+ 1.0), θ_u)
+    # Step 3: convert sin(x,t) to sin.(x,t)
+    ex = postwalk(ex) do x
+        if @capture(x, gg_(xs__))
+            if gg in keys(dict_depvars)
+                if xs == indvars
+                    return :($(Symbol(:phi, :_, gg))($(Symbol(:coord, :_, gg)), $(Symbol(:θ, :_, gg))))
+                else
+                    cs = map(xs) do i
+                        i isa Symbol ? i : :(zero(view(coord, [1], :)) .+ $i)
+                    end
+                    return :($(Symbol(:phi, :_, gg))(vcat($(cs...)), $(Symbol(:θ, :_, gg))))
+                end
+            elseif gg===:derivative
+                return:($gg($(xs...)))
+            else
+                return :($gg.($(xs...)))
+            end
+        else
+            return x
+        end
+    end
 end
 
 

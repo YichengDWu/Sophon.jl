@@ -34,19 +34,12 @@ function scalarize(strategy::NonAdaptiveTraining{P, B}, phi, datafree_pde_loss_f
     return f
 end
 
-function scalarize(weights::NTuple{N, <:Real}, datafree_loss_functions::Tuple) where {N}
-    body = Expr(:block)
-    push!(body.args, Expr(:(=), :local_ps, :(get_local_ps(pp))))
-    push!(body.args, Expr(:(=), :global_ps, :(get_global_ps(pp))))
-
-    ex = :(mean($(weights[1]) .*
-                abs2.($(datafree_loss_functions[1])(local_ps[1], θ, global_ps)))) # ugly hack to be compatible with PI-Neural Operators
-    for i in 2:N                                                                  # local_ps is just coord
-        ex = :(mean($(weights[i]) .*
-                    abs2.($(datafree_loss_functions[i])(local_ps[$i], θ, global_ps))) + $ex)
+function scalarize(weights::NTuple{N, <:Real}, datafree_loss_function::Tuple) where {N}
+    ex = :(mean($(weights[1]) .* abs2.($(datafree_loss_function[1])(p[1], θ))))
+    for i in 2:N
+        ex = :(mean($(weights[i]) .* abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
     end
-    push!(body.args, ex)
-    loss_f = Expr(:function, Expr(:call, :(pinn_loss_function), :θ, :pp), body)
+    loss_f = :((θ, p) -> $ex)
     return eval(loss_f)
 end
 
@@ -63,26 +56,26 @@ struct AdaptiveTraining{P, B} <: AbstractTrainingAlg
 end
 
 function AdaptiveTraining(pde_weights::Function, bcs_weights::Real)
-    _bcs_weights = (phi, coord, θ) -> bcs_weights
+    _bcs_weights = Returns(bcs_weights)
     return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights,
                                                                        _bcs_weights)
 end
 
 function AdaptiveTraining(pde_weights::Function, bcs_weights::NTuple{N, <:Real}) where {N}
-    _bcs_weights = map(w -> (phi, coord, θ) -> w, bcs_weights)
+    _bcs_weights = map(w -> Returns(w), bcs_weights)
     return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights,
                                                                        _bcs_weights)
 end
 
 function AdaptiveTraining(pde_weights::Tuple{Vararg{Function}}, bcs_weights::Int)
-    _bcs_weights = (phi, coord, θ) -> bcs_weights
+    _bcs_weights = Returns(bcs_weights)
     return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights,
                                                                        _bcs_weights)
 end
 
 function AdaptiveTraining(pde_weights::Tuple{Vararg{Function}},
                           bcs_weights::NTuple{N, <:Real}) where {N}
-    _bcs_weights = map(w -> (phi, coord, θ) -> w, bcs_weights)
+    _bcs_weights = map(w -> Returns(w), bcs_weights)
     return AdaptiveTraining{typeof(pde_weights), typeof(_bcs_weights)}(pde_weights,
                                                                        _bcs_weights)
 end
@@ -105,17 +98,12 @@ end
 
 function scalarize(phi, weights::Tuple{Vararg{Function}}, datafree_loss_function::Tuple)
     N = length(datafree_loss_function)
-    body = Expr(:block)
-    push!(body.args, Expr(:(=), :local_ps, :(get_local_ps(pp))))
-    push!(body.args, Expr(:(=), :global_ps, :(get_global_ps(pp))))
-
-    ex = :(mean($(weights[1])($phi, local_ps[1], θ) .*
-                abs2.($(datafree_loss_function[1])(local_ps[1], θ, global_ps))))
+    ex = :(mean($(weights[1])($phi, p[1], θ) .*
+                abs2.($(datafree_loss_function[1])(p[1], θ))))
     for i in 2:N
-        ex = :(mean($(weights[i])($phi, local_ps[$i], θ) .*
-                    abs2.($(datafree_loss_function[i])(local_ps[$i], θ, global_ps))) + $ex)
+        ex = :(mean($(weights[i])($phi, p[$i], θ) .*
+                    abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
     end
-    push!(body.args, ex)
-    loss_f = Expr(:function, Expr(:call, :(pinn_loss_function), :θ, :pp), body)
+    loss_f = :((θ, p) -> $ex)
     return eval(loss_f)
 end

@@ -23,3 +23,7 @@ end
 ```
 
 Finally, pass the callback function to `Optimization.solve` to monitor the loss as the training progresses.
+
+## Q: How can I inspect the generated symbolic loss function?
+
+A: Simply replace `Sophon.discretize` by `Sophon.symbolic_discretize`.
