@@ -12,6 +12,8 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
         eqs = [eqs]
     end
 
+    eqs = map(ModelingToolkit.expand_derivatives, eqs)
+
     pinnrep = (; eqs, bcs, domain, ps, defaults, depvars, indvars, dict_indvars,
                dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
                strategy, fdtype=Float64, eq_params=SciMLBase.NullParameters())
@@ -148,6 +150,8 @@ function symbolic_discretize(pde_system, pinn::PINN, sampler::PINNSampler,
     if !(eqs isa Vector)
         eqs = [eqs]
     end
+
+    eqs = map(ModelingToolkit.expand_derivatives, eqs)
 
     pinnrep = (; eqs, bcs, domain, ps, defaults, depvars, indvars, dict_indvars,
                dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
