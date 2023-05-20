@@ -192,7 +192,7 @@ end
 
 function eq_to_expr(eq)
     eq = eq.lhs - eq.rhs
-    eq = ModelingToolkit.expand_derivatives(eq)
+    #eq = ModelingToolkit.expand_derivatives(eq)
     return ModelingToolkit.toexpr(eq)
 end
 
