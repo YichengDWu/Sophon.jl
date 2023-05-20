@@ -12,12 +12,9 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
         eqs = [eqs]
     end
 
-    pde_indvars = get_variables(eqs, dict_indvars, dict_depvars)
-    bc_indvars = get_variables(bcs, dict_indvars, dict_depvars)
-
     pinnrep = (; eqs, bcs, domain, ps, defaults, depvars, indvars, dict_indvars,
                dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
-               strategy, pde_indvars, bc_indvars, fdtype=Float64, eq_params=SciMLBase.NullParameters())
+               strategy, fdtype=Float64, eq_params=SciMLBase.NullParameters())
 
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, eq, i)
                                         for (i, eq) in enumerate(eqs))
@@ -41,12 +38,8 @@ function build_loss_function(pde_system::PDESystem, pinn::PINN,
 
     multioutput = phi isa NamedTuple
 
-    pde_indvars = get_variables(map(first, eqs), dict_indvars, dict_depvars)
-
-    bc_indvars = get_variables(map(first, bcs), dict_indvars, dict_depvars)
-
     pinnrep = (; eqs, bcs, depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input,
-               multioutput, init_params, phi, derivative, strategy, pde_indvars, bc_indvars,
+               multioutput, init_params, phi, derivative, strategy,
                fdtype=Float64, eq_params=SciMLBase.NullParameters())
 
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, first(eq), i)
@@ -73,12 +66,9 @@ function build_loss_function(pde_system::ParametricPDESystem, pinn::PINN,
 
     multioutput = false
 
-    pde_indvars = get_variables(map(first, eqs), dict_indvars, dict_depvars)
-    bc_indvars = pde_indvars
-
     pinnrep = (; eqs, bcs, depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input,
                dict_pmdepvars, dict_pmdepvar_input, multioutput, pvs, init_params, pinn,
-               derivative, strategy, pde_indvars, bc_indvars, fdtype=Float64, coord_branch_net,
+               derivative, strategy, fdtype=Float64, coord_branch_net,
                eq_params=SciMLBase.NullParameters())
 
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, first(eq), i)
@@ -159,12 +149,9 @@ function symbolic_discretize(pde_system, pinn::PINN, sampler::PINNSampler,
         eqs = [eqs]
     end
 
-    pde_indvars = get_variables(eqs, dict_indvars, dict_depvars)
-    bc_indvars = get_variables(bcs, dict_indvars, dict_depvars)
-
     pinnrep = (; eqs, bcs, domain, ps, defaults, depvars, indvars, dict_indvars,
                dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
-               strategy, pde_indvars, bc_indvars, fdtype=Float64, eq_params=SciMLBase.NullParameters())
+               strategy, fdtype=Float64, eq_params=SciMLBase.NullParameters())
 
     pde_loss_function = [build_symbolic_loss_function(pinnrep, eq)[2] for eq in eqs]
     bc_loss_function = [build_symbolic_loss_function(pinnrep, bc)[2] for bc in bcs]
