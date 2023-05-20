@@ -126,28 +126,6 @@ function get_bounds(pde::ModelingToolkit.PDESystem)
     return bounds
 end
 
-"""
-[Dx(u1(x,y)) + 4*Dy(u2(x,y)) ~ 0,
- Dx(u2(x,y)) + 9*Dy(u1(x,y)) ~ 0]
-
-:((coord, θ) -> begin
-  #= ... =#
-  #= ... =#
-  begin
-      (θ_depvar_1, θ_depvar_2) = (θ.depvar_1, θ.depvar_2)
-      (phi_depvar_1, phi_depvar_2) = (phi.depvar_1, phi.depvar_2)
-      let (x, y) = (coord[1], coord[2])
-          [
-              (+)(derivative(phi_depvar_1, u, [x, y], [[ε, 0.0]], 1, θ_depvar_1),
-                  (*)(4, derivative(phi_depvar_1, u, [x, y], [[0.0, ε]], 1, θ_depvar_2))) -
-              0,
-              (+)(derivative(phi_depvar_2, u, [x, y], [[ε, 0.0]], 1, θ_depvar_2),
-                  (*)(9, derivative(phi_depvar_2, u, [x, y], [[0.0, ε]], 1, θ_depvar_1))) -
-              0,
-          ]
-      end
-  end end)
-"""
 function build_symbolic_loss_function(pinnrep::NamedTuple{names},
                                       eq::Symbolics.Equation) where {names}
     (; indvars, depvars, dict_depvar_input, derivative, multioutput, dict_indvars) = pinnrep
@@ -155,7 +133,7 @@ function build_symbolic_loss_function(pinnrep::NamedTuple{names},
     vars = :(coord, θ)
     ex = Expr(:block)
 
-    # Step 1: store phi and derivative in the expression
+    # Step 1: interpolate phi and derivative in the expression
     phi = pinnrep.phi
     push!(ex.args, Expr(:(=), :phi, phi))
     push!(ex.args, Expr(:(=), :derivative, derivative))
