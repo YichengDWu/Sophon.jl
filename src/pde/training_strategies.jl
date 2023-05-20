@@ -14,8 +14,6 @@ struct NonAdaptiveTraining{P, B} <: AbstractTrainingAlg
     pde_weights::P
     bcs_weights::B
     function NonAdaptiveTraining(pde_weights=1, bcs_weights=pde_weights)
-        pde_weights = map(x-> x isa Number ? Returns(x) : x, pde_weights)
-        bcs_weights = map(x-> x isa Number ? Returns(x) : x, bcs_weights)
         return new{typeof(pde_weights), typeof(bcs_weights)}(pde_weights, bcs_weights)
     end
 end
@@ -27,8 +25,8 @@ function scalarize(strategy::NonAdaptiveTraining{P, B}, phi, datafree_pde_loss_f
     N1 = length(datafree_pde_loss_functions)
     N2 = length(datafree_bc_loss_functions)
 
-    pde_weights = pde_weights isa Returns || length(pde_weights) == 1  ? ntuple(_->pde_weights, N1) : pde_weights
-    bcs_weights = bcs_weights isa Returns || length(bcs_weights) == 1 ? ntuple(_->bcs_weights, N2) : bcs_weights
+    pde_weights = length(pde_weights) == 1 ? ntuple(_->pde_weights, N1) : pde_weights
+    bcs_weights = length(bcs_weights) == 1 ? ntuple(_->bcs_weights, N2) : bcs_weights
 
     f = scalarize((pde_weights..., bcs_weights...),
                   (datafree_pde_loss_functions..., datafree_bc_loss_functions...))
@@ -36,10 +34,10 @@ function scalarize(strategy::NonAdaptiveTraining{P, B}, phi, datafree_pde_loss_f
     return f
 end
 
-function scalarize(weights::NTuple{N, <:Returns}, datafree_loss_function::Tuple) where {N}
-    ex = :(mean($(weights[1].value) .* abs2.($(datafree_loss_function[1])(p[1], θ))))
+function scalarize(weights::NTuple{N, <:Real}, datafree_loss_function::Tuple) where {N}
+    ex = :(mean($(weights[1]) .* abs2.($(datafree_loss_function[1])(p[1], θ))))
     for i in 2:N
-        ex = :(mean($(weights[i].value) .* abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
+        ex = :(mean($(weights[i]) .* abs2.($(datafree_loss_function[i])(p[$i], θ))) + $ex)
     end
     loss_f = :((θ, p) -> $ex)
     return eval(loss_f)
