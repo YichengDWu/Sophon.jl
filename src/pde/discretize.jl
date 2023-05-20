@@ -13,7 +13,6 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
     end
 
     pde_indvars = get_variables(eqs, dict_indvars, dict_depvars)
-
     bc_indvars = get_variables(bcs, dict_indvars, dict_depvars)
 
     pinnrep = (; eqs, bcs, domain, ps, defaults, depvars, indvars, dict_indvars,
@@ -142,4 +141,32 @@ function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSa
 
     p = PINOParameterHandler(datasets, pfs)
     return Optimization.OptimizationProblem(f, init_params, p)
+end
+
+function symbolic_discretize(pde_system, pinn::PINN, sampler::PINNSampler,
+                             strategy::AbstractTrainingAlg;
+                             additional_loss=Sophon.null_additional_loss, derivative=finitediff,
+                             adtype=Optimization.AutoZygote())
+    (; eqs, bcs, domain, ps, defaults, indvars, depvars) = pde_system
+    (; phi, init_params) = pinn
+
+    depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input = get_vars(indvars,
+                                                                               depvars)
+
+    multioutput = phi isa NamedTuple
+
+    if !(eqs isa Vector)
+        eqs = [eqs]
+    end
+
+    pde_indvars = get_variables(eqs, dict_indvars, dict_depvars)
+    bc_indvars = get_variables(bcs, dict_indvars, dict_depvars)
+
+    pinnrep = (; eqs, bcs, domain, ps, defaults, depvars, indvars, dict_indvars,
+               dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
+               strategy, pde_indvars, bc_indvars, fdtype=Float64, eq_params=SciMLBase.NullParameters())
+
+    pde_loss_function = [build_symbolic_loss_function(pinnrep, eq)[2] for eq in eqs]
+    bc_loss_function = [build_symbolic_loss_function(pinnrep, bc)[2] for bc in bcs]
+    return [pde_loss_function; bc_loss_function]
 end

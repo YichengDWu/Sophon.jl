@@ -6,6 +6,7 @@ import Lux: initialparameters, initialstates, parameterlength, statelength,
             AbstractExplicitLayer, AbstractExplicitContainerLayer, zeros32
 
 import ModelingToolkit
+import ModelingToolkit: Differential
 using Optimization
 import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, TriangleExp,
                             Sin, SinDecay2, SinExp, CosAnneal, Sequence, Loop, Interpolator,
@@ -24,6 +25,8 @@ using RuntimeGeneratedFunctions
 using DomainSets, StaticArraysCore
 import Symbolics
 using ForwardDiff
+using MacroTools
+using MacroTools: prewalk, postwalk
 
 RuntimeGeneratedFunctions.init(@__MODULE__)
 
