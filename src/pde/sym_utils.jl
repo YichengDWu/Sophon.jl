@@ -5,16 +5,6 @@ function get_ε_h(dim, der_num, fdtype, order)
     return ε, inv(epsilon)
 end
 
-function get_limits(domain)
-    if domain isa AbstractInterval
-        return [leftendpoint(domain)], [rightendpoint(domain)]
-    elseif domain isa ProductDomain
-        return collect(map(leftendpoint, DomainSets.components(domain))),
-               collect(map(rightendpoint, DomainSets.components(domain)))
-    end
-end
-
-
 get_dict_vars(vars) = Dict([Symbol(v) .=> i for (i, v) in enumerate(vars)])
 
 function get_vars(indvars_, depvars_)
