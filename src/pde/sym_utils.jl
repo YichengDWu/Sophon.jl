@@ -257,11 +257,17 @@ function expr_to_residual_function(pinnrep::NamedTuple, expr::Expr)
     return expr
 end
 
+const mixed_derivative_rules = (
+    ((1,1), :((Differential(dr1_))((Differential(dr2_))(ff_(args__))))),
+    ((2,1), :((Differential(dr1_))((Differential(dr1_))((Differential(dr2_))(ff_(args__)))))),
+    ((2,2), :((Differential(dr1_))((Differential(dr1_))((Differential(dr2_))((Differential(dr2_))(ff_(args__))))))),
+)
+
 const derivative_rules = (
-    (1,:((Differential(dr_))(f_(args__)))),
-    (2,:((Differential(dr_))((Differential(dr_))(f_(args__))))),
-    (3,:((Differential(dr_))((Differential(dr_))((Differential(dr_))(f_(args__)))))),
-    (4,:((Differential(dr_))((Differential(dr_))((Differential(dr_))((Differential(x))(f_(args__)))))))
+    (1,:((Differential(dr_))(ff_(args__)))),
+    (2,:((Differential(dr_))((Differential(dr_))(ff_(args__))))),
+    (3,:((Differential(dr_))((Differential(dr_))((Differential(dr_))(ff_(args__)))))),
+    (4,:((Differential(dr_))((Differential(dr_))((Differential(dr_))((Differential(x))(ff_(args__)))))))
 )
 
 function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names}
@@ -272,18 +278,30 @@ function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names
     ex = prewalk(ex) do x
         quoted_x = Meta.quot(x)
 
+        for ((order1, order2), rule) in reverse(mixed_derivative_rules)
+            if @eval @capture($quoted_x, $rule) && dr1 !== dr2
+                ε1, h1 = get_ε_h(length(args), findfirst(==(dr1), dict_depvar_input[ff]), fdtype, order1)
+                ε2, h2 = get_ε_h(length(args), findfirst(==(dr2), dict_depvar_input[ff]), fdtype, order2)
+                ε1 = use_gpu ? adapt(CuArray, ε1) : ε1
+                ε2 = use_gpu ? adapt(CuArray, ε2) : ε2
+
+                return :(derivative((x,ps)->derivative(phi_u, x, ps, $ε2, $h2, $(Val(order2))),
+                                     coord_u, θ, $ε1, $h1, $(Val(order1))))
+            end
+        end
+
         for (order, rule) in reverse(derivative_rules)
             if @eval @capture($quoted_x, $rule)
-                ε, h = get_ε_h(length(args), findfirst(==(dr), dict_depvar_input[f]), fdtype, order)
+                ε, h = get_ε_h(length(args), findfirst(==(dr), dict_depvar_input[ff]), fdtype, order)
                 ε = use_gpu ? adapt(CuArray, ε) : ε
-                return :(derivative($(Symbol(:phi, :_, f)), $(Symbol(:coord, :_, f)), $(Symbol(:θ, :_, f)), $ε, $h, $(Val(order))))
+                return :(derivative($(Symbol(:phi, :_, ff)), $(Symbol(:coord, :_, ff)), $(Symbol(:θ, :_, ff)), $ε, $h, $(Val(order))))
             end
         end
         return x
     end
 
     # Step 2: Convert u(x,t) to phi_u(coord_u, θ_u), u(x, 1.0) to phi_u(vcat(x, zero(view(coord,[1],:)) .+ 1.0), θ_u)
-    # Step 3: convert g(x,t) to g.(x,t)
+    # Step 3: convert sin(x,t) to sin.(x,t)
     ex = postwalk(ex) do x
         if @capture(x, g_(xs__))
             if g in keys(dict_depvars)
