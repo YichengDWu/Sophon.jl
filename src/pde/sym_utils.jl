@@ -260,20 +260,20 @@ function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names
     # Step 2: Convert u(x,t) to phi_u(coord_u, θ_u), u(x, 1.0) to phi_u(vcat(x, zero(view(coord,[1],:)) .+ 1.0), θ_u)
     # Step 3: convert sin(x,t) to sin.(x,t)
     ex = postwalk(ex) do x
-        if @capture(x, g_(xs__))
-            if g in keys(dict_depvars)
+        if @capture(x, gg_(xs__))
+            if gg in keys(dict_depvars)
                 if xs == indvars
-                    return :($(Symbol(:phi, :_, g))($(Symbol(:coord, :_, g)), $(Symbol(:θ, :_, g))))
+                    return :($(Symbol(:phi, :_, gg))($(Symbol(:coord, :_, gg)), $(Symbol(:θ, :_, gg))))
                 else
                     cs = map(xs) do i
                         i isa Symbol ? i : :(zero(view(coord, [1], :)) .+ $i)
                     end
-                    return :($(Symbol(:phi, :_, g))(vcat($(cs...)), $(Symbol(:θ, :_, g))))
+                    return :($(Symbol(:phi, :_, gg))(vcat($(cs...)), $(Symbol(:θ, :_, gg))))
                 end
-            elseif g===:derivative
-                return:($g($(xs...)))
+            elseif gg===:derivative
+                return:($gg($(xs...)))
             else
-                return :($g.($(xs...)))
+                return :($gg.($(xs...)))
             end
         else
             return x
