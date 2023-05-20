@@ -25,8 +25,8 @@ function scalarize(strategy::NonAdaptiveTraining{P, B}, phi, datafree_pde_loss_f
     N1 = length(datafree_pde_loss_functions)
     N2 = length(datafree_bc_loss_functions)
 
-    pde_weights = length(pde_weights) == 1 ? ntuple(_->pde_weights, N1) : pde_weights
-    bcs_weights = length(bcs_weights) == 1 ? ntuple(_->bcs_weights, N2) : bcs_weights
+    pde_weights = P <: Number ? ntuple(_ -> first(pde_weights), N1) : Tuple(pde_weights)
+    bcs_weights = B <: Number ? ntuple(_ -> first(bcs_weights), N2) : Tuple(bcs_weights)
 
     f = scalarize((pde_weights..., bcs_weights...),
                   (datafree_pde_loss_functions..., datafree_bc_loss_functions...))
