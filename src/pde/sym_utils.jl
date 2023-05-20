@@ -1,8 +1,8 @@
-function get_ε_epsilon(dim, der_num, fdtype, order)
+function get_ε_h(dim, der_num, fdtype, order)
     epsilon = ^(eps(fdtype), one(fdtype) / (2 + order))
     ε = zeros(fdtype, dim)
     ε[der_num] = epsilon
-    return ε, epsilon
+    return ε, inv(epsilon)
 end
 
 function get_limits(domain)
@@ -274,9 +274,9 @@ function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names
 
         for (order, rule) in reverse(derivative_rules)
             if @eval @capture($quoted_x, $rule)
-                ε, epsilon = get_ε_epsilon(length(args), findfirst(==(dr), dict_depvar_input[f]), fdtype, order)
+                ε, h = get_ε_h(length(args), findfirst(==(dr), dict_depvar_input[f]), fdtype, order)
                 ε = use_gpu ? adapt(CuArray, ε) : ε
-                return :(derivative($(Symbol(:phi, :_, f)), $(Symbol(:coord, :_, f)), $(Symbol(:θ, :_, f)), $ε, $epsilon, $(Val(order))))
+                return :(derivative($(Symbol(:phi, :_, f)), $(Symbol(:coord, :_, f)), $(Symbol(:θ, :_, f)), $ε, $h, $(Val(order))))
             end
         end
         return x
