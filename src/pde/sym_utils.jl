@@ -167,6 +167,8 @@ function build_symbolic_loss_function(pinnrep::NamedTuple,
     for d in this_eq_depvars
         coord_expr = if length(dict_depvar_input[d]) == length(indvars)
                         :coord
+                     elseif length(dict_depvar_input[d]) == 1
+                        :($(dict_depvar_input[d][1]))
                      else
                         :(vcat($(dict_depvar_input[d]...)))
                      end
