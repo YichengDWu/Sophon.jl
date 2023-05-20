@@ -214,13 +214,13 @@ function expr_to_residual_function(pinnrep::NamedTuple, expr::Expr)
     return expr
 end
 
-const mixed_derivative_rules = (
+const mixed_derivative_patterns = (
     ((1,1), :((Differential(dr1_))((Differential(dr2_))(ff_(args__))))),
     ((2,1), :((Differential(dr1_))((Differential(dr1_))((Differential(dr2_))(ff_(args__)))))),
     ((2,2), :((Differential(dr1_))((Differential(dr1_))((Differential(dr2_))((Differential(dr2_))(ff_(args__))))))),
 )
 
-const derivative_rules = (
+const derivative_patterns = (
     (1,:((Differential(dr_))(ff_(args__)))),
     (2,:((Differential(dr_))((Differential(dr_))(ff_(args__))))),
     (3,:((Differential(dr_))((Differential(dr_))((Differential(dr_))(ff_(args__)))))),
@@ -235,8 +235,8 @@ function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names
     ex = prewalk(ex) do x
         quoted_x = Meta.quot(x)
 
-        for ((order1, order2), rule) in reverse(mixed_derivative_rules)
-            if @eval @capture($quoted_x, $rule) && dr1 !== dr2
+        for ((order1, order2), pattern) in reverse(mixed_derivative_patterns)
+            if @eval @capture($quoted_x, $pattern) && dr1 !== dr2
                 ε1, h1 = get_ε_h(length(args), findfirst(==(dr1), dict_depvar_input[ff]), fdtype, order1)
                 ε2, h2 = get_ε_h(length(args), findfirst(==(dr2), dict_depvar_input[ff]), fdtype, order2)
                 ε1 = use_gpu ? adapt(CuArray, ε1) : ε1
@@ -247,8 +247,8 @@ function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names
             end
         end
 
-        for (order, rule) in reverse(derivative_rules)
-            if @eval @capture($quoted_x, $rule)
+        for (order, pattern) in reverse(derivative_patterns)
+            if @eval @capture($quoted_x, $pattern)
                 ε, h = get_ε_h(length(args), findfirst(==(dr), dict_depvar_input[ff]), fdtype, order)
                 ε = use_gpu ? adapt(CuArray, ε) : ε
                 return :(derivative($(Symbol(:phi, :_, ff)), $(Symbol(:coord, :_, ff)), $(Symbol(:θ, :_, ff)), $ε, $h, $(Val(order))))
