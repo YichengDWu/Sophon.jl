@@ -44,9 +44,8 @@ end
 end
 
 function finitediff(phi, x, θ, dim::Int, order::Int)
-    ε = ChainRulesCore.@ignore_derivatives get_ε(size(x, 1), dim, eltype(θ), order)
+    ε, _epsilon = ChainRulesCore.@ignore_derivatives get_ε_epsilon(size(x, 1), dim, eltype(θ), order)
     _type = parameterless_type(ComponentArrays.getdata(θ))
-    _epsilon = inv(first(ε[ε .!= zero(ε)]))
 
     ε = adapt(_type, ε)
 
