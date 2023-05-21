@@ -226,7 +226,7 @@ const derivative_patterns = (
     (1,:((Differential(dr_))(ff_(args__)))),
     (2,:((Differential(dr_))((Differential(dr_))(ff_(args__))))),
     (3,:((Differential(dr_))((Differential(dr_))((Differential(dr_))(ff_(args__)))))),
-    (4,:((Differential(dr_))((Differential(dr_))((Differential(dr_))((Differential(x))(ff_(args__)))))))
+    (4,:((Differential(dr_))((Differential(dr_))((Differential(dr_))((Differential(dr_))(ff_(args__)))))))
 )
 
 function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names}
