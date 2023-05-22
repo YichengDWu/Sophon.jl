@@ -35,12 +35,6 @@ StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
-[weakdeps]
-Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
-
-[extensions]
-OptimisersExt = "Optimisers"
-
 [compat]
 Adapt = "3"
 CUDA = "3, 4"
@@ -68,9 +62,12 @@ RuntimeGeneratedFunctions = "0.5"
 SciMLBase = "1"
 Sobol = "1"
 StaticArraysCore = "1"
-StatsBase = "0.33"
+StatsBase = "0.33, 0.34"
 Symbolics = "4, 5"
 julia = "1.7"
+
+[extensions]
+OptimisersExt = "Optimisers"
 
 [extras]
 DomainSets = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
@@ -82,3 +79,6 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
 test = ["Test", "Zygote", "ModelingToolkit", "DomainSets", "OptimizationOptimJL"]
+
+[weakdeps]
+Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
