@@ -157,7 +157,13 @@ function symbolic_discretize(pde_system, pinn::PINN, sampler::PINNSampler,
                dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
                strategy, fdtype=Float64, eq_params=SciMLBase.NullParameters())
 
-    pde_loss_function = [build_symbolic_loss_function(pinnrep, eq)[2] for eq in eqs]
-    bc_loss_function = [build_symbolic_loss_function(pinnrep, bc)[2] for bc in bcs]
+    pde_loss_function = map(eqs) do eq
+        args, body = build_symbolic_loss_function(pinnrep, eq)
+        return :($args -> $body)
+    end
+    bc_loss_function = map(bcs) do bc
+        args, body = build_symbolic_loss_function(pinnrep, bc)
+        return :($args -> $body)
+    end
     return [pde_loss_function; bc_loss_function]
 end
