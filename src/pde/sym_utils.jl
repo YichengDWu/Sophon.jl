@@ -1,10 +1,3 @@
-function get_ε_h(::typeof(finitediff), dim, der_num, fdtype, order)
-    epsilon = ^(eps(fdtype), one(fdtype) / (2 + order))
-    ε = zeros(fdtype, dim)
-    ε[der_num] = epsilon
-    return ε, inv(epsilon)
-end
-
 get_dict_vars(vars) = Dict([Symbol(v) .=> i for (i, v) in enumerate(vars)])
 
 function get_vars(indvars_, depvars_)

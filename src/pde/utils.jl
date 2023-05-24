@@ -63,6 +63,25 @@ function finitediff(phi, x, θ, dim::Int, order::Int)
     end
 end
 
+# only order = 1 is supported
+function upwind(phi, x, θ, dim::Int, order::Int)
+    return (3 .* phi(x, θ) .- 4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* h ./ 2
+end
+
+function get_ε_h(::typeof(finitediff), dim, der_num, fdtype, order)
+    epsilon = ^(eps(fdtype), one(fdtype) / (2 + order))
+    ε = zeros(fdtype, dim)
+    ε[der_num] = epsilon
+    return ε, inv(epsilon)
+end
+
+function get_ε_h(::typeof(upwind), dim, der_num, fdtype, order)
+    epsilon = ^(eps(fdtype), one(fdtype) / (2 + order))
+    ε = zeros(fdtype, dim)
+    ε[der_num] = epsilon
+    return ε, inv(epsilon)
+end
+
 function Base.getproperty(d::Symbolics.VarDomainPairing, var::Symbol)
     if var == :variables
         return getfield(d, :variables)
