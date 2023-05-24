@@ -4,12 +4,12 @@ if isdefined(Base, :get_extension)
     using TaylorDiff, NNlib, ChainRulesCore
     import NNlib: tanh_fast
     import TaylorDiff: derivative, make_taylor, raise, extract_derivative
-    import ChainRulesCore: rrule
+    import ChainRulesCore: rrule, @thunk
 else
     using ..TaylorDiff, ..NNlib, ..ChainRulesCore
     import ..NNlib: tanh_fast
     import ..TaylorDiff: derivative, make_taylor, raise, extract_derivative
-    import ..ChainRulesCore: rrule
+    import ..ChainRulesCore: rrule, @thunk
 end
 
 function tanh_fast(t::TaylorScalar{T,2}) where {T}
@@ -34,12 +34,17 @@ function rrule(::typeof(*), A::AbstractMatrix{S},
 end
 
 function rrule(::typeof(*), A::AbstractMatrix{S},
-               t::AbstractMatrix{TaylorScalar{T, N}}) where {N, S <: Number, T}
+                              t::AbstractMatrix{TaylorScalar{T}}) where {S <: Number, T}
     project_A = ProjectTo(A)
+    project_t = ProjectTo(t)
     function gemv_pullback(x̄)
-        x̂ = reinterpret(T, x̄)
-        t̂ = reinterpret(T, t)
-        NoTangent(), @thunk(project_A(transpose(x̂) * t̂)), @thunk(transpose(A)*x̄)
+        X̄ = unthunk(x̄)
+        X̂ = reinterpret(reshape, T, X̄)
+        t̂ = reinterpret(reshape, T, t)
+
+        dA = @thunk(project_A(dropdims(sum(batched_transpose(X̂) ⊠ t̂; dims=3); dims=3)))
+        dB = @thunk(project_t(transpose(A)*X̄))
+        NoTangent(), dA, dB
     end
     return A * t, gemv_pullback
 end
@@ -53,6 +58,13 @@ end
                             vN::Val{N}) where {T <: Number, N}
     t = broadcast((t0, t1) -> make_taylor(t0, t1, vN), x, l)
     return extract_derivative(f(t), N)
+end
+
+# batched version
+@inline function derivative(f, x::AbstractMatrix{T}, l::AbstractVector{T},
+                            vN::Val{N}) where {T <: Number, N}
+    t = broadcast((t0, t1) -> TaylorDiff.make_taylor(t0, t1, vN), x, l)
+    return map(Base.Fix2(extract_derivative, N), f(t))
 end
 
 end
