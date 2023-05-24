@@ -76,3 +76,5 @@ end
 @inline function taylordiff(phi, x, θ, ε::AbstractVector{T}, h::T, ::Val{N}) where {T <: Number, N}
     return TaylorDiff.derivative(Base.Fix2(phi, θ), x, ε, Val{N+1}())
 end
+
+end
