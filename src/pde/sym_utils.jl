@@ -16,7 +16,7 @@ function get_vars(indvars_, depvars_)
             dname = ModelingToolkit.getname(d)
             push!(depvars, dname)
             push!(dict_depvar_input,
-                  dname => [nameof(ModelingToolkit.value(argument))
+                  dname => [Symbol(ModelingToolkit.value(argument))
                             for argument in ModelingToolkit.value(d).arguments])
         else
             dname = ModelingToolkit.getname(d)
@@ -30,65 +30,66 @@ function get_vars(indvars_, depvars_)
     return depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input
 end
 
-function find_thing_in_expr(ex::Expr, thing; ans=[])
-    if thing in ex.args
-        push!(ans, ex)
-    end
-    for e in ex.args
-        if e isa Expr
-            if thing in e.args
-                push!(ans, e)
-            end
-            find_thing_in_expr(e, thing; ans=ans)
+_beats(x, y::Nothing) = true
+_beats(x::Number, y::Number) = true
+_beats(x::Number, y::Symbol) = false
+_beats(x::Symbol, y::Number) = true
+_beats(x::Symbol, y::Symbol) = false
+
+function get_arguments(eq::ModelingToolkit.Equation, dict_indvars, dict_depvar_input)
+    args = Dict{Symbol,Any}(keys(dict_indvars) .=> nothing)
+    expr = ModelingToolkit.toexpr(eq.lhs - eq.rhs)
+
+    function update_args!(args, key, val)
+        old_val = get(args, key, nothing)
+        if _beats(val, old_val)
+            args[key] = val
         end
     end
-    return collect(Set(ans))
+    postwalk(expr) do x
+        if @capture(x, gg_(xs__))
+            if gg ∈ keys(dict_depvar_input)
+                map(dict_depvar_input[gg], xs) do key, arg
+                    key ∈ keys(args) && update_args!(args, key, arg)
+                end
+            end
+        end
+        x
+    end
+    values(sort(args; by=x->dict_indvars[x])) |> collect
 end
 
-function get_argument(eqs, dict_indvars, dict_depvars)
-    exprs = ModelingToolkit.toexpr.(eqs)
-    vars = map(exprs) do expr
-        _vars = map(depvar -> find_thing_in_expr(expr, depvar), collect(keys(dict_depvars)))
-        f_vars = filter(x -> !isempty(x), _vars)
-        return map(x -> first(x), f_vars)
+function get_arguments(eq::Vector{<:ModelingToolkit.Equation}, dict_indvars, dict_depvar_input)
+    map(eq) do eq
+        get_arguments(eq, dict_indvars, dict_depvar_input)
     end
-    args_ = map(vars) do _vars
-        ind_args_ = map(var -> var.args[2:end], _vars)
-        syms = Set{Symbol}()
-        filter(vcat(ind_args_...)) do ind_arg
-            if ind_arg isa Symbol
-                if ind_arg ∈ syms
-                    false
-                else
-                    push!(syms, ind_arg)
-                    true
-                end
-            else
-                true
-            end
-        end
-    end
-    return args_
 end
 
 function get_bounds(domains::Vector{Symbolics.VarDomainPairing}, eqs, bcs, eltypeθ,
-                    dict_indvars, dict_depvars)
+                    dict_indvars, dict_depvar_input)
     dict_span = Dict([Symbol(d.variables) => [infimum(d.domain), supremum(d.domain)]
                       for d in domains])
-    pde_args = get_argument(eqs, dict_indvars, dict_depvars)
+    pde_args = get_arguments(eqs, dict_indvars, dict_depvar_input)
     pde_bounds = map(pde_args) do pde_arg
         bds = mapreduce(s -> get(dict_span, s, fill(s, 2)), hcat, pde_arg)
         bds = eltypeθ.(bds)
         return bds[1, :], bds[2, :]
     end
 
-    bound_args = get_argument(bcs, dict_indvars, dict_depvars)
+    bound_args = get_arguments(bcs, dict_indvars, dict_depvar_input)
     bcs_bounds = map(bound_args) do bound_arg
         bds = mapreduce(s -> get(dict_span, s, fill(s, 2)), hcat, bound_arg)
         bds = eltypeθ.(bds)
         return bds[1, :], bds[2, :]
     end
     return pde_bounds, bcs_bounds
+end
+
+function get_bounds(pde::ModelingToolkit.PDESystem)
+    (; eqs, bcs, domain, ivs, dvs) = pde
+    _, _, dict_indvars, _, dict_depvar_input = get_vars(ivs, dvs)
+    bounds = get_bounds(domain, eqs, bcs, Float64, dict_indvars, dict_depvar_input)
+    return bounds
 end
 
 function get_bounds(d::Domain)
@@ -109,12 +110,6 @@ function get_bounds(pde::Sophon.PDESystem)
     return pde_bounds, bcs_bounds
 end
 
-function get_bounds(pde::ModelingToolkit.PDESystem)
-    (; eqs, bcs, domain, ivs, dvs) = pde
-    _, _, dict_indvars, dict_depvars, _ = get_vars(ivs, dvs)
-    bounds = get_bounds(domain, eqs, bcs, Float64, dict_indvars, dict_depvars)
-    return bounds
-end
 
 function build_symbolic_loss_function(pinnrep::NamedTuple,
                                       eq::Symbolics.Equation)
@@ -266,6 +261,8 @@ function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names
             if gg in keys(dict_depvars)
                 if xs == indvars
                     return :($(Symbol(:phi, :_, gg))($(Symbol(:coord, :_, gg)), $(Symbol(:θ, :_, gg))))
+                elseif hasproperty(xs[1], :head) && xs[1].head === :call
+                    return :($(Symbol(:phi, :_, gg))($(xs...), $(Symbol(:θ, :_, gg))))
                 else
                     cs = map(xs) do i
                         i isa Symbol ? i : :(zero(view(coord, [1], :)) .+ $i)

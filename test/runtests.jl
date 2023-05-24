@@ -311,5 +311,5 @@ rng = Random.default_rng()
     =#
 end
 
-
 @testset "BetaSampler" begin include("betasampler.jl") end
+@testset "Functional" begin include("functional.jl") end
