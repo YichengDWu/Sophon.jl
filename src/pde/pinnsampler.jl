@@ -100,7 +100,7 @@ function sample(pde::Sophon.PDESystem, sampler::QuasiRandomSampler)
 end
 
 function sample(pde::ModelingToolkit.PDESystem,
-                sampler::QuasiRandomSampler{P, B, SobolSample}) where {P, B}
+                sampler::QuasiRandomSampler{true, P, B, SobolSample}) where {P, B}
     (; pde_points, bcs_points) = sampler
     pde_bounds, bcs_bounds = get_bounds(pde)
 
@@ -119,6 +119,22 @@ function sample(pde::ModelingToolkit.PDESystem,
     return [pde_datasets; boundary_datasets]
 end
 
+function sample(pde::ModelingToolkit.PDESystem,
+                sampler::QuasiRandomSampler{false, P, B, SobolSample}) where {P<:Int, B}
+    (; pde_points, bcs_points) = sampler
+    pde_bounds, bcs_bounds = get_bounds(pde)
+
+    bcs_points = length(bcs_points) == 1 ?
+                 ntuple(_ -> first(bcs_points), length(bcs_bounds)) : Tuple(bcs_points)
+
+    pde_dataset = sobolsample(pde_points, pde_bounds[1][1], pde_bounds[1][2])
+    pde_datasets = [pde_dataset for _ in 1:length(pde_bounds)]
+
+    boundary_datasets = [sobolsample(points, bound[1], bound[2])
+                         for (points, bound) in zip(bcs_points, bcs_bounds)]
+
+    return [pde_datasets; boundary_datasets]
+end
 
 """
     BetaRandomSampler(pde_points, bcs_points=pde_points; sampling_alg=SobolSample(),
