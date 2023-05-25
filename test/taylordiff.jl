@@ -1,4 +1,4 @@
-using ModelingToolkit, IntervalSets, TaylorDiff, Sophon, Test
+using ModelingToolkit, DomainSets, TaylorDiff, Sophon, Test
 using Optimization, OptimizationOptimJL
 
 @parameters x,t
