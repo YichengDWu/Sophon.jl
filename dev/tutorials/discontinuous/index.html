@@ -42,28 +42,28 @@ Plots.plot(vec(x_test), vec(y_test),label=false)</code></pre><p><img src="../u.s
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">train (generic function with 1 method)</code></pre><h3 id="Plot-the-result"><a class="docs-heading-anchor" href="#Plot-the-result">Plot the result</a><a id="Plot-the-result-1"></a><a class="docs-heading-anchor-permalink" href="#Plot-the-result" title="Permalink"></a></h3><pre><code class="language-julia hljs">@time ps, st = train(model, x_train, y_train)
 y_pred = model(x_test,ps,st)[1]
 Plots.plot(vec(x_test), vec(y_pred),label=&quot;Prediction&quot;,line = (:dot, 4))
-Plots.plot!(vec(x_test), vec(y_test),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.6674186473404599
-Epoch 101 ||  0.01864971608910129
-Epoch 201 ||  0.01586160455358826
-Epoch 301 ||  0.015642592203372316
-Epoch 401 ||  0.015134793001105953
-Epoch 501 ||  0.014135986669104079
-Epoch 601 ||  0.013294937620977186
-Epoch 701 ||  0.01283151046387411
-Epoch 801 ||  0.01269387195476285
-Epoch 901 ||  0.012548224446460796
-Epoch 1001 ||  0.012477976191138811
-Epoch 1101 ||  0.012388274320054444
-Epoch 1201 ||  0.011654797179621984
-Epoch 1301 ||  0.010529602194651164
-Epoch 1401 ||  0.009334360844972378
-Epoch 1501 ||  0.008023263286543424
-Epoch 1601 ||  0.008215332658830921
-Epoch 1701 ||  0.007631491029260764
-Epoch 1801 ||  0.008620853054213236
-Epoch 1901 ||  0.00761754941462241
-Epoch 2000 ||  0.007640770062452741
- 10.062300 seconds (13.18 M allocations: 1.485 GiB, 4.70% gc time, 92.18% compilation time)</code></pre><p><img src="../result1.svg" alt/></p><h2 id="Siren"><a class="docs-heading-anchor" href="#Siren">Siren</a><a id="Siren-1"></a><a class="docs-heading-anchor-permalink" href="#Siren" title="Permalink"></a></h2><p>We use four hidden layers with 50 neurons in each.</p><pre><code class="language-julia hljs">model = Siren(1,50,50,50,50,1; omega = 30f0)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
+Plots.plot!(vec(x_test), vec(y_test),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  1.3409524212878674
+Epoch 101 ||  0.018745518366168654
+Epoch 201 ||  0.015984822768917478
+Epoch 301 ||  0.01571354604609585
+Epoch 401 ||  0.015588105308392044
+Epoch 501 ||  0.015395894597887944
+Epoch 601 ||  0.01525807139605885
+Epoch 701 ||  0.015114913923725926
+Epoch 801 ||  0.01494920230097214
+Epoch 901 ||  0.01473396963561008
+Epoch 1001 ||  0.014486045444698996
+Epoch 1101 ||  0.014055945402078782
+Epoch 1201 ||  0.013424928082053797
+Epoch 1301 ||  0.01316323167164056
+Epoch 1401 ||  0.012868442504831832
+Epoch 1501 ||  0.012720242167226439
+Epoch 1601 ||  0.01261584295174062
+Epoch 1701 ||  0.01256507226479235
+Epoch 1801 ||  0.012479673129290582
+Epoch 1901 ||  0.012450328599095095
+Epoch 2000 ||  0.012368824758344514
+ 11.697890 seconds (13.17 M allocations: 1.484 GiB, 5.72% gc time, 89.61% compilation time)</code></pre><p><img src="../result1.svg" alt/></p><h2 id="Siren"><a class="docs-heading-anchor" href="#Siren">Siren</a><a id="Siren-1"></a><a class="docs-heading-anchor-permalink" href="#Siren" title="Permalink"></a></h2><p>We use four hidden layers with 50 neurons in each.</p><pre><code class="language-julia hljs">model = Siren(1,50,50,50,50,1; omega = 30f0)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
     layer_1 = Dense(1 =&gt; 50, sin),      # 100 parameters
     layer_2 = Dense(50 =&gt; 50, sin),     # 2_550 parameters
     layer_3 = Dense(50 =&gt; 50, sin),     # 2_550 parameters
@@ -73,28 +73,28 @@ Epoch 2000 ||  0.007640770062452741
           #        plus 0 states, summarysize 88 bytes.</code></pre><pre><code class="language-julia hljs">@time ps, st = train(model, x_train, y_train)
 y_pred = model(x_test,ps,st)[1]
 Plots.plot(vec(x_test), vec(y_pred),label=&quot;Prediction&quot;,line = (:dot, 4))
-Plots.plot!(vec(x_test), vec(y_test),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.909549179682448
-Epoch 101 ||  0.0008151168307359856
-Epoch 201 ||  3.8336544497710354e-5
-Epoch 301 ||  1.1909652707386057e-6
-Epoch 401 ||  1.808600583110818e-8
-Epoch 501 ||  1.2708066697148196e-10
-Epoch 601 ||  1.3749377531574327e-12
-Epoch 701 ||  1.0406863824540416e-13
-Epoch 801 ||  4.881711462532812e-14
-Epoch 901 ||  5.228574590390096e-14
-Epoch 1001 ||  5.288736962103693e-14
-Epoch 1101 ||  2.4452210658530916e-14
-Epoch 1201 ||  3.402150770077229e-14
-Epoch 1301 ||  3.603955226408408e-14
-Epoch 1401 ||  7.247265791629228e-14
-Epoch 1501 ||  5.029870591614112e-14
-Epoch 1601 ||  4.2894384671717485e-14
-Epoch 1701 ||  8.707620003304713e-14
-Epoch 1801 ||  9.402394126583967e-14
-Epoch 1901 ||  1.1860167960913492e-13
-Epoch 2000 ||  4.013482585388735e-14
-  5.149543 seconds (8.15 M allocations: 1.298 GiB, 4.79% gc time, 82.49% compilation time)</code></pre><p><img src="../result.svg" alt/></p><p>As we can see the model overfits the data, and the high frequencies cannot be optimized away. We need to tunning the hyperparameter <code>omega</code></p><pre><code class="language-julia hljs">model = Siren(1,50,50,50,50,1; omega = 10f0)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
+Plots.plot!(vec(x_test), vec(y_test),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  1.125260277958165
+Epoch 101 ||  0.0012458716029345861
+Epoch 201 ||  0.00012429530067250544
+Epoch 301 ||  7.910892501945798e-6
+Epoch 401 ||  3.2923978875359534e-7
+Epoch 501 ||  1.159670722778995e-8
+Epoch 601 ||  3.1312447935300414e-10
+Epoch 701 ||  7.801340919119585e-12
+Epoch 801 ||  6.058874285541287e-13
+Epoch 901 ||  1.8728339535986594e-13
+Epoch 1001 ||  3.984586463525972e-14
+Epoch 1101 ||  3.8405373308542954e-14
+Epoch 1201 ||  4.484014110222215e-14
+Epoch 1301 ||  3.196790556808487e-14
+Epoch 1401 ||  4.8730231942432674e-14
+Epoch 1501 ||  5.287770170982841e-14
+Epoch 1601 ||  5.263846124736394e-14
+Epoch 1701 ||  5.0575457205838733e-14
+Epoch 1801 ||  5.519861436164602e-14
+Epoch 1901 ||  6.687930753883388e-14
+Epoch 2000 ||  7.366567896586189e-14
+  6.210852 seconds (8.15 M allocations: 1.298 GiB, 5.89% gc time, 79.17% compilation time)</code></pre><p><img src="../result.svg" alt/></p><p>As we can see the model overfits the data, and the high frequencies cannot be optimized away. We need to tunning the hyperparameter <code>omega</code></p><pre><code class="language-julia hljs">model = Siren(1,50,50,50,50,1; omega = 10f0)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
     layer_1 = Dense(1 =&gt; 50, sin),      # 100 parameters
     layer_2 = Dense(50 =&gt; 50, sin),     # 2_550 parameters
     layer_3 = Dense(50 =&gt; 50, sin),     # 2_550 parameters
@@ -104,28 +104,28 @@ Epoch 2000 ||  4.013482585388735e-14
           #        plus 0 states, summarysize 88 bytes.</code></pre><pre><code class="language-julia hljs">@time ps, st = train(model, x_train, y_train)
 y_pred = model(x_test,ps,st)[1]
 Plots.plot(vec(x_test), vec(y_pred),label=&quot;Prediction&quot;,line = (:dot, 4))
-Plots.plot!(vec(x_test), vec(y_test),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  1.2063497752614132
-Epoch 101 ||  0.007117457564225465
-Epoch 201 ||  0.005371271746944549
-Epoch 301 ||  0.004468523361628335
-Epoch 401 ||  0.0035589010502245556
-Epoch 501 ||  0.002717718751854087
-Epoch 601 ||  0.0020387610553170006
-Epoch 701 ||  0.0014310307764242712
-Epoch 801 ||  0.0008459575385100773
-Epoch 901 ||  0.00038105768865475114
-Epoch 1001 ||  0.00013499746274630336
-Epoch 1101 ||  6.162038086906172e-5
-Epoch 1201 ||  4.570468890499265e-5
-Epoch 1301 ||  4.000209703547209e-5
-Epoch 1401 ||  3.630994511040673e-5
-Epoch 1501 ||  3.3407858412345086e-5
-Epoch 1601 ||  3.095253474155971e-5
-Epoch 1701 ||  2.877321442006864e-5
-Epoch 1801 ||  2.677211446043986e-5
-Epoch 1901 ||  2.489446964242961e-5
-Epoch 2000 ||  2.3126641399069197e-5
-  0.798826 seconds (1.15 M allocations: 892.513 MiB, 8.97% gc time)</code></pre><p><img src="../result10.svg" alt/></p><h2 id="Gaussian-activation-function"><a class="docs-heading-anchor" href="#Gaussian-activation-function">Gaussian activation function</a><a id="Gaussian-activation-function-1"></a><a class="docs-heading-anchor-permalink" href="#Gaussian-activation-function" title="Permalink"></a></h2><p>We can also try using a fully connected net with the <a href="../../api/#Sophon.gaussian"><code>gaussian</code></a> activation function.</p><pre><code class="language-julia hljs">model = FullyConnected((1,50,50,50,50,1), gaussian)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
+Plots.plot!(vec(x_test), vec(y_test),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.38014543758711106
+Epoch 101 ||  0.006911203471907723
+Epoch 201 ||  0.00442997769209286
+Epoch 301 ||  0.0027031063907790114
+Epoch 401 ||  0.0017107071939680021
+Epoch 501 ||  0.0010155812244194158
+Epoch 601 ||  0.0005144813253618219
+Epoch 701 ||  0.00025424610392795914
+Epoch 801 ||  0.00014494676839139987
+Epoch 901 ||  9.499216199068596e-5
+Epoch 1001 ||  6.974061560550813e-5
+Epoch 1101 ||  5.464134887722488e-5
+Epoch 1201 ||  4.80013114192026e-5
+Epoch 1301 ||  3.495821977720167e-5
+Epoch 1401 ||  2.8021421420616497e-5
+Epoch 1501 ||  2.2760661842013322e-5
+Epoch 1601 ||  1.8531057888970787e-5
+Epoch 1701 ||  0.00014030923685510408
+Epoch 1801 ||  1.321990057809906e-5
+Epoch 1901 ||  1.1535305643699373e-5
+Epoch 2000 ||  1.5467918826944518e-5
+  1.185156 seconds (1.15 M allocations: 892.465 MiB, 6.12% gc time)</code></pre><p><img src="../result10.svg" alt/></p><h2 id="Gaussian-activation-function"><a class="docs-heading-anchor" href="#Gaussian-activation-function">Gaussian activation function</a><a id="Gaussian-activation-function-1"></a><a class="docs-heading-anchor-permalink" href="#Gaussian-activation-function" title="Permalink"></a></h2><p>We can also try using a fully connected net with the <a href="../../api/#Sophon.gaussian"><code>gaussian</code></a> activation function.</p><pre><code class="language-julia hljs">model = FullyConnected((1,50,50,50,50,1), gaussian)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
     layer_1 = Dense(1 =&gt; 50, gaussian),  # 100 parameters
     layer_2 = Dense(50 =&gt; 50, gaussian),  # 2_550 parameters
     layer_3 = Dense(50 =&gt; 50, gaussian),  # 2_550 parameters
@@ -135,28 +135,28 @@ Epoch 2000 ||  2.3126641399069197e-5
           #        plus 0 states, summarysize 80 bytes.</code></pre><pre><code class="language-julia hljs">@time ps, st = train(model, x_train, y_train)
 y_pred = model(x_test,ps,st)[1]
 Plots.plot(vec(x_test), vec(y_pred),label=&quot;Prediction&quot;,line = (:dot, 4))
-Plots.plot!(vec(x_test), vec(y_test),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.31717089212971333
-Epoch 101 ||  0.0035377395793752286
-Epoch 201 ||  0.0010850373648236965
-Epoch 301 ||  1.9780307269852647e-6
-Epoch 401 ||  1.7383085665646078e-5
-Epoch 501 ||  2.0204408937415945e-7
-Epoch 601 ||  5.356584959294857e-8
-Epoch 701 ||  2.5995331754477992e-5
-Epoch 801 ||  1.2155838011480962e-8
-Epoch 901 ||  2.9224017947156728e-9
-Epoch 1001 ||  0.0002674667478706377
-Epoch 1101 ||  2.0897651776189587e-8
-Epoch 1201 ||  6.033182945451432e-9
-Epoch 1301 ||  2.7220763107030183e-6
-Epoch 1401 ||  6.289320818962694e-8
-Epoch 1501 ||  6.876695775323019e-6
-Epoch 1601 ||  3.396508198116544e-9
-Epoch 1701 ||  6.163778304889331e-5
-Epoch 1801 ||  1.6507335621513318e-8
-Epoch 1901 ||  2.2323817878392956e-7
-Epoch 2000 ||  0.00010143816433795874
-  4.934227 seconds (7.28 M allocations: 1.251 GiB, 5.18% gc time, 78.44% compilation time)</code></pre><p><img src="../result2.svg" alt/></p><h2 id="Quadratic-activation-function"><a class="docs-heading-anchor" href="#Quadratic-activation-function">Quadratic activation function</a><a id="Quadratic-activation-function-1"></a><a class="docs-heading-anchor-permalink" href="#Quadratic-activation-function" title="Permalink"></a></h2><p><a href="tutorials/@ref"><code>quadratic</code></a> is much cheaper to compute compared to the Gaussain activation function.</p><pre><code class="language-julia hljs">model = FullyConnected((1,50,50,50,50,1), quadratic)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
+Plots.plot!(vec(x_test), vec(y_test),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.2855603104903411
+Epoch 101 ||  0.005559767471248973
+Epoch 201 ||  0.005130172789748338
+Epoch 301 ||  0.004844565282286954
+Epoch 401 ||  0.0034223650026568376
+Epoch 501 ||  0.0013276966010291223
+Epoch 601 ||  2.1500074766197235e-5
+Epoch 701 ||  6.0588812057197654e-6
+Epoch 801 ||  1.4485027696345366e-5
+Epoch 901 ||  7.072979562331616e-8
+Epoch 1001 ||  2.538235899458057e-7
+Epoch 1101 ||  5.925878723150666e-6
+Epoch 1201 ||  2.0903927806256143e-9
+Epoch 1301 ||  7.871734245495267e-9
+Epoch 1401 ||  8.011853595003645e-8
+Epoch 1501 ||  2.162444956691978e-5
+Epoch 1601 ||  1.4106915099021936e-10
+Epoch 1701 ||  6.357788512758844e-12
+Epoch 1801 ||  2.1723008659429959e-7
+Epoch 1901 ||  5.28686994827422e-11
+Epoch 2000 ||  0.0015928988265820935
+  5.762081 seconds (7.28 M allocations: 1.251 GiB, 5.95% gc time, 75.14% compilation time)</code></pre><p><img src="../result2.svg" alt/></p><h2 id="Quadratic-activation-function"><a class="docs-heading-anchor" href="#Quadratic-activation-function">Quadratic activation function</a><a id="Quadratic-activation-function-1"></a><a class="docs-heading-anchor-permalink" href="#Quadratic-activation-function" title="Permalink"></a></h2><p><a href="tutorials/@ref"><code>quadratic</code></a> is much cheaper to compute compared to the Gaussain activation function.</p><pre><code class="language-julia hljs">model = FullyConnected((1,50,50,50,50,1), quadratic)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
     layer_1 = Dense(1 =&gt; 50, quadratic),  # 100 parameters
     layer_2 = Dense(50 =&gt; 50, quadratic),  # 2_550 parameters
     layer_3 = Dense(50 =&gt; 50, quadratic),  # 2_550 parameters
@@ -166,25 +166,25 @@ Epoch 2000 ||  0.00010143816433795874
           #        plus 0 states, summarysize 80 bytes.</code></pre><pre><code class="language-julia hljs">@time ps, st = train(model, x_train, y_train)
 y_pred = model(x_test,ps,st)[1]
 Plots.plot(vec(x_test), vec(y_pred),label=&quot;Prediction&quot;,line = (:dot, 4))
-Plots.plot!(vec(x_test), vec(y_test),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.28931497296635816
-Epoch 101 ||  0.005744776260583966
-Epoch 201 ||  0.0048069050063164085
-Epoch 301 ||  0.004198679343321062
-Epoch 401 ||  0.0033047805521389173
-Epoch 501 ||  0.0017466371031746183
-Epoch 601 ||  0.0007134014481158557
-Epoch 701 ||  0.00012980885126927946
-Epoch 801 ||  1.6839506223087092e-5
-Epoch 901 ||  1.705618888167686e-6
-Epoch 1001 ||  4.769382950586637e-7
-Epoch 1101 ||  2.529624782151779e-7
-Epoch 1201 ||  1.2799482941919566e-6
-Epoch 1301 ||  1.5145075736430885e-6
-Epoch 1401 ||  1.311031485628243e-7
-Epoch 1501 ||  2.993820056495584e-5
-Epoch 1601 ||  4.3953701146093705e-7
-Epoch 1701 ||  1.8784411753408227e-5
-Epoch 1801 ||  6.473922684876669e-5
-Epoch 1901 ||  8.78122285682427e-8
-Epoch 2000 ||  3.530075075275552e-8
-  4.401716 seconds (7.03 M allocations: 1.235 GiB, 5.68% gc time, 85.18% compilation time)</code></pre><p><img src="../result3.svg" alt/></p><h2 id="Conclusion"><a class="docs-heading-anchor" href="#Conclusion">Conclusion</a><a id="Conclusion-1"></a><a class="docs-heading-anchor-permalink" href="#Conclusion" title="Permalink"></a></h2><p>&quot;Neural networks suppresse high frequency components&quot; is a misinterpretation of the spectral bias. The accurate way of putting it is that the lower frequencies in the error are optimized first in the optimization process. This can be seen in Siren&#39;s example of overfitting data, where you do not have implicit regularization. The high frequency in the network will never go away because it has fitted the data perfectly.</p><p>Mainstream attributes the phenomenon that neural networks &quot;suppress&quot; high frequencies to gradient descent. This is not the whole picture. Initialization also plays an important role. Siren mitigats this problem by initializing larger weights in the first layer, while activation functions such as gassian have large enough gradients and sufficiently large support of the second derivative with proper hyperparameters. Please refer to <a href="../../references/#sitzmann2020implicit">Vincent Sitzmann, Julien Martel, Alexander Bergman, David Lindell, Gordon Wetzstein (2020)</a>, <a href="../../references/#ramasinghe2021beyond">Sameera Ramasinghe, Simon Lucey (2021)</a> and <a href="../../references/#ramasinghe2022regularizing">Sameera Ramasinghe, Lachlan MacDonald, Simon Lucey (2022)</a> if you want to dive deeper into this.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../ode/">« Introduction with Lotka-Volterra System</a><a class="docs-footer-nextpage" href="../poisson/">1D Multi-scale Poisson&#39;s Equation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Monday 22 May 2023 21:21">Monday 22 May 2023</span>. Using Julia version 1.9.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Plots.plot!(vec(x_test), vec(y_test),label=&quot;Exact&quot;,legend=:topleft)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Epoch 1 ||  0.8490000896694299
+Epoch 101 ||  0.006362181457075462
+Epoch 201 ||  0.005959473756446347
+Epoch 301 ||  0.00574669379307256
+Epoch 401 ||  0.005542830461028591
+Epoch 501 ||  0.005277137667309173
+Epoch 601 ||  0.004961134162153847
+Epoch 701 ||  0.004522746946065141
+Epoch 801 ||  0.004011082555458318
+Epoch 901 ||  0.0034705992700361276
+Epoch 1001 ||  0.002805728873126852
+Epoch 1101 ||  0.00229605095884471
+Epoch 1201 ||  0.0015689735309117486
+Epoch 1301 ||  0.0006821464973515037
+Epoch 1401 ||  0.0002491693736831167
+Epoch 1501 ||  8.41239972103591e-5
+Epoch 1601 ||  2.3968992750691317e-5
+Epoch 1701 ||  6.217239607164116e-6
+Epoch 1801 ||  1.5958855638450791e-6
+Epoch 1901 ||  1.1727542882578775e-6
+Epoch 2000 ||  2.2023447939425877e-7
+  5.179304 seconds (7.03 M allocations: 1.235 GiB, 6.20% gc time, 81.32% compilation time)</code></pre><p><img src="../result3.svg" alt/></p><h2 id="Conclusion"><a class="docs-heading-anchor" href="#Conclusion">Conclusion</a><a id="Conclusion-1"></a><a class="docs-heading-anchor-permalink" href="#Conclusion" title="Permalink"></a></h2><p>&quot;Neural networks suppresse high frequency components&quot; is a misinterpretation of the spectral bias. The accurate way of putting it is that the lower frequencies in the error are optimized first in the optimization process. This can be seen in Siren&#39;s example of overfitting data, where you do not have implicit regularization. The high frequency in the network will never go away because it has fitted the data perfectly.</p><p>Mainstream attributes the phenomenon that neural networks &quot;suppress&quot; high frequencies to gradient descent. This is not the whole picture. Initialization also plays an important role. Siren mitigats this problem by initializing larger weights in the first layer, while activation functions such as gassian have large enough gradients and sufficiently large support of the second derivative with proper hyperparameters. Please refer to <a href="../../references/#sitzmann2020implicit">Vincent Sitzmann, Julien Martel, Alexander Bergman, David Lindell, Gordon Wetzstein (2020)</a>, <a href="../../references/#ramasinghe2021beyond">Sameera Ramasinghe, Simon Lucey (2021)</a> and <a href="../../references/#ramasinghe2022regularizing">Sameera Ramasinghe, Lachlan MacDonald, Simon Lucey (2022)</a> if you want to dive deeper into this.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../ode/">« Introduction with Lotka-Volterra System</a><a class="docs-footer-nextpage" href="../poisson/">1D Multi-scale Poisson&#39;s Equation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Thursday 25 May 2023 00:20">Thursday 25 May 2023</span>. Using Julia version 1.9.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
