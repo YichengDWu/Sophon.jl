@@ -98,10 +98,10 @@ function discretize(pde_system, pinn::PINN, sampler::PINNSampler,
                     additional_loss=Sophon.null_additional_loss, derivative=finitediff,
                     fdtype=Float64, adtype=Optimization.AutoZygote())
     datasets = sample(pde_system, sampler)
-    init_params = Lux.fmap(fdtype, pinn.init_params; exclude = x->x isa Number)
+    init_params = Lux.fmap(Base.Fix1(broadcast, fdtype), pinn.init_params)
     init_params = _ComponentArray(init_params)
 
-    datasets = Lux.fmap(fdtype, datasets; exclude = x->x isa Number)
+    datasets = map(Base.Fix1(broadcast, fdtype), datasets)
     datasets = init_params isa AbstractGPUComponentVector ?
                map(Base.Fix1(adapt, CuArray), datasets) : datasets
     pde_and_bcs_loss_function = build_loss_function(pde_system, pinn, strategy;
@@ -122,10 +122,10 @@ function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSa
                     fdtype=Float64,
                     adtype=Optimization.AutoZygote())
     datasets = sample(pde_system, sampler)
-    init_params = Lux.fmap(fdtype, pinn.init_params; exclude = x->x isa Number)
+    init_params = Lux.fmap(Base.Fix1(broadcast, fdtype), pinn.init_params)
     init_params = _ComponentArray(init_params)
 
-    datasets = Lux.fmap(fdtype, datasets; exclude = x->x isa Number)
+    datasets = map(Base.Fix1(broadcast, fdtype), datasets)
     datasets = init_params isa AbstractGPUComponentVector ?
                map(Base.Fix1(adapt, CuArray), datasets) : datasets
 
@@ -147,7 +147,7 @@ end
 function symbolic_discretize(pde_system, pinn::PINN, sampler::PINNSampler,
                              strategy::AbstractTrainingAlg;
                              additional_loss=Sophon.null_additional_loss, derivative=finitediff,
-                             adtype=Optimization.AutoZygote())
+                             adtype=Optimization.AutoZygote(), fdtype=Float64)
     (; eqs, bcs, domain, ps, defaults, indvars, depvars) = pde_system
     (; phi, init_params) = pinn
 
@@ -164,7 +164,7 @@ function symbolic_discretize(pde_system, pinn::PINN, sampler::PINNSampler,
 
     pinnrep = (; eqs, bcs, domain, ps, defaults, depvars, indvars, dict_indvars,
                dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
-               strategy, fdtype=Float64, eq_params=SciMLBase.NullParameters())
+               strategy, fdtype=fdtype, eq_params=SciMLBase.NullParameters())
 
     pde_loss_function = map(eqs) do eq
         args, body = build_symbolic_loss_function(pinnrep, eq)
