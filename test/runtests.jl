@@ -313,3 +313,4 @@ end
 
 @testset "BetaSampler" begin include("betasampler.jl") end
 @testset "Functional" begin include("functional.jl") end
+@testset "taylordiff.jl" begin include("taylordiff.jl") end
