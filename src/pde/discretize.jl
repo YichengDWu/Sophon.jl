@@ -16,7 +16,7 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
 
     pinnrep = (; eqs, bcs, domain, ps, defaults, depvars, indvars, dict_indvars,
                dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
-               strategy, fdtype=fdtype, eq_params=SciMLBase.NullParameters())
+               strategy, fdtype)
 
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, eq, i)
                                         for (i, eq) in enumerate(eqs))
@@ -42,7 +42,7 @@ function build_loss_function(pde_system::PDESystem, pinn::PINN,
 
     pinnrep = (; eqs, bcs, depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input,
                multioutput, init_params, phi, derivative, strategy,
-               fdtype=fdtype, eq_params=SciMLBase.NullParameters())
+               fdtype)
 
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, first(eq), i)
                                         for (i, eq) in enumerate(eqs))
@@ -70,8 +70,7 @@ function build_loss_function(pde_system::ParametricPDESystem, pinn::PINN,
 
     pinnrep = (; eqs, bcs, depvars, indvars, dict_indvars, dict_depvars, dict_depvar_input,
                dict_pmdepvars, dict_pmdepvar_input, multioutput, pvs, init_params, pinn,
-               derivative, strategy, fdtype=Float64, coord_branch_net,
-               eq_params=SciMLBase.NullParameters())
+               derivative, strategy, fdtype, coord_branch_net)
 
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, first(eq), i)
                                         for (i, eq) in enumerate(eqs))
@@ -164,7 +163,7 @@ function symbolic_discretize(pde_system, pinn::PINN, sampler::PINNSampler,
 
     pinnrep = (; eqs, bcs, domain, ps, defaults, depvars, indvars, dict_indvars,
                dict_depvars, dict_depvar_input, multioutput, init_params, phi, derivative,
-               strategy, fdtype=fdtype, eq_params=SciMLBase.NullParameters())
+               strategy, fdtype)
 
     pde_loss_function = map(eqs) do eq
         args, body = build_symbolic_loss_function(pinnrep, eq)
