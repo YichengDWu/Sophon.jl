@@ -85,4 +85,6 @@ function Sophon.get_ε_h(::typeof(taylordiff), dim, der_num, fdtype, order)
     return ε, epsilon
 end
 
+setproperty!(Sophon, :taylordiff, taylordiff)
+
 end
