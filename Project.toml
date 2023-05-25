@@ -72,6 +72,7 @@ StaticArraysCore = "1"
 StatsBase = "0.33"
 Symbolics = "4, 5"
 julia = "1.7"
+Requires = "1"
 
 [extras]
 DomainSets = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
