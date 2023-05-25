@@ -1,12 +1,12 @@
 module SophonTaylorDiffExt
 
 if isdefined(Base, :get_extension)
-    using TaylorDiff, NNlib, ChainRulesCore
+    using TaylorDiff, NNlib, ChainRulesCore, Sophon
     import NNlib: tanh_fast
     import TaylorDiff: derivative, make_taylor, raise, extract_derivative, value
     import ChainRulesCore: rrule, @thunk
 else
-    using ..TaylorDiff, ..NNlib, ..ChainRulesCore
+    using ..TaylorDiff, ..NNlib, ..ChainRulesCore, Sophon
     import ..NNlib: tanh_fast
     import ..TaylorDiff: derivative, make_taylor, raise, extract_derivative, value
     import ..ChainRulesCore: rrule, @thunk
