@@ -40,8 +40,8 @@ include("layers/operators.jl")
 
 include("pde/componentarrays.jl")
 include("pde/pinn_types.jl")
-include("pde/sym_utils.jl")
 include("pde/utils.jl")
+include("pde/sym_utils.jl")
 include("pde/training_strategies.jl")
 include("pde/pinnsampler.jl")
 include("pde/discretize.jl")
@@ -49,7 +49,7 @@ include("pde/discretize.jl")
 function __init__()
     @static if !isdefined(Base, :get_extension)
         @require Optimisers="3bd65402-5787-11e9-1adc-39752487f4e2" begin include("../ext/SophonOptimisersExt.jl") end
-        @require TaylorDiff="b0b7fa68-4b77-11ea-0f0f-4d3c7ab2f928" begin include("../ext/SophonTaylorDiffExt.jl") end
+        @require TaylorDiff="b36ab563-344f-407b-a36a-4f200bebf99c" begin include("../ext/SophonTaylorDiffExt.jl") end
     end
 end
 

@@ -1,55 +1,56 @@
 module SophonTaylorDiffExt
 
 if isdefined(Base, :get_extension)
-    using TaylorDiff, NNlib, ChainRulesCore
-    import NNlib: tanh_fast
+    using TaylorDiff
     import TaylorDiff: derivative, make_taylor, raise, extract_derivative, value
-    import ChainRulesCore: rrule, @thunk
 else
-    using ..TaylorDiff, ..NNlib, ..ChainRulesCore
-    import ..NNlib: tanh_fast
+    using ..TaylorDiff
     import ..TaylorDiff: derivative, make_taylor, raise, extract_derivative, value
-    import ..ChainRulesCore: rrule, @thunk
 end
 
-function tanh_fast(t::TaylorScalar{T,2}) where {T}
+using Sophon
+import Sophon.ChainRulesCore as CRC
+import NNlib
+import LinearAlgebra
+
+function NNlib.tanh_fast(t::TaylorScalar{T,2}) where {T}
     t0, t1 = value(t)
-    return TaylorScalar{T,2}(frule((NoTangent(), t1), tanh_fast, t0))
+    return TaylorScalar{T,2}(CRC.frule((CRC.NoTangent(), t1), NNlib.tanh_fast, t0))
 end
-function tanh_fast(t::TaylorScalar{T,N}) where {T,N}
+function NNlib.tanh_fast(t::TaylorScalar{T,N}) where {T,N}
     t1 = TaylorScalar{T,N-1}(t)
-    df = 1 - tanh_fast(t1)^2
-    return raise(tanh_fast(value(t)[1]), df, t)
+    df = 1 - NNlib.tanh_fast(t1)^2
+    return raise(NNlib.tanh_fast(value(t)[1]), df, t)
 end
 
-function rrule(::typeof(*), A::AbstractMatrix{S},
+function CRC.rrule(::typeof(*), A::AbstractMatrix{S},
                t::AbstractVector{TaylorScalar{T, N}}) where {N, S <: Number, T}
-    project_A = ProjectTo(A)
+    project_A = CRC.ProjectTo(A)
     function gemv_pullback(x̄)
         x̂ = reinterpret(reshape, T, x̄)
         t̂ = reinterpret(reshape, T, t)
-        NoTangent(), @thunk(project_A(transpose(x̂) * t̂)), @thunk(transpose(A)*x̄)
+        CRC.NoTangent(), CRC.@thunk(project_A(transpose(x̂) * t̂)), CRC.@thunk(transpose(A)*x̄)
     end
     return A * t, gemv_pullback
 end
 
-function rrule(::typeof(*), A::AbstractMatrix{S},
-               t::AbstractMatrix{TaylorScalar{T}}) where {S <: Number, T}
-    project_t = ProjectTo(t)
+function CRC.rrule(::typeof(*), A::AbstractMatrix{S},
+               t::AbstractMatrix{TaylorScalar{T,N}}) where {N, S <: Number, T}
+    project_t = CRC.ProjectTo(t)
     function gemv_pullback(x̄)
-        X̄ = unthunk(x̄)
+        X̄ = CRC.unthunk(x̄)
         X̂ = reinterpret(reshape, T, X̄)
         T̂ = reinterpret(reshape, T, t)
 
-        dA = @thunk begin
+        dA = CRC.@thunk begin
                 C = zero(A)
                 @inbounds for n in axes(X̂, 3)
-                    C .+= @views transpose(X̂[:, :, n]) * T̂[:, :, n]
+                    LinearAlgebra.mul!(C, transpose(@view(X̂[:, :, n])), @view(T̂[:, :, n]), true, true)
                 end
                 C
             end
-        dB = @thunk(project_t(transpose(A)*X̄))
-        NoTangent(), dA, dB
+        dB = CRC.@thunk(project_t(transpose(A)*X̄))
+        CRC.NoTangent(), dA, dB
     end
     return A * t, gemv_pullback
 end
@@ -75,6 +76,13 @@ end
 
 @inline function taylordiff(phi, x, θ, ε::AbstractVector{T}, h::T, ::Val{N}) where {T <: Number, N}
     return TaylorDiff.derivative(Base.Fix2(phi, θ), x, ε, Val{N+1}())
+end
+
+function Sophon.get_ε_h(::typeof(taylordiff), dim, der_num, fdtype, order)
+    epsilon = one(fdtype)
+    ε = zeros(fdtype, dim)
+    ε[der_num] = epsilon
+    return ε, epsilon
 end
 
 end
