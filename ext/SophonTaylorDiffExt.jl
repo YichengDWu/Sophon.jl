@@ -77,4 +77,11 @@ end
     return TaylorDiff.derivative(Base.Fix2(phi, θ), x, ε, Val{N+1}())
 end
 
+function Sophon.get_ε_h(::typeof(taylordiff), dim, der_num, fdtype, order)
+    epsilon = one(fdtype)
+    ε = zeros(fdtype, dim)
+    ε[der_num] = epsilon
+    return ε, epsilon
+end
+
 end
