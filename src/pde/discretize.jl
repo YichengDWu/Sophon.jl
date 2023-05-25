@@ -98,7 +98,10 @@ function discretize(pde_system, pinn::PINN, sampler::PINNSampler,
                     additional_loss=Sophon.null_additional_loss, derivative=finitediff,
                     fdtype=Float64, adtype=Optimization.AutoZygote())
     datasets = sample(pde_system, sampler)
-    init_params = _ComponentArray(pinn.init_params)
+    init_params = Lux.fmap(fdtype, pinn.init_params; exclude = x->x isa Number)
+    init_params = _ComponentArray(init_params)
+
+    datasets = Lux.fmap(fdtype, datasets; exclude = x->x isa Number)
     datasets = init_params isa AbstractGPUComponentVector ?
                map(Base.Fix1(adapt, CuArray), datasets) : datasets
     pde_and_bcs_loss_function = build_loss_function(pde_system, pinn, strategy;
@@ -119,7 +122,10 @@ function discretize(pde_system::ParametricPDESystem, pinn::PINN, sampler::PINNSa
                     fdtype=Float64,
                     adtype=Optimization.AutoZygote())
     datasets = sample(pde_system, sampler)
-    init_params = _ComponentArray(pinn.init_params)
+    init_params = Lux.fmap(fdtype, pinn.init_params; exclude = x->x isa Number)
+    init_params = _ComponentArray(init_params)
+
+    datasets = Lux.fmap(fdtype, datasets; exclude = x->x isa Number)
     datasets = init_params isa AbstractGPUComponentVector ?
                map(Base.Fix1(adapt, CuArray), datasets) : datasets
 

@@ -47,20 +47,19 @@ end
 
 function PINN(chain::NamedTuple, rng::AbstractRNG=Random.default_rng())
     phi = map(m -> ChainState(m, rng), chain)
-    init_params = Lux.fmap(float64, initialparameters(rng, phi))
+    init_params = initialparameters(rng, phi)
 
     return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
 function PINN(chain::AbstractExplicitLayer, rng::AbstractRNG=Random.default_rng())
     phi = ChainState(chain, rng)
-    init_params = Lux.fmap(float64, initialparameters(rng, phi))
-
+    init_params = initialparameters(rng, phi)
     return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
 function initialparameters(rng::AbstractRNG, pinn::PINN)
-    return Lux.fmap(float64, initialparameters(rng, pinn.phi))
+    return initialparameters(rng, pinn.phi)
 end
 
 """
