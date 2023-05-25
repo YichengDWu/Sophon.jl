@@ -37,9 +37,11 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [weakdeps]
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
+TaylorDiff = "b36ab563-344f-407b-a36a-4f200bebf99c"
 
 [extensions]
-OptimisersExt = "Optimisers"
+SophonOptimisersExt = "Optimisers"
+SophonTaylorDiffExt = "TaylorDiff"
 
 [compat]
 Adapt = "3"
@@ -63,7 +65,6 @@ Optimization = "3"
 OptimizationOptimisers = "0.1"
 ParameterSchedulers = "0.3"
 QuasiMonteCarlo = "0.2"
-Requires = "1"
 RuntimeGeneratedFunctions = "0.5"
 SciMLBase = "1"
 Sobol = "1"
@@ -77,6 +78,7 @@ DomainSets = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
 OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
+TaylorDiff = "b36ab563-344f-407b-a36a-4f200bebf99c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 

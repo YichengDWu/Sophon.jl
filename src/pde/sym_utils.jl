@@ -1,3 +1,10 @@
+function get_ε_h( dim, der_num, fdtype, order)
+    epsilon = ^(eps(fdtype), one(fdtype) / (2 + order))
+    ε = zeros(fdtype, dim)
+    ε[der_num] = epsilon
+    return ε, inv(epsilon)
+end
+
 get_dict_vars(vars) = Dict([Symbol(v) .=> i for (i, v) in enumerate(vars)])
 
 function get_vars(indvars_, depvars_)
@@ -218,7 +225,7 @@ const derivative_patterns = (
 )
 
 function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names}
-    (; indvars, dict_depvars, dict_depvar_input, fdtype, init_params, derivative) = pinnrep
+    (; indvars, dict_depvars, dict_depvar_input, fdtype, init_params) = pinnrep
     use_gpu = isongpu(init_params)
 
     # Step 1: Replace all the derivatives with the derivative function
@@ -227,8 +234,8 @@ function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names
 
         for ((order1, order2), pattern) in reverse(mixed_derivative_patterns)
             if @eval @capture($quoted_x, $pattern) && dr1 !== dr2
-                ε1, h1 = get_ε_h(derivative, length(args), findfirst(==(dr1), dict_depvar_input[ff]), fdtype, order1)
-                ε2, h2 = get_ε_h(derivative, length(args), findfirst(==(dr2), dict_depvar_input[ff]), fdtype, order2)
+                ε1, h1 = get_ε_h(length(args), findfirst(==(dr1), dict_depvar_input[ff]), fdtype, order1)
+                ε2, h2 = get_ε_h(length(args), findfirst(==(dr2), dict_depvar_input[ff]), fdtype, order2)
                 ε1 = use_gpu ? adapt(CuArray, ε1) : ε1
                 ε2 = use_gpu ? adapt(CuArray, ε2) : ε2
 
@@ -239,7 +246,7 @@ function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names
 
         for (order, pattern) in reverse(derivative_patterns)
             if @eval @capture($quoted_x, $pattern)
-                ε, h = get_ε_h(derivative, length(args), findfirst(==(dr), dict_depvar_input[ff]), fdtype, order)
+                ε, h = get_ε_h(length(args), findfirst(==(dr), dict_depvar_input[ff]), fdtype, order)
                 ε = use_gpu ? adapt(CuArray, ε) : ε
                 return :(derivative($(Symbol(:phi, :_, ff)), $(Symbol(:coord, :_, ff)), $(Symbol(:θ, :_, ff)), $ε, $h, $(Val(order))))
             end

@@ -1,5 +1,5 @@
 
-module OptimisersExt
+module SophonOptimisersExt
 
 if isdefined(Base, :get_extension)
     using Optimisers
