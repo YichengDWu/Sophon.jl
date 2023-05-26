@@ -1,5 +1,5 @@
 using ModelingToolkit, DomainSets, TaylorDiff, Sophon, Test
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, TaylorDiff
 
 @parameters x,t
 @variables u(..), v(..)
@@ -28,4 +28,4 @@ pinn = PINN(u = Siren(2,1; hidden_dims=16,num_layers=4, omega = 1.0),
 sampler = QuasiRandomSampler(500, (200,200,20,20))
 strategy = NonAdaptiveTraining(1,(10,10,1,1))
 
-prob = Sophon.discretize(pde_system, pinn, sampler, strategy; derivative=finitediff, derivative_bc=taylordiff)
+@test_nowarn Sophon.discretize(pde_system, pinn, sampler, strategy; derivative=finitediff, derivative_bc=taylordiff)
