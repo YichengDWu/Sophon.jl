@@ -31,7 +31,7 @@ pde_system = Sophon.PDESystem(eqs, bcs, [x,y], [u(x,y)])
 ```
 
 ```@example L
-chain = ResNet((2,16,16,16,1), tanh)
+chain = FullyConnected((2,16,16,16,1), tanh)
 pinn = PINN(chain)
 sampler = QuasiRandomSampler(300, 30)
 strategy = NonAdaptiveTraining()
