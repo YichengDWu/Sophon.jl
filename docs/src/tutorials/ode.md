@@ -33,8 +33,8 @@ In this part of the tutorial, we will employ [`BetaRandomSampler`](@ref) to gene
 
 ```@example ODE
 # Constructing the physics-informed neural network (PINN)
-pinn = PINN(x = ResNet(1, 1, sin; hidden_dims=8, num_layers=3),
-            y = ResNet(1, 1, sin; hidden_dims=8, num_layers=3))
+pinn = PINN(x = FullyConnected(1, 1, sin; hidden_dims=8, num_layers=3),
+            y = FullyConnected(1, 1, sin; hidden_dims=8, num_layers=3))
 
 # Setting up the sampler, training strategy and problem
 sampler = BetaRandomSampler(200, 1)
