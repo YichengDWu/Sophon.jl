@@ -19,8 +19,7 @@ domains = [x ∈ Interval(-5.0f0, 5.0f0),
 
 @named pde_system = PDESystem(eqs, bcs, domains, [x,t], [u(x,t),v(x,t)])
 
-Ext = isdefined(Base, :get_extension) ? Base.get_extension(Sophon,:SophonTaylorDiffExt) : Sophon.SophonTaylorDiffExt
-derivative = Ext.taylordiff
+derivative = isdefined(Base, :get_extension) ? Sophon.taylordiff : Sophon.SophonTaylorDiffExt.taylordiff
 
 pinn = PINN(u = Siren(2,1; hidden_dims=16,num_layers=4, omega = 1.0),
             v = Siren(2,1; hidden_dims=16,num_layers=4, omega = 1.0))
