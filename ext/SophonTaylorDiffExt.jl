@@ -85,6 +85,10 @@ function Sophon.get_ε_h(::typeof(taylordiff), dim, der_num, fdtype, order)
     return ε, epsilon
 end
 
-__init__() = setproperty!(Sophon, :taylordiff, taylordiff)
+function __init__()
+    @static if VERSION >= v"1.9.0"
+        setproperty!(Sophon, :taylordiff, taylordiff)
+    end
+end
 
 end
