@@ -227,8 +227,8 @@ function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names
 
         for ((order1, order2), pattern) in reverse(mixed_derivative_patterns)
             if @eval @capture($quoted_x, $pattern) && dr1 !== dr2
-                ε1, h1 = get_ε_h(derivative, length(args), findfirst(==(dr1), dict_depvar_input[ff]), fdtype, order1)
-                ε2, h2 = get_ε_h(derivative, length(args), findfirst(==(dr2), dict_depvar_input[ff]), fdtype, order2)
+                ε1, h1 = get_ε_h(derivative, length(args), findfirst(==(dr1), dict_depvar_input[ff]), fdtype, order1+order2)
+                ε2, h2 = get_ε_h(derivative, length(args), findfirst(==(dr2), dict_depvar_input[ff]), fdtype, order1+order2)
                 ε1 = use_gpu ? adapt(CuArray, ε1) : ε1
                 ε2 = use_gpu ? adapt(CuArray, ε2) : ε2
 
