@@ -38,9 +38,9 @@ domains = [t ∈ Interval(t_min, t_max), x ∈ Interval(x_min, x_max)]
 ```
 
 ```@example SOD
-pinn = PINN(u=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
-            ρ=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16),
-            p=FullyConnected(2, 1, tanh; num_layers=4, hidden_dims=16))
+pinn = PINN(u=ResNet(2, 1, tanh; num_layers=4, hidden_dims=16),
+            ρ=ResNet(2, 1, tanh; num_layers=4, hidden_dims=16),
+            p=ResNet(2, 1, tanh; num_layers=4, hidden_dims=16))
 
 sampler = QuasiRandomSampler(1000, 400)
 

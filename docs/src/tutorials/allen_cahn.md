@@ -26,7 +26,7 @@ bcs = [u(x,0) ~ x^2 * cospi(x),
 
 Then we define the neural net, the sampler, and the training strategy.
 ```@example allen
-chain = FullyConnected(2, 1, tanh; hidden_dims=16, num_layers=4)
+chain = ResNet(2, 1, tanh; hidden_dims=16, num_layers=4)
 pinn = PINN(chain)
 sampler = QuasiRandomSampler(500, (300, 100))
 strategy = NonAdaptiveTraining(1, (50, 1))
