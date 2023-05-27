@@ -36,7 +36,7 @@ end
 
 function CRC.rrule(::typeof(*), A::AbstractMatrix{S},
                t::AbstractMatrix{TaylorScalar{T,N}}) where {N, S <: Number, T}
-    project_t = CRC.ProjectTo(t)
+    project_A = CRC.ProjectTo(A)
     function gemv_pullback(x̄)
         X̄ = CRC.unthunk(x̄)
         X̂ = reinterpret(reshape, T, X̄)
@@ -49,8 +49,8 @@ function CRC.rrule(::typeof(*), A::AbstractMatrix{S},
                 end
                 C
             end
-        dB = CRC.@thunk(project_t(transpose(A)*X̄))
-        CRC.NoTangent(), dA, dB
+        dB = CRC.@thunk(transpose(A)*X̄)
+        CRC.NoTangent(), project_A(dA), dB
     end
     return A * t, gemv_pullback
 end
