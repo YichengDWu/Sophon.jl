@@ -100,7 +100,7 @@ for N in 1:5
     @eval @inline function derivative(f, x::AbstractVector{T}, l::AbstractVector{T},
                                       ::Val{$N}) where {T <: Number}
         t = $(Symbol(:broadcasted_make_taylor_, N))(x, l)
-        return extract_derivative(f(t), N)
+        return extract_derivative(f(t), $N)
     end
 end
 
