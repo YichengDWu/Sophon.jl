@@ -10,7 +10,6 @@ end
 
 using Sophon
 import Sophon.ChainRulesCore as CRC
-import Sophon.ComponentArrays as CA
 import NNlib
 import LinearAlgebra
 
@@ -116,7 +115,7 @@ for N in 1:5
 end
 
 @inline function taylordiff(phi, x, θ, ε::AbstractVector{T}, h::T, ::Val{N}) where {T <: Number, N}
-    ε = CRC.@ignore_derivatives adapt(parameterless_type(CA.getdata(θ)), ε)
+    ε = CRC.@ignore_derivatives Sophon.adapt(Sophon.parameterless_type(Sophon.getdata(θ)), ε)
     return TaylorDiff.derivative(Base.Fix2(phi, θ), x, ε, Val{N+1}())
 end
 
