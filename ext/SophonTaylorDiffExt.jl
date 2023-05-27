@@ -55,23 +55,63 @@ function CRC.rrule(::typeof(*), A::AbstractMatrix{S},
     return A * t, gemv_pullback
 end
 
+for N in 1:5
+    @eval begin
+        $(Symbol(:broadcasted_make_taylor_, N))(t0,t1) = CRC.@ignore_derivatives broadcast((t0, t1) -> make_taylor(t0, t1, $(Val(N))), t0, t1)
+
+        function CRC.rrule(f::typeof($(Symbol(:broadcasted_make_taylor_, N))), x::AbstractVector, y::AbstractVector)
+            o = f(x, y)
+            function f_pullback(x̄::AbstractVector{<:TaylorScalar{T}}) where {T}
+                x = reinterpret(reshape, T, x̄)
+                return CRC.NoTangent(), x[1, :], x[2, :]
+            end
+            return o, f_pullback
+        end
+
+        function CRC.rrule(f::typeof($(Symbol(:broadcasted_make_taylor_, N))), x::AbstractMatrix, y::AbstractVector)
+            o = f(x, y)
+            function broadcasted_make_taylor_pullback(x̄::AbstractMatrix{<:TaylorScalar{T}}) where {T}
+                x = reinterpret(reshape, T, x̄)
+                return CRC.NoTangent(), x[1, :, :], x[2, :, 1]
+            end
+            return o, broadcasted_make_taylor_pullback
+        end
+
+        $(Symbol(:broadcasted_extract_derivative_, N))(t) = CRC.@ignore_derivatives map(Base.Fix2(extract_derivative, $(Val(N))), t)
+
+        function CRC.rrule(f::typeof($(Symbol(:broadcasted_extract_derivative_, N))), t::AbstractArray{TaylorScalar{T, L}}) where {T, L}
+            function broadcasted_extract_derivative_pullback(x̂)
+                Δ = broadcast(x̂) do d
+                    TaylorScalar{T, L}(ntuple(j -> j === $N ? d : zero(T), Val{L}()))
+                end
+                return CRC.NoTangent(), Δ
+            end
+            return f(t), broadcasted_extract_derivative_pullback
+        end
+    end
+end
+
 @inline function derivative(f, x::AbstractVector{T}, l::AbstractVector{T},
                             order::Int64) where {T <: Number}
     derivative(f, x, l, Val{order + 1}())
 end
 
-@inline function derivative(f, x::AbstractVector{T}, l::AbstractVector{T},
-                            vN::Val{N}) where {T <: Number, N}
-    t = broadcast((t0, t1) -> make_taylor(t0, t1, vN), x, l)
-    return extract_derivative(f(t), N)
+for N in 1:5
+    @eval @inline function derivative(f, x::AbstractVector{T}, l::AbstractVector{T},
+                                      ::Val{$N}) where {T <: Number}
+        t = $(Symbol(:broadcasted_make_taylor_, N))(x, l)
+        return extract_derivative(f(t), N)
+    end
 end
 
 @inline extract_derivative(t::TaylorScalar, ::Val{N}) where {N} = value(t)[N]
 # batched version
-@inline function derivative(f, x::AbstractMatrix{T}, l::AbstractVector{T},
-                            vN::Val{N}) where {T <: Number, N}
-    t = broadcast((t0, t1) -> TaylorDiff.make_taylor(t0, t1, vN), x, l)
-    return map(Base.Fix2(extract_derivative, vN), f(t))
+for N in 1:5
+    @eval @inline function derivative(f, x::AbstractMatrix{T}, l::AbstractVector{T},
+                                      ::Val{$N}) where {T <: Number}
+        t = $(Symbol(:broadcasted_make_taylor_, N))(x, l)
+        return $(Symbol(:broadcasted_extract_derivative_, N))(f(t))
+    end
 end
 
 @inline function taylordiff(phi, x, θ, ε::AbstractVector{T}, h::T, ::Val{N}) where {T <: Number, N}
