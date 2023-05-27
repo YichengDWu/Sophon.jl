@@ -28,6 +28,7 @@ using ForwardDiff
 using MacroTools
 using MacroTools: prewalk, postwalk
 using Requires
+using StaticArrays: SVector
 
 RuntimeGeneratedFunctions.init(@__MODULE__)
 

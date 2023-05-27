@@ -114,16 +114,37 @@ for N in 1:5
     end
 end
 
-@inline function taylordiff(phi, x, θ, ε::AbstractVector{T}, h::T, ::Val{N}) where {T <: Number, N}
-    ε = CRC.@ignore_derivatives Sophon.adapt(Sophon.parameterless_type(Sophon.getdata(θ)), ε)
+@inline function taylordiff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{N}) where {T <: Number, N}
+    ε = CRC.@ignore_derivatives convert(Sophon.parameterless_type(x), ε_)
     return TaylorDiff.derivative(Base.Fix2(phi, θ), x, ε, Val{N+1}())
 end
 
-function Sophon.get_ε_h(::typeof(taylordiff), dim, der_num, fdtype, order)
+function generate_ε(::typeof(taylordiff), dim, der_num, fdtype, order)
     epsilon = one(fdtype)
     ε = zeros(fdtype, dim)
     ε[der_num] = epsilon
-    return ε, epsilon
+    return Sophon.SVector{dim}(ε)
+end
+
+for order in 1:4
+    for fdtype in (Float32, Float64)
+        @eval Sophon.get_h(::typeof(taylordiff), ::Type{$fdtype}, ::Val{$order}) = $(one(fdtype))
+    end
+end
+
+for l in 1:4
+    for d in 1:l
+        for order in 1:4
+            for fdtype in (Float32, Float64)
+                @eval const $(Symbol(:taylordiff_ε, :_, l, :_, d, :_, order, :_, fdtype)) =
+                    $(generate_ε(taylordiff, l, d, fdtype, order))
+
+                @eval function Sophon.get_ε(::typeof(taylordiff), ::Val{$l}, ::Val{$d}, ::Type{$fdtype}, ::Val{$order})
+                    return $(Symbol(:taylordiff_ε, :_, l, :_, d, :_, order, :_, fdtype))
+                end
+            end
+        end
+    end
 end
 
 function __init__()
