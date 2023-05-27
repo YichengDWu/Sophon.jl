@@ -15,19 +15,23 @@ This function is only used for the first order derivative.
 forwarddiff(phi, t, εs, order, θ) = ForwardDiff.gradient(sum ∘ Base.Fix2(phi, θ), t)
 
 @inline function finitediff(phi, x, θ, ε::AbstractVector{T}, h::T, ::Val{1}) where {T<:AbstractFloat}
+    ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(ComponentArrays.getdata(θ)), ε)
     return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* (h / 2)
 end
 
 @inline function finitediff(phi, x, θ, ε::AbstractVector{T}, h::T, ::Val{2}) where {T<:AbstractFloat}
+    ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(ComponentArrays.getdata(θ)), ε)
     return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* h^2
 end
 
 @inline function finitediff(phi, x, θ, ε::AbstractVector{T}, h::T, ::Val{3}) where {T<:AbstractFloat}
+    ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(ComponentArrays.getdata(θ)), ε)
     return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ) .+ 2 .* phi(x .- ε, θ) -
             phi(x .- 2 .* ε, θ)) .* h^3 ./ 2
 end
 
 @inline function finitediff(phi, x, θ, ε::AbstractVector{T}, h::T, ::Val{4}) where {T<:AbstractFloat}
+    ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(ComponentArrays.getdata(θ)), ε)
     return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
             4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* h^4
 end
@@ -54,6 +58,7 @@ end
 
 # only order = 1 is supported
 function upwind(phi, x, θ, ε::AbstractVector{T}, h::T, ::Val{1}) where {T<:AbstractFloat}
+    ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(ComponentArrays.getdata(θ)), ε)
     return (3 .* phi(x, θ) .- 4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* (h / 2)
 end
 

@@ -115,6 +115,7 @@ for N in 1:5
 end
 
 @inline function taylordiff(phi, x, θ, ε::AbstractVector{T}, h::T, ::Val{N}) where {T <: Number, N}
+    ε = ChainRulesCore.@ignore_derivatives adapt(parameterless_type(ComponentArrays.getdata(θ)), ε)
     return TaylorDiff.derivative(Base.Fix2(phi, θ), x, ε, Val{N+1}())
 end
 
