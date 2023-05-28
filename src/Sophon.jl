@@ -17,6 +17,7 @@ import SciMLBase
 import SciMLBase: parameterless_type, __solve, build_solution, NullParameters
 using StatsBase, QuasiMonteCarlo
 using Adapt, ChainRulesCore, CUDA, GPUArrays, GPUArraysCore
+import GPUArraysCore: AbstractGPUArray
 import QuasiMonteCarlo
 import Sobol
 using Distributions: Beta

@@ -14,24 +14,27 @@ This function is only used for the first order derivative.
 """
 forwarddiff(phi, t, εs, order, θ) = ForwardDiff.gradient(sum ∘ Base.Fix2(phi, θ), t)
 
-@inline function finitediff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{1}) where {T<:AbstractFloat}
-    ε = ChainRulesCore.@ignore_derivatives convert(parameterless_type(x), ε_)
+@inline maybe_adapt(x::AbstractGPUArray, ε_) = ChainRulesCore.@ignore_derivatives convert(CuArray, ε_)
+@inline maybe_adapt(x, ε_) = ChainRulesCore.@ignore_derivatives ε_
+
+@inline function finitediff(phi, x::AbstractGPUArray, θ, ε_::AbstractVector{T}, h::T, ::Val{1}) where {T<:AbstractFloat}
+    ε = maybe_adapt(x, ε_)
     return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* (h / 2)
 end
 
 @inline function finitediff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{2}) where {T<:AbstractFloat}
-    ε = ChainRulesCore.@ignore_derivatives convert(parameterless_type(x), ε_)
+    ε = maybe_adapt(x, ε_)
     return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* h^2
 end
 
 @inline function finitediff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{3}) where {T<:AbstractFloat}
-    ε = ChainRulesCore.@ignore_derivatives convert(parameterless_type(x), ε_)
+    ε = maybe_adapt(x, ε_)
     return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ) .+ 2 .* phi(x .- ε, θ) -
             phi(x .- 2 .* ε, θ)) .* h^3 ./ 2
 end
 
 @inline function finitediff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{4}) where {T<:AbstractFloat}
-    ε = ChainRulesCore.@ignore_derivatives convert(parameterless_type(x), ε_)
+    ε = maybe_adapt(x, ε_)
     return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
             4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* h^4
 end
