@@ -77,7 +77,7 @@ for N in 1:5
             return o, broadcasted_make_taylor_pullback
         end
 
-        $(Symbol(:broadcasted_extract_derivative_, N))(t) = CRC.@ignore_derivatives map(Base.Fix2(extract_derivative, $(Val(N))), t)
+        $(Symbol(:broadcasted_extract_derivative_, N))(t) = CRC.@ignore_derivatives broadcast(Base.Fix2(extract_derivative, $(Val(N))), t)
 
         function CRC.rrule(f::typeof($(Symbol(:broadcasted_extract_derivative_, N))), t::AbstractArray{TaylorScalar{T, L}}) where {T, L}
             function broadcasted_extract_derivative_pullback(x̂)
@@ -145,6 +145,13 @@ for l in 1:4
             end
         end
     end
+end
+
+# avoid NaN
+function Base.:*(A::Sophon.CuMatrix{T}, B::Sophon.CuMatrix{TaylorScalar{T, N}}) where {T, N}
+    C = similar(B, (size(A, 1), size(B, 2)))
+    fill!(C, zero(eltype(C)))
+    return LinearAlgebra.mul!(C, A, B)
 end
 
 function __init__()
