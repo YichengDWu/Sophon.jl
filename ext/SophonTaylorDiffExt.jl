@@ -36,7 +36,7 @@ end
 
 function CRC.rrule(::typeof(*), A::AbstractMatrix{S},
                t::AbstractMatrix{TaylorScalar{T,N}}) where {N, S <: Number, T}
-    project_t = CRC.ProjectTo(t)
+    project_A = CRC.ProjectTo(A)
     function gemv_pullback(x̄)
         X̄ = CRC.unthunk(x̄)
         X̂ = reinterpret(reshape, T, X̄)
@@ -49,10 +49,46 @@ function CRC.rrule(::typeof(*), A::AbstractMatrix{S},
                 end
                 C
             end
-        dB = CRC.@thunk(project_t(transpose(A)*X̄))
-        CRC.NoTangent(), dA, dB
+        dB = CRC.@thunk(transpose(A)*X̄)
+        CRC.NoTangent(), project_A(dA), dB
     end
     return A * t, gemv_pullback
+end
+
+for N in 1:5
+    @eval begin
+        $(Symbol(:broadcasted_make_taylor_, N))(t0,t1) = CRC.@ignore_derivatives broadcast((t0, t1) -> make_taylor(t0, t1, $(Val(N))), t0, t1)
+
+        function CRC.rrule(f::typeof($(Symbol(:broadcasted_make_taylor_, N))), x::AbstractVector, y::AbstractVector)
+            o = f(x, y)
+            function f_pullback(x̄::AbstractVector{<:TaylorScalar{T}}) where {T}
+                x = reinterpret(reshape, T, x̄)
+                return CRC.NoTangent(), x[1, :], x[2, :]
+            end
+            return o, f_pullback
+        end
+
+        function CRC.rrule(f::typeof($(Symbol(:broadcasted_make_taylor_, N))), x::AbstractMatrix, y::AbstractVector)
+            o = f(x, y)
+            function broadcasted_make_taylor_pullback(x̄::AbstractMatrix{<:TaylorScalar{T}}) where {T}
+                x = reinterpret(reshape, T, x̄)
+                return CRC.NoTangent(), x[1, :, :], x[2, :, 1]
+            end
+            return o, broadcasted_make_taylor_pullback
+        end
+
+        $(Symbol(:broadcasted_extract_derivative_, N))(t) = CRC.@ignore_derivatives broadcast(Base.Fix2(extract_derivative, $(Val(N))), t)
+
+        function CRC.rrule(f::typeof($(Symbol(:broadcasted_extract_derivative_, N))), t::AbstractArray{TaylorScalar{T, L}}) where {T, L}
+            function broadcasted_extract_derivative_pullback(x̂)
+                Δ = broadcast(x̂) do d
+                    TaylorScalar{T, L}(ntuple(j -> j === $N ? d : zero(T), Val{L}()))
+                end
+                return CRC.NoTangent(), Δ
+            end
+            return f(t), broadcasted_extract_derivative_pullback
+        end
+    end
 end
 
 @inline function derivative(f, x::AbstractVector{T}, l::AbstractVector{T},
@@ -60,29 +96,63 @@ end
     derivative(f, x, l, Val{order + 1}())
 end
 
-@inline function derivative(f, x::AbstractVector{T}, l::AbstractVector{T},
-                            vN::Val{N}) where {T <: Number, N}
-    t = broadcast((t0, t1) -> make_taylor(t0, t1, vN), x, l)
-    return extract_derivative(f(t), N)
+for N in 1:5
+    @eval @inline function derivative(f, x::AbstractVector{T}, l::AbstractVector{T},
+                                      ::Val{$N}) where {T <: Number}
+        t = $(Symbol(:broadcasted_make_taylor_, N))(x, l)
+        return extract_derivative(f(t), $N)
+    end
 end
 
 @inline extract_derivative(t::TaylorScalar, ::Val{N}) where {N} = value(t)[N]
 # batched version
-@inline function derivative(f, x::AbstractMatrix{T}, l::AbstractVector{T},
-                            vN::Val{N}) where {T <: Number, N}
-    t = broadcast((t0, t1) -> TaylorDiff.make_taylor(t0, t1, vN), x, l)
-    return map(Base.Fix2(extract_derivative, vN), f(t))
+for N in 1:5
+    @eval @inline function derivative(f, x::AbstractMatrix{T}, l::AbstractVector{T},
+                                      ::Val{$N}) where {T <: Number}
+        t = $(Symbol(:broadcasted_make_taylor_, N))(x, l)
+        return $(Symbol(:broadcasted_extract_derivative_, N))(f(t))
+    end
 end
 
-@inline function taylordiff(phi, x, θ, ε::AbstractVector{T}, h::T, ::Val{N}) where {T <: Number, N}
+@inline function taylordiff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{N}) where {T <: Number, N}
+    ε = Sophon.maybe_adapt(x, ε_)
     return TaylorDiff.derivative(Base.Fix2(phi, θ), x, ε, Val{N+1}())
 end
 
-function Sophon.get_ε_h(::typeof(taylordiff), dim, der_num, fdtype, order)
+function generate_ε(::typeof(taylordiff), dim, der_num, fdtype, order)
     epsilon = one(fdtype)
     ε = zeros(fdtype, dim)
     ε[der_num] = epsilon
-    return ε, epsilon
+    return Sophon.SVector{dim}(ε)
+end
+
+for order in 1:4
+    for fdtype in (Float32, Float64)
+        @eval Sophon.get_h(::typeof(taylordiff), ::Type{$fdtype}, ::Val{$order}) = $(one(fdtype))
+    end
+end
+
+for l in 1:4
+    for d in 1:l
+        for order in 1:4
+            for fdtype in (Float32, Float64)
+                @eval const $(Symbol(:taylordiff_ε, :_, l, :_, d, :_, order, :_, fdtype)) =
+                    $(generate_ε(taylordiff, l, d, fdtype, order))
+
+                @eval function Sophon.get_ε(::typeof(taylordiff), ::Val{$l}, ::Val{$d}, ::Type{$fdtype}, ::Val{$order})
+                    return $(Symbol(:taylordiff_ε, :_, l, :_, d, :_, order, :_, fdtype))
+                end
+            end
+        end
+    end
+end
+
+# avoid NaN
+function Base.:*(A::Union{Sophon.CuMatrix{T}, LinearAlgebra.Transpose{T, Sophon.CuArray}},
+                 B::Sophon.CuMatrix{TaylorScalar{T, N}}) where {T, N}
+    C = similar(B, (size(A, 1), size(B, 2)))
+    fill!(C, zero(eltype(C)))
+    return LinearAlgebra.mul!(C, A, B)
 end
 
 function __init__()

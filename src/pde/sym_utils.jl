@@ -219,28 +219,27 @@ const derivative_patterns = (
 
 function transform_expression(pinnrep::NamedTuple{names}, ex::Expr) where {names}
     (; indvars, dict_depvars, dict_depvar_input, fdtype, init_params, derivative) = pinnrep
-    use_gpu = isongpu(init_params)
 
     # Step 1: Replace all the derivatives with the derivative function
     ex = prewalk(ex) do x
         quoted_x = Meta.quot(x)
-
         for ((order1, order2), pattern) in reverse(mixed_derivative_patterns)
             if @eval @capture($quoted_x, $pattern) && dr1 !== dr2
-                ε1, h1 = get_ε_h(derivative, length(args), findfirst(==(dr1), dict_depvar_input[ff]), fdtype, order1+order2)
-                ε2, h2 = get_ε_h(derivative, length(args), findfirst(==(dr2), dict_depvar_input[ff]), fdtype, order1+order2)
-                ε1 = use_gpu ? adapt(CuArray, ε1) : ε1
-                ε2 = use_gpu ? adapt(CuArray, ε2) : ε2
+                order = Val(order1 + order2)
+                l = Val(length(args))
+                h = get_h(derivative, fdtype, order)
+                ε1 = get_ε(derivative, l, Val(findfirst(==(dr1), dict_depvar_input[ff])), fdtype, order)
+                ε2 = get_ε(derivative, l, Val(findfirst(==(dr2), dict_depvar_input[ff])), fdtype, order)
 
-                return :(derivative((x,ps)->derivative(phi_u, x, ps, $ε2, $h2, $(Val(order2))),
-                                     coord_u, θ, $ε1, $h1, $(Val(order1))))
+                return :(derivative((x,ps)->derivative(phi_u, x, ps, $ε2, $h, $(Val(order2))),
+                                     coord_u, θ, $ε1, $h, $(Val(order1))))
             end
         end
 
         for (order, pattern) in reverse(derivative_patterns)
             if @eval @capture($quoted_x, $pattern)
-                ε, h = get_ε_h(derivative, length(args), findfirst(==(dr), dict_depvar_input[ff]), fdtype, order)
-                ε = use_gpu ? adapt(CuArray, ε) : ε
+                h = get_h(derivative, fdtype, Val(order))
+                ε = get_ε(derivative, Val(length(args)), Val(findfirst(==(dr), dict_depvar_input[ff])), fdtype, Val(order))
                 return :(derivative($(Symbol(:phi, :_, ff)), $(Symbol(:coord, :_, ff)), $(Symbol(:θ, :_, ff)), $ε, $h, $(Val(order))))
             end
         end
