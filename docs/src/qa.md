@@ -8,7 +8,7 @@ pinn = gpu(PINN(...))
 ```
 ## Q: How can I monitor the loss for each loss function?
 
-A: Data points are stored in `prob.p`. Call `Sophon.residual_function_1` with the corresponding arguments to obtain the residual of each data point:
+A: Data points are stored in `prob.p`. Call `Sophon.residual_function_x` with the corresponding arguments to obtain the residual of each data point:
 ```julia
 residual = Sophon.residual_function_1(prob.p[1], res.u)
 ```
