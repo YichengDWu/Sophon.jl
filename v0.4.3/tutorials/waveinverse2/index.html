@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Inverse problem for the wave equation with unknown velocity field · Sophon.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://YichengDWu.github.io/Sophon.jl/tutorials/waveinverse2/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/indigo.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Sophon.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../ode/">Introduction with Lotka-Volterra System</a></li><li><a class="tocitem" href="../discontinuous/">Fitting a nonlinear discontinuous function</a></li><li><a class="tocitem" href="../poisson/">1D Multi-scale Poisson&#39;s Equation</a></li><li><a class="tocitem" href="../convection/">1D Convection Equation</a></li><li><a class="tocitem" href="../helmholtz/">2D Helmholtz Equation</a></li><li><a class="tocitem" href="../allen_cahn/">Allen-Cahn Equation with Sequential Training</a></li><li><a class="tocitem" href="../SchrödingerEquation/">Schrödinger Equation: A PDE System with Resampling</a></li><li><a class="tocitem" href="../L_shape/">Poisson equation over an L-shaped domain</a></li><li class="is-active"><a class="tocitem" href>Inverse problem for the wave equation with unknown velocity field</a></li><li><a class="tocitem" href="../sod/">SOD Shock Tube Problem</a></li></ul></li><li><a class="tocitem" href="../../qa/">FAQ</a></li><li><a class="tocitem" href="../../api/">API Reference</a></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Inverse problem for the wave equation with unknown velocity field</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Inverse problem for the wave equation with unknown velocity field</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/YichengDWu/Sophon.jl/blob/main/docs/src/tutorials/waveinverse2.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Inverse-problem-for-the-wave-equation-with-unknown-velocity-field"><a class="docs-heading-anchor" href="#Inverse-problem-for-the-wave-equation-with-unknown-velocity-field">Inverse problem for the wave equation with unknown velocity field</a><a id="Inverse-problem-for-the-wave-equation-with-unknown-velocity-field-1"></a><a class="docs-heading-anchor-permalink" href="#Inverse-problem-for-the-wave-equation-with-unknown-velocity-field" title="Permalink"></a></h1><p>We are going to sovle the wave equation.</p><pre><code class="language-julia hljs">using Sophon, ModelingToolkit, IntervalSets
+using Optimization, OptimizationOptimJL
+
+@parameters x, t
+@variables u(..), c(..)
+
+Dₜ = Differential(t)
+Dₜ² = Differential(t)^2
+Dₓ² = Differential(x)^2
+
+s(x,t) = abs2(x) * sin(x) * cos(t)
+
+eq = Dₜ²(u(x,t)) ~ c(x) * Dₓ²(u(x,t)) + s(x,t)
+
+bcs = [u(x, 0) ~ sin(x),
+       Dₜ(u(x, 0)) ~ 0,
+       u(0, t) ~ 0,
+       u(1, t) ~ sin(1) * cos(t)]
+
+domains = [t ∈ Interval(0.0, 1.0),
+           x ∈ Interval(0.0, 1.0)]
+
+@named wave = PDESystem(eq, bcs, domains, [t,x], [u(x,t),c(x)])</code></pre><p class="math-container">\[ \begin{align}
+\frac{\mathrm{d}}{\mathrm{d}t} \frac{\mathrm{d}}{\mathrm{d}t} u\left( x, t \right) =&amp; c\left( x \right) \frac{\mathrm{d}}{\mathrm{d}x} \frac{\mathrm{d}}{\mathrm{d}x} u\left( x, t \right) + \cos\left( t \right) \left|x\right|^{2} \sin\left( x \right)
+\end{align}
+ \]</p><p>Here the velocity field <span>$c(x)$</span> is unknown, we will approximate it with a neural network.</p><pre><code class="language-julia hljs">pinn = PINN(u = FullyConnected((2,16,16,16,1), sin),
+            c = FullyConnected((1,16,16,1), tanh))
+
+sampler = QuasiRandomSampler(500,100)
+strategy = NonAdaptiveTraining(1, (10,10,1,1))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">NonAdaptiveTraining{Int64, NTuple{4, Int64}}(1, (10, 10, 1, 1))</code></pre><p>Next we generate some data of <span>$u(x,t)$</span>. Here we place two sensors at <span>$x=0.1$</span> and <span>$x=0.5$</span>.</p><pre><code class="language-julia hljs">ū(x,t) = sin(x) * cos(t)
+
+x_data = hcat(fill(0.1, 1, 50), fill(0.5, 1, 50))
+t_data = repeat(range(0.0, 1.0, length = 50),2)&#39;
+input_data = [x_data; t_data]
+
+u_data = ū.(x_data, t_data)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1×100 Matrix{Float64}:
+ 0.0998334  0.0998126  0.0997503  0.0996464  …  0.275281  0.267213  0.259035</code></pre><p>Finally we construct the inverse problem and solve it.</p><pre><code class="language-julia hljs">additional_loss(phi, θ) = sum(abs2, phi.u(input_data, θ.u) .- u_data)
+
+prob = Sophon.discretize(wave, pinn, sampler, strategy; additional_loss=additional_loss)
+
+@time res = Optimization.solve(prob, BFGS(), maxiters=1000)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: ComponentVector{Float64}(u = (layer_1 = (weight = [-0.31427751375901586 0.22914934870521636; -0.5667641983551683 -0.320396821035702; … ; -0.6320108798617073 -0.4946593865437533; -0.08661570903877946 -1.4852417292931686], bias = [-0.05480105682566175; -0.14729980586392769; … ; 0.022984467306622604; 0.418957100466176;;]), layer_2 = (weight = [-0.06970541950446439 -0.2777946719500239 … 0.19322089467747372 -0.2539073105125716; 0.027489645882333 -0.06881470526623543 … -0.26781143555002174 -0.5174555686801424; … ; 0.552439849840593 0.2854797119863833 … -0.2965199767956199 0.5115290081218372; -0.08629149442744312 0.5306176467270818 … -0.10926761971788763 -0.4243500584042799], bias = [0.11765509633530125; -0.1214133041207588; … ; 0.16376553145072753; 0.27054367781051425;;]), layer_3 = (weight = [-0.23817691218182319 -0.10218635726147299 … 0.3716600928565129 -0.49000805598420744; 0.014902489232328767 0.3662656133892853 … 0.05057099172109876 0.6579109064345033; … ; 0.12046708452107001 0.11044497742608196 … -0.004584482289587015 -0.26768157170875506; -0.23498660108550415 0.062045203564746645 … 0.03243188378419912 -0.07542932523565044], bias = [0.11280567997503475; -0.15617218467763863; … ; -0.20162109163636674; -0.09132175949027507;;]), layer_4 = (weight = [0.03621733517751906 0.3121593561106047 … 0.44214512263783023 0.27377024443573295], bias = [-0.1466964445879561;;])), c = (layer_1 = (weight = [-0.736106786506738; -2.142052601498895; … ; 0.7467680768630652; 0.7804448846361813;;], bias = [0.17843500997675188; 0.18541310949333412; … ; -0.5004729097908655; -0.6772958422374354;;]), layer_2 = (weight = [-0.0041390337559279655 0.1292898748904789 … 0.7165304708063726 0.7035542546814259; 0.2214551185990158 0.2982768213512761 … 0.10798665520647427 0.1927726810800672; … ; 0.6706020625095548 -0.5987170173971241 … 0.058793042324928185 0.6061898139363336; 0.4233928278463246 0.3266206516714456 … -1.0846238154273153 -0.7687605037083468], bias = [-0.019020545968797556; -0.684515132105829; … ; -0.09356267135842368; -0.14178411195983073;;]), layer_3 = (weight = [0.9533880741227813 -0.39718779296581835 … -0.9135925827928868 -1.4574626671596937], bias = [0.993601128842014;;])))</code></pre><p>Let&#39;s visualize the predictted solution and inferred velocity</p><pre><code class="language-julia hljs">using CairoMakie
+
+ts = range(0, 1; length=100)
+xs = range(0, 1; length=100)
+
+u_pred = [pinn.phi.u([x, t], res.u.u)[1] for x in xs, t in ts]
+c_pred = [pinn.phi.c([x], res.u.c)[1] for x in xs]
+
+u_true = [ū(x, t) for x in xs, t in ts]
+c_true = 1 .+ abs2.(xs) |&gt; vec
+
+axis = (xlabel=&quot;x&quot;, ylabel=&quot;t&quot;, title=&quot;Analytical Solution&quot;)
+fig, ax1, hm1 = heatmap(xs, ts, u_true, axis=axis; colormap=:jet)
+ax2, hm2= heatmap(fig[1, end+1], xs, ts, u_pred, axis= merge(axis, (;title = &quot;Prediction&quot;)); colormap=:jet)
+ax3, hm3 = heatmap(fig[1, end+1], xs, ts, abs.(u_true .- u_pred), axis= merge(axis, (;title = &quot;Absolute Error&quot;)); colormap=:jet)
+Colorbar(fig[:, end+1], hm3)
+fig</code></pre><p><img src="../sol.png" alt/></p><pre><code class="language-julia hljs">fig, ax = lines(xs, c_pred)
+lines!(ax, xs, c_true)
+fig</code></pre><p><img src="../velocity.png" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../L_shape/">« Poisson equation over an L-shaped domain</a><a class="docs-footer-nextpage" href="../sod/">SOD Shock Tube Problem »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Sunday 28 May 2023 21:52">Sunday 28 May 2023</span>. Using Julia version 1.9.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
