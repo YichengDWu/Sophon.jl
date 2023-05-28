@@ -40,7 +40,7 @@ end
 end
 
 function finitediff(phi, x, θ, dim::Int, order::Int)
-    ε = ChainRulesCore.@ignore_derivatives get_ε(finitediff, size(x, 1), dim, eltype(θ), order)
+    ε = ChainRulesCore.@ignore_derivatives get_ε(finitediff, Val(size(x, 1)), Val(dim), eltype(θ), Val(order))
     h = get_h(finitediff, eltype(x), order)
     ε = convert(parameterless_type(x), ε)
 
