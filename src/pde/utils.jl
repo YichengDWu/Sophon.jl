@@ -17,7 +17,7 @@ forwarddiff(phi, t, εs, order, θ) = ForwardDiff.gradient(sum ∘ Base.Fix2(phi
 @inline maybe_adapt(x::AbstractGPUArray, ε_) = ChainRulesCore.@ignore_derivatives convert(CuArray, ε_)
 @inline maybe_adapt(x, ε_) = ChainRulesCore.@ignore_derivatives ε_
 
-@inline function finitediff(phi, x::AbstractGPUArray, θ, ε_::AbstractVector{T}, h::T, ::Val{1}) where {T<:AbstractFloat}
+@inline function finitediff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{1}) where {T<:AbstractFloat}
     ε = maybe_adapt(x, ε_)
     return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* (h / 2)
 end
