@@ -21,7 +21,7 @@ pkg> add Sophon
 ```
 ## Examples
 
-More examples can be found in [Sophon-Examples](https://github.com/YichengDWu/Sophon-Examples)
+More examples can be found in [Sophon-Examples](https://github.com/YichengDWu/Sophon-Examples).
 
 ## Gallery
 | ![](assets/functionfitting.svg)     | ![](assets/poisson.png)                 | ![](assets/convection.png)                | ![](assets/helmholtz.png)                |
