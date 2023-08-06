@@ -49,7 +49,7 @@ function get_arguments(eq::ModelingToolkit.Equation, dict_indvars, dict_depvar_i
         end
         x
     end
-    values(sort(args; by=x->dict_indvars[x])) |> collect
+    values(sort!(OrderedDict(args); by=x->dict_indvars[x])) |> collect
 end
 
 function get_arguments(eq::Vector{<:ModelingToolkit.Equation}, dict_indvars, dict_depvar_input)
