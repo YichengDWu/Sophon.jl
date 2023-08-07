@@ -11,7 +11,7 @@ imagenet classification." _Proceedings of the IEEE international conference on c
 vision_. 2015.
 """
 function kaiming_uniform(rng::AbstractRNG, dims::Integer...; gain::Real=√2.0f0)
-    bound = Float32(√3.0f0 * gain / sqrt(first(Lux._nfan(dims...))))
+    bound = Float32(√3.0f0 * gain / sqrt(first(Lux.WeightInitializers._nfan(dims...))))
     return (rand(rng, Float32, dims...) .- 0.5f0) .* 2bound
 end
 
@@ -35,7 +35,7 @@ imagenet classification." _Proceedings of the IEEE international conference on c
 vision_. 2015.
 """
 function kaiming_normal(rng::AbstractRNG, dims::Integer...; gain::Real=√2.0f0)
-    std = Float32(gain / sqrt(first(Lux._nfan(dims...))))
+    std = Float32(gain / sqrt(first(Lux.WeightInitializers._nfan(dims...))))
     return randn(rng, Float32, dims...) .* std
 end
 
