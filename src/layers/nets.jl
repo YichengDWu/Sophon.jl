@@ -499,7 +499,7 @@ function FourierFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_lay
     layers = ntuple(i -> Dense(in_dims, hidden_dims, sin; init_bias=init_uniform(1.0f0π),
                                init_weight=init_uniform(scale)), num_layers)
     nt = NamedTuple{names}(layers)
-    filters = BranchLayer{typeof(nt)}(nt)
+    filters = BranchLayer{typeof(nt), Lux.NAME_TYPE}(nt, nothing)
 
     layers = ntuple(i -> Dense(hidden_dims, hidden_dims; init_weight=kaiming_uniform(sin)),
                     num_layers - 1)
@@ -530,7 +530,7 @@ function BACON(in_dims::Int, out_dims::Int, N::Int, period::Real; hidden_dims::I
     layers = ntuple(i -> DiscreteFourierFeature(in_dims, hidden_dims, Ns[i], period),
                     num_layers)
     nt = NamedTuple{names}(layers)
-    filters = BranchLayer{typeof(nt)}(nt)
+    filters = BranchLayer{typeof(nt), Lux.NAME_TYPE}(nt, nothing)
 
     layers = ntuple(i -> Dense(hidden_dims, hidden_dims; init_weight=kaiming_uniform(sin)),
                     num_layers - 1)
