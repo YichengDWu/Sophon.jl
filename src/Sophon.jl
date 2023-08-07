@@ -4,6 +4,7 @@ using LinearAlgebra
 using Lux, Random, NNlib, NNlibCUDA
 import Lux: initialparameters, initialstates, parameterlength, statelength,
             AbstractExplicitLayer, AbstractExplicitContainerLayer, zeros32
+using Lux.WeightInitializers: _nfan
 
 import ModelingToolkit
 import ModelingToolkit: Differential
