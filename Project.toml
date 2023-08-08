@@ -70,11 +70,11 @@ Requires = "1"
 RuntimeGeneratedFunctions = "0.5"
 SciMLBase = "1"
 Sobol = "1"
+StaticArrays = "1.5"
 StaticArraysCore = "1"
-StatsBase = "0.33"
+StatsBase = "0.33, 0.34"
 Symbolics = "4, 5"
 julia = "1.8"
-StaticArrays = "1.5"
 
 [extras]
 DomainSets = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
