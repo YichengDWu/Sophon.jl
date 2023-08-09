@@ -5,7 +5,7 @@ using DocThemeIndigo
 
 indigo = DocThemeIndigo.install(Sophon)
 
-bib = CitationBibliography(joinpath(@__DIR__, "bibliography.bib"); sorting=:nyt)
+bib = CitationBibliography(joinpath(@__DIR__, "bibliography.bib"))
 
 DocMeta.setdocmeta!(Sophon, :DocTestSetup, :(using Sophon); recursive=true)
 
