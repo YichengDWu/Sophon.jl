@@ -230,18 +230,3 @@ function Base.show(io::IO, ::MIME"text/plain", sys::ParametricPDESystem)
     println(io, "Parametric Variables: ", sys.pvs)
     return nothing
 end
-
-mutable struct PINOParameterHandler
-    coords::Any
-    fs::Any
-end
-
-get_local_ps(p::PINOParameterHandler) = p.coords
-get_global_ps(p::PINOParameterHandler) = p.fs
-Base.getindex(p::PINOParameterHandler, i) = getindex(p.coords, i)
-
-@inline get_local_ps(p::Vector{<:AbstractMatrix}) = p
-@inline get_global_ps(::Vector{<:AbstractMatrix}) = nothing
-
-ChainRulesCore.@non_differentiable get_local_ps(::Any...)
-ChainRulesCore.@non_differentiable get_global_ps(::Any...)
