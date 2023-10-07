@@ -30,6 +30,13 @@ More examples can be found in [Sophon-Examples](https://github.com/YichengDWu/So
 | ![](assets/allen.png)     | ![](assets/Schrödinger.png)                 | ![](assets/Lshape.png)                |    ![](assets/sod.png)     |
 | [Allen-Cahn Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/allen_cahn/) | [Schrödinger Equation](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/Schr%C3%B6dingerEquation/) | [L-shaped Domain](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/L_shape/) | [SOD Shock Tube](https://yichengdwu.github.io/Sophon.jl/dev/tutorials/sod/) |
 
+## 🏠 Stable & Mature Framework
+
+The current version is highly stable and you can confidently use it for your projects.
+In the immediate future, we will **not** be introducing new features to the framework. Our focus is on maintaining its stability and robustness, ensuring that it stands resilient in various use-cases and scenarios.
+
+We're here to help you with any issues or challenges you might encounter. Feel free to reach out!
+
 ## Related Libraries
 
 - [NeuralPDE](https://github.com/SciML/NeuralPDE.jl)
