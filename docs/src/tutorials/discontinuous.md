@@ -10,7 +10,7 @@ u(x)= \begin{cases}0.2 \sin (18 x) & \text { if } x \leq 0 \\ 1+0.3 x \cos (54 x
 ```
 The domain is ``[-1,1]``. The number of training points used is `50`.
 
-## Import pacakges
+## Import packages
 ```@example ds
 using Lux, Sophon
 using NNlib, Optimisers, Plots, Random, StatsBase, Zygote
@@ -44,9 +44,9 @@ savefig("u.svg"); nothing # hide
 ```
 ![](u.svg)
 
-## Naive Neural Nets
+## Naive Neural Networks
 
-First we demonstrate show naive fully connected neural nets could be really bad at fitting this function.
+First, we demonstrate that naive, fully connected neural nets are not sufficient for fitting this function.
 ```@example ds
 model = FullyConnected((1,50,50,50,50,1), relu)
 ```
@@ -133,7 +133,7 @@ savefig("result2.svg"); nothing # hide
 
 ## Quadratic activation function
 
-[`quadratic`](@ref) is much cheaper to compute compared to the Gaussain activation function.
+[`quadratic`](@ref) is much cheaper to compute compared to the Gaussian activation function.
 
 
 ```@example ds
@@ -151,6 +151,6 @@ savefig("result3.svg"); nothing # hide
 
 ## Conclusion
 
-"Neural networks suppresse high frequency components" is a misinterpretation of the spectral bias. The accurate way of putting it is that the lower frequencies in the error are optimized first in the optimization process. This can be seen in Siren's example of overfitting data, where you do not have implicit regularization. The high frequency in the network will never go away because it has fitted the data perfectly.
+"Neural networks suppress high-frequency components" is a misinterpretation of the spectral bias. The accurate way of putting it is that the lower frequencies in the error are optimized first in the optimization process. This can be seen in Siren's example of overfitting data, where you do not have implicit regularization. The high frequency in the network will never go away because it has fitted the data perfectly.
 
-Mainstream attributes the phenomenon that neural networks "suppress" high frequencies to gradient descent. This is not the whole picture. Initialization also plays an important role. Siren mitigats this problem by initializing larger weights in the first layer, while activation functions such as gassian have large enough gradients and sufficiently large support of the second derivative with proper hyperparameters. Please refer to [sitzmann2020implicit](@cite), [ramasinghe2021beyond](@cite) and [ramasinghe2022regularizing](@cite) if you want to dive deeper into this.
+Mainstream attributes the phenomenon that neural networks "suppress" high frequencies to gradient descent. This is not the whole picture. Initialization also plays an important role. Siren mitigates this problem by initializing larger weights in the first layer. In contrast, activation functions such as Gaussian have sufficiently large gradients and sufficiently large support of the second derivative with proper hyperparameters. Please refer to [sitzmann2020implicit](@cite), [ramasinghe2021beyond](@cite) and [ramasinghe2022regularizing](@cite) if you want to dive deeper into this.
