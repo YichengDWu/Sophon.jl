@@ -3,7 +3,7 @@
 This example showcases how to use adaptive weights in `Sophon`. 
 
 ```@example SOD
-using Optimization, OptimizationOptimJL, Plots
+using Optimization, OptimizationOptimJL, Plots, Zygote
 using ModelingToolkit, IntervalSets
 using Sophon
 using ChainRulesCore

@@ -13,7 +13,7 @@ First we define the PDE.
 
 ```@example convection
 using ModelingToolkit, Sophon, IntervalSets, CairoMakie
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, Zygote
 
 @parameters x, t
 @variables u(..)

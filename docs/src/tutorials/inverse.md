@@ -10,7 +10,7 @@ $\frac{\mathrm{d} z}{\mathrm{~d} t}=x y-\beta z$,
 
 ```julia
 using ModelingToolkit, Sophon, OrdinaryDiffEq
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, Zygote
 using ModelingToolkit, IntervalSets
 ```
 

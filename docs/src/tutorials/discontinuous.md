@@ -133,7 +133,7 @@ savefig("result2.svg"); nothing # hide
 
 ## Quadratic activation function
 
-[`quadratic`](@ref) is much cheaper to compute compared to the Gaussian activation function.
+`quadratic` is much cheaper to compute compared to the Gaussian activation function.
 
 
 ```@example ds

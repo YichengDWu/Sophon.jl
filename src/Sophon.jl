@@ -9,10 +9,6 @@ using Lux.WeightInitializers: _nfan
 import ModelingToolkit
 import ModelingToolkit: Differential
 using Optimization
-import ParameterSchedulers: Step, Exp, Poly, Inv, Triangle, TriangleDecay2, TriangleExp,
-                            Sin, SinDecay2, SinExp, CosAnneal, Sequence, Loop, Interpolator,
-                            Shifted, ComposedSchedule, Constant
-using ParameterSchedulers: AbstractSchedule
 using ComponentArrays
 import SciMLBase
 import SciMLBase: parameterless_type, __solve, build_solution, NullParameters

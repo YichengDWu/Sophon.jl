@@ -7,7 +7,7 @@ $\mathrm{i} \partial_t \psi=-\frac{1}{2} \sigma \partial_{x x} \psi-\beta|\psi|^
 Let $\sigma=\beta=1, \psi=u+v i$, the equation can be transformed into a system of partial differential equations
 ```@example Schrödinger
 using ModelingToolkit, IntervalSets, Sophon, CairoMakie
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, Zygote
 
 @parameters x,t
 @variables u(..), v(..)

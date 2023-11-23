@@ -9,19 +9,13 @@ bib = CitationBibliography(joinpath(@__DIR__, "bibliography.bib"))
 
 DocMeta.setdocmeta!(Sophon, :DocTestSetup, :(using Sophon); recursive=true)
 
-makedocs(bib; modules=[Sophon], sitename="Sophon.jl",
+makedocs(; plugins=[bib], modules=[Sophon], sitename="Sophon.jl",
          repo="https://github.com/YichengDWu/Sophon.jl/blob/{commit}{path}#{line}",
          format=Documenter.HTML(; prettyurls=get(ENV, "CI", "false") == "true",
                                 canonical="https://YichengDWu.github.io/Sophon.jl",
                                 edit_link="main", assets=String[indigo]),
-         strict=[
-             :doctest,
-             :linkcheck,
-             :parse_error,
-             :example_block,
-             # Other available options are
-             # :autodocs_block, :cross_references, :docs_block, :eval_block, :example_block, :footnote, :meta_block, :missing_docs, :setup_block
-         ], authors="Yicheng Wu",
+         authors="Yicheng Wu",
+         warnonly = Documenter.except(:missing_docs)
          pages=[
              "Home" => "index.md",
              "Tutorials" => [

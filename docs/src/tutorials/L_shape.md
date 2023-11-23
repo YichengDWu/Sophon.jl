@@ -3,7 +3,7 @@
 The example is taken from [here](https://arxiv.org/pdf/1907.04502.pdf). We showcase define a PDE on an L-shaped domain
 
 ```@example L
-using ModelingToolkit, DomainSets, Optimization, OptimizationOptimJL
+using ModelingToolkit, DomainSets, Optimization, OptimizationOptimJL, Zygote
 using DomainSets: ×
 using Sophon
 
