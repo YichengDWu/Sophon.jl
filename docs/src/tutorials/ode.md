@@ -5,7 +5,7 @@ This tutorial provides a step-by-step guide to solve the Lotka-Volterra system o
 ```@example ODE
 using ModelingToolkit
 using Sophon, IntervalSets
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, Zygote
 using Plots
 
 # Defining parameters and variables

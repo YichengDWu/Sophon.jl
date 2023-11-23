@@ -4,7 +4,7 @@ We are going to sovle the wave equation.
 
 ```@example wave
 using Sophon, ModelingToolkit, IntervalSets
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, Zygote
 
 @parameters x, t
 @variables u(..), c(..)
