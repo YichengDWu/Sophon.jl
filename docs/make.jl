@@ -15,6 +15,7 @@ makedocs(; plugins=[bib], modules=[Sophon], sitename="Sophon.jl",
                                 canonical="https://YichengDWu.github.io/Sophon.jl",
                                 edit_link="main", assets=String[indigo]),
          authors="Yicheng Wu",
+         warnonly = Documenter.except(:missing_docs)
          pages=[
              "Home" => "index.md",
              "Tutorials" => [
