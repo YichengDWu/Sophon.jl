@@ -47,7 +47,7 @@ pinn = PINN(chain)
 
 prob = Sophon.discretize(convection, pinn, sampler, strategy) 
 
-@time res = Optimization.solve(prob, BFGS(); maxiters = 1000)
+@showprogress res = Optimization.solve(prob, BFGS(); maxiters = 1000)
 ```
 
 Let's visualize the result.

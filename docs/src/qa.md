@@ -16,8 +16,9 @@ residual = Sophon.residual_function_1(prob.p[1], res.u)
 If you want to monitor the loss during training, create a callback function like the following:
 ```julia
 function callback(p, _)
-    loss = sum(abs2, Sophon.residual_function_1(prob.p[1], p))
-    println("loss: $loss")
+    loss_1 = sum(abs2, Sophon.residual_function_1(prob.p[1], p))
+    loss_2 = sum(abs2, Sophon.residual_function_1(prob.p[2], p))
+    println("loss: $loss_1, loss_2")
     return false
 end
 ```

@@ -52,7 +52,7 @@ function train(pde_system, prob, sampler, strategy, resample_period = 500, n=10)
      return res
 end
 
-res = train(pde_system, prob, sampler, strategy)
+@showprogress res = train(pde_system, prob, sampler, strategy)
 ```
 
 ```@example Schrödinger

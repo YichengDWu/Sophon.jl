@@ -6,7 +6,7 @@ In this tutorial we are going to solve the Allen-Cahn equation with periodic bou
 ```@example allen
 using ModelingToolkit, IntervalSets
 using Sophon
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, Zygote
 
 @parameters t, x
 @variables u(..)

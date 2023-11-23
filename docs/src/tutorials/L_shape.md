@@ -38,7 +38,7 @@ strategy = NonAdaptiveTraining()
 
 prob = Sophon.discretize(pde_system, pinn, sampler, strategy)
 
-res = Optimization.solve(prob, BFGS(); maxiters=1000)
+@showprogress res = Optimization.solve(prob, BFGS(); maxiters=1000)
 
 using CairoMakie
 
