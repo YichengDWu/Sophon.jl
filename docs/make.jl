@@ -14,14 +14,7 @@ makedocs(; plugins=[bib], modules=[Sophon], sitename="Sophon.jl",
          format=Documenter.HTML(; prettyurls=get(ENV, "CI", "false") == "true",
                                 canonical="https://YichengDWu.github.io/Sophon.jl",
                                 edit_link="main", assets=String[indigo]),
-         strict=[
-             :doctest,
-             :linkcheck,
-             :parse_error,
-             :example_block,
-             # Other available options are
-             # :autodocs_block, :cross_references, :docs_block, :eval_block, :example_block, :footnote, :meta_block, :missing_docs, :setup_block
-         ], authors="Yicheng Wu",
+         authors="Yicheng Wu",
          pages=[
              "Home" => "index.md",
              "Tutorials" => [
