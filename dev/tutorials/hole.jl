@@ -1,6 +1,6 @@
 
 using ModelingToolkit, Sophon
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, Zygote
 using DomainSets
 using DomainSets: ×
 
