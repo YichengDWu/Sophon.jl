@@ -25,7 +25,7 @@ macro showprogress(expr)
         callback_def = quote
             function $callback_var(p, l)
                 update($iter_var)
-                set_description($iter_var, string("Loss: ", l))
+                set_description($iter_var, string(@sprintf("%.6e", l)))
                 return false
             end
         end
@@ -34,7 +34,7 @@ macro showprogress(expr)
         callback_def = quote
             function $callback_var(p, l)
                 update($iter_var)
-                set_description($iter_var, string("Loss: ", l))
+                set_description($iter_var, string(@sprintf("%.6e", l)))
                 return $callback(p, l)
             end
         end
