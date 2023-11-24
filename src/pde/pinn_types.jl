@@ -127,7 +127,7 @@ for (dev) in (:CPU, :CUDA, :AMDGPU, :Metal)
     @eval begin
         function (device::$ldev)(cs::ChainState)
             Lux.@set! cs.state = device(cs.state)
-            return c
+            return cs
         end
 
         function (device::$ldev)(cs::NTofChainState{names}) where {names}
