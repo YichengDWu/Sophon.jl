@@ -3,8 +3,11 @@ using ProgressBars
 using Printf
 
 macro showprogress(expr)
-    @capture(expr, res_ = Optimization.solve(prob_, method_; kwargs__)) ||
+    if @capture(expr, res_ = Optimization.solve(prob_, method_; kwargs__))
+    elseif @capture(expr, res_ = Optimization.solve(prob_, method_, kwargs__))
+    else
         error("Unsupported expression format")
+    end
 
     maxiters = nothing
     callback = nothing
