@@ -1,5 +1,5 @@
 using MacroTools
-using ProgressMeter
+using ProgressBars
 using Printf
 
 macro showprogress(expr)
@@ -19,14 +19,14 @@ macro showprogress(expr)
     end
 
     iter_var = gensym(:iter)
-    progress_expr = :($iter_var = Sophon.ProgressMeter.ProgressBar(1:$maxiters))
+    progress_expr = :($iter_var = ProgressBars.ProgressBar(1:$maxiters))
 
     if isnothing(callback)
         callback_var = gensym(:callback)
         callback_def = quote
             function $callback_var(p, l)
                 update($iter_var)
-                set_description($iter_var, string(Sophon.Printf.@sprintf("%.6e", l)))
+                set_description($iter_var, string(Printf.@sprintf("%.6e", l)))
                 return false
             end
         end
