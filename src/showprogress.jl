@@ -25,8 +25,8 @@ macro showprogress(expr)
         callback_var = gensym(:callback)
         callback_def = quote
             function $callback_var(p, l)
-                update($iter_var)
-                set_description($iter_var, string(Printf.@sprintf("%.6e", l)))
+                ProgressBars.update($iter_var)
+                ProgressBars.set_description($iter_var, string(Printf.@sprintf("%.6e", l)))
                 return false
             end
         end
@@ -41,7 +41,7 @@ macro showprogress(expr)
         end
     end
 
-    new_func_call = Expr(:call, :(Optimization.solve), prob, method, kwargs..., :($(Expr(:kw, :callback, callback_var))))
+    new_func_call = Expr(:call, :(Optimization.solve), esc(prob), esc(method), kwargs..., :($(Expr(:kw, :callback, callback_var))))
     assignment_expr = Expr(:(=), esc(res), new_func_call)
 
     return quote
