@@ -47,12 +47,12 @@ function train(pde_system, prob, sampler, strategy, resample_period = 500, n=10)
      for i in 1:n
          data = Sophon.sample(pde_system, sampler)
          prob = remake(prob; u0=res.u, p=data)
-         res = Optimization.solve(prob, bfgs; maxiters=resample_period)
+         @showprogress res = Optimization.solve(prob, bfgs; maxiters=resample_period)
      end
      return res
 end
 
-@showprogress res = train(pde_system, prob, sampler, strategy)
+res = train(pde_system, prob, sampler, strategy)
 ```
 
 ```@example Schrödinger
