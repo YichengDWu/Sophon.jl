@@ -53,7 +53,7 @@ function __init__()
     end
 end
 
-export showprogress
+export @showprogress
 export gaussian, quadratic, laplacian, expsin, multiquadratic, stan
 export FourierFeature, TriplewiseFusion, FullyConnected, ResNet, Sine, RBF,
        DiscreteFourierFeature, ConstantFunction, ScalarLayer, SplitFunction, FactorizedDense
