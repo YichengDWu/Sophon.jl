@@ -45,7 +45,7 @@ SophonTaylorDiffExt = "TaylorDiff"
 
 [compat]
 Adapt = "3"
-CUDA = "3, 4"
+CUDA = "3, 4, 5"
 ChainRulesCore = "1"
 ComponentArrays = "0.15"
 Distributions = "0.25"
