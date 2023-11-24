@@ -1,5 +1,6 @@
 using MacroTools
 using ProgressMeter
+using Printf
 
 macro showprogress(expr)
     @capture(expr, res_ = Optimization.solve(prob_, method_; kwargs__)) ||
