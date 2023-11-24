@@ -13,7 +13,7 @@ using ComponentArrays
 import SciMLBase
 import SciMLBase: parameterless_type, __solve, build_solution, NullParameters
 using StatsBase, QuasiMonteCarlo
-using Adapt, ChainRulesCore, GPUArrays, GPUArraysCore
+using Adapt, ChainRulesCore, GPUArraysCore
 import GPUArraysCore: AbstractGPUArray
 import QuasiMonteCarlo
 import Sobol

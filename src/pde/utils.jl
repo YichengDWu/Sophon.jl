@@ -17,7 +17,7 @@ forwarddiff(phi, t, εs, order, θ) = ForwardDiff.gradient(sum ∘ Base.Fix2(phi
 for (dev) in (:CPU, :CUDA, :AMDGPU, :Metal)
     ldev = Symbol("Lux$(dev)Device")
     ladaptor = Symbol("Lux$(dev)Adaptor")
-    @inline get_adaptor(::$(ldev)) = $(ladaptor)()
+    @eval @inline get_adaptor(::$(ldev)) = $(ladaptor)()
 end
 @inline get_gpu_adaptor() = get_adaptor(gpu_device())
 @inline maybe_adapt(x::AbstractGPUArray, ε_) = ChainRulesCore.@ignore_derivatives adapt(get_gpu_adaptor(), ε_)
