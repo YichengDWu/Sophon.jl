@@ -69,11 +69,7 @@ function additional_loss(phi, θ)
 end
 prob = Sophon.discretize(pde_system, pinn, sampler, strategy, additional_loss=additional_loss)
 
-callback = function (p,l)
-    println("Current loss is: $l")
-    return false
-end
-@time res = Optimization.solve(prob, BFGS(), callback = callback, maxiters=1000)
+@showprogress res = Optimization.solve(prob, BFGS(), maxiters=1000)
 ```
 
 ```julia

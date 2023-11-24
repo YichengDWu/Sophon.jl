@@ -42,7 +42,7 @@ strategy = NonAdaptiveTraining(1,50)
 prob = Sophon.discretize(lotka_volterra, pinn, sampler, strategy)
 
 # Solving the problem using BFGS optimization
-res = Optimization.solve(prob, BFGS(); maxiters=1000)
+@showprogress res = Optimization.solve(prob, BFGS(); maxiters=1000)
 ```
 Next, we'll compare our results with a reference solution to verify our computations.
 

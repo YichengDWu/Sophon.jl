@@ -15,7 +15,7 @@ makedocs(; plugins=[bib], modules=[Sophon], sitename="Sophon.jl",
                                 canonical="https://YichengDWu.github.io/Sophon.jl",
                                 edit_link="main", assets=String[indigo]),
          authors="Yicheng Wu",
-         warnonly = Documenter.except(:autodocs_block, :cross_references, :docs_block, 
+         warnonly = Documenter.except(:autodocs_block, :cross_references, :docs_block,
                                       :doctest, :eval_block, :example_block, :footnote,
                                       :linkcheck_remotes, :linkcheck, :meta_block, :parse_error),
          pages=[

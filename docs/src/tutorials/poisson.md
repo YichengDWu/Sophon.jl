@@ -30,7 +30,7 @@ sampler = QuasiRandomSampler(200, 1)
 strategy = NonAdaptiveTraining(1 , 50)
 
 prob = Sophon.discretize(poisson, pinn, sampler, strategy)
-res = Optimization.solve(prob, BFGS(); maxiters=2000)
+@showprogress res = Optimization.solve(prob, BFGS(); maxiters=2000)
 
 phi = pinn.phi
 xs = 0:0.001:1

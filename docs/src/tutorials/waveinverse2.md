@@ -56,7 +56,7 @@ additional_loss(phi, θ) = sum(abs2, phi.u(input_data, θ.u) .- u_data)
 
 prob = Sophon.discretize(wave, pinn, sampler, strategy; additional_loss=additional_loss)
 
-@time res = Optimization.solve(prob, BFGS(), maxiters=1000)
+@showprogress res = Optimization.solve(prob, BFGS(), maxiters=1000)
 ```
 
 Let's visualize the predictted solution and inferred velocity

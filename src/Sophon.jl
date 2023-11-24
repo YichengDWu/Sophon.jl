@@ -30,6 +30,7 @@ using StaticArrays: SVector
 
 RuntimeGeneratedFunctions.init(@__MODULE__)
 
+include("showprogress.jl")
 include("layers/basic.jl")
 include("layers/activations.jl")
 include("layers/containers.jl")
@@ -52,6 +53,7 @@ function __init__()
     end
 end
 
+export @showprogress
 export gaussian, quadratic, laplacian, expsin, multiquadratic, stan
 export FourierFeature, TriplewiseFusion, FullyConnected, ResNet, Sine, RBF,
        DiscreteFourierFeature, ConstantFunction, ScalarLayer, SplitFunction, FactorizedDense
