@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Introduction with Lotka-Volterra System · Sophon.jl</title><meta name="title" content="Introduction with Lotka-Volterra System · Sophon.jl"/><meta property="og:title" content="Introduction with Lotka-Volterra System · Sophon.jl"/><meta property="twitter:title" content="Introduction with Lotka-Volterra System · Sophon.jl"/><meta name="description" content="Documentation for Sophon.jl."/><meta property="og:description" content="Documentation for Sophon.jl."/><meta property="twitter:description" content="Documentation for Sophon.jl."/><meta property="og:url" content="https://YichengDWu.github.io/Sophon.jl/tutorials/ode/"/><meta property="twitter:url" content="https://YichengDWu.github.io/Sophon.jl/tutorials/ode/"/><link rel="canonical" href="https://YichengDWu.github.io/Sophon.jl/tutorials/ode/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/indigo.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Sophon.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li class="is-active"><a class="tocitem" href>Introduction with Lotka-Volterra System</a></li><li><a class="tocitem" href="../discontinuous/">Fitting a nonlinear discontinuous function</a></li><li><a class="tocitem" href="../poisson/">1D Multi-scale Poisson&#39;s Equation</a></li><li><a class="tocitem" href="../convection/">1D Convection Equation</a></li><li><a class="tocitem" href="../helmholtz/">2D Helmholtz Equation</a></li><li><a class="tocitem" href="../allen_cahn/">Allen-Cahn Equation with Sequential Training</a></li><li><a class="tocitem" href="../SchrödingerEquation/">Schrödinger Equation: A PDE System with Resampling</a></li><li><a class="tocitem" href="../L_shape/">Poisson equation over an L-shaped domain</a></li><li><a class="tocitem" href="../waveinverse2/">Inverse problem for the wave equation with unknown velocity field</a></li><li><a class="tocitem" href="../sod/">SOD Shock Tube Problem</a></li></ul></li><li><a class="tocitem" href="../../qa/">FAQ</a></li><li><a class="tocitem" href="../../api/">API Reference</a></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Introduction with Lotka-Volterra System</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Introduction with Lotka-Volterra System</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/YichengDWu/Sophon.jl/blob/main/docs/src/tutorials/ode.md#" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Getting-started-with-ODEs"><a class="docs-heading-anchor" href="#Getting-started-with-ODEs">Getting started with ODEs</a><a id="Getting-started-with-ODEs-1"></a><a class="docs-heading-anchor-permalink" href="#Getting-started-with-ODEs" title="Permalink"></a></h1><p>This tutorial provides a step-by-step guide to solve the Lotka-Volterra system of ordinary differential equations (ODEs).</p><pre><code class="language-julia hljs">using ModelingToolkit
+using Sophon, IntervalSets
+using Optimization, OptimizationOptimJL, Zygote
+using Plots
+
+# Defining parameters and variables
+@parameters t
+@variables x(..), y(..)
+
+# Define the differential operator
+Dₜ = Differential(t)
+p = [1.5, 1.0, 3.0, 1.0]
+
+# Setting up the system of equations
+eqs = [Dₜ(x(t)) ~ p[1] * x(t) - p[2] * x(t) * y(t),
+      Dₜ(y(t)) ~ -p[3] * y(t) + p[4] * x(t) * y(t)]
+
+# Defining the domain
+domain = [t ∈ 0 .. 3.0]
+
+# Defining the initial conditions
+bcs = [x(0.0) ~ 1.0, y(0.0) ~ 1.0]
+
+@named lotka_volterra = PDESystem(eqs, bcs, domain, [t], [x(t), y(t)])</code></pre><p class="math-container">\[ \begin{align}
+\frac{\mathrm{d} x\left( t \right)}{\mathrm{d}t} =&amp; 1.5 x\left( t \right) - x\left( t \right) y\left( t \right) \\
+\frac{\mathrm{d} y\left( t \right)}{\mathrm{d}t} =&amp;  - 3 y\left( t \right) + x\left( t \right) y\left( t \right)
+\end{align}
+ \]</p><p>In this part of the tutorial, we will employ <a href="../../api/#Sophon.BetaRandomSampler"><code>BetaRandomSampler</code></a> to generate training data using a Beta distribution. This introduces a soft causality into the training data, enhancing the effectiveness of the learning process.</p><pre><code class="language-julia hljs"># Constructing the physics-informed neural network (PINN)
+pinn = PINN(x = FullyConnected(1, 1, sin; hidden_dims=8, num_layers=3),
+            y = FullyConnected(1, 1, sin; hidden_dims=8, num_layers=3))
+
+# Setting up the sampler, training strategy and problem
+sampler = BetaRandomSampler(200, 1)
+strategy = NonAdaptiveTraining(1,50)
+prob = Sophon.discretize(lotka_volterra, pinn, sampler, strategy)
+
+# Solving the problem using BFGS optimization
+@showprogress res = Optimization.solve(prob, BFGS(); maxiters=1000)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: ComponentVector{Float64}(x = (layer_1 = (weight = [-0.12140732344591111; 0.3839914430620586; … ; -2.0879455913496505; 0.5473200323575913;;], bias = [0.4674480459951282; -0.22577655070363384; … ; -0.007446270505704523; -0.3279379029385564;;]), layer_2 = (weight = [0.06568419685388308 -0.23187460169590995 … -1.114049978520698 0.6988220788878458; 0.5671039553606569 -0.9135239079692721 … 0.16119955844923714 -0.3551868401453192; … ; -0.639736522909715 -0.37270994870866586 … -1.0921851665388351 -0.07575426857868867; 0.15222441618323232 0.179049238978451 … -0.3820932129886917 0.4289536094085351], bias = [0.05583045791493727; -0.2682560041298351; … ; 0.22028537335719706; 0.08857144196454816;;]), layer_3 = (weight = [-0.11837850179213856 0.4292485067727415 … 0.6874709365892993 -0.3478752685046028; 0.6211988013325175 -0.15705501842568892 … -0.7412173934736019 0.2816412244625453; … ; -0.3448038224064694 -0.1263465455761286 … 0.3913968002289962 -0.5532553817206923; -0.1598859662115073 -1.0446656692146612 … 1.201985971643409 1.049154655896354], bias = [0.19976878824244684; 0.031873601044085535; … ; -0.11809110547134476; 0.12737794482479523;;]), layer_4 = (weight = [-1.0226890242173385 0.4290893350083455 … -0.9495382926055849 1.5675875862685573], bias = [1.3025210806406897;;])), y = (layer_1 = (weight = [-0.6945941770574359; -1.0526647457919922; … ; 2.212457287578315; -2.3569547469938317;;], bias = [0.017505009759438667; -0.2417040013768462; … ; 0.8731457504596163; -0.06337250596231003;;]), layer_2 = (weight = [-0.34298952358854745 -0.5471121557060368 … -0.28455134862706793 0.34174167264197775; 1.011632552934991 -0.34248988760569105 … 0.36230834372314646 0.07403969787169734; … ; 0.44085318532183426 0.05129648214359334 … 0.19397471977136982 0.22775518729250654; 0.10122034648693502 -1.0925508937710648 … -0.18770316973539436 -0.625089625347593], bias = [-0.2184504605255309; -0.49185256100652947; … ; -0.09578677558432362; 0.2753716624868497;;]), layer_3 = (weight = [-0.8796448219958368 0.4217515300804656 … -0.23472269260549755 -0.2656911388855056; -0.047182783827619715 0.5629240707197342 … -0.5884291090916836 -0.010913449055527033; … ; 0.10603697319138357 -0.44897960263840797 … -0.8384260232401342 -0.734708628177018; 0.7430698964075331 0.44169574008406626 … 0.7625850166333332 1.0203934165583104], bias = [0.39703754882106995; 0.17338956304461436; … ; 0.6609922600379233; -0.12470581529528481;;]), layer_4 = (weight = [-1.7248040613268587 -0.49110206336868684 … 1.7651836112588328 -0.7597808409525203], bias = [0.542213952356895;;])))</code></pre><p>Next, we&#39;ll compare our results with a reference solution to verify our computations.</p><pre><code class="language-julia hljs">using OrdinaryDiffEq
+
+function f(u, p, t)
+    return [p[1] * u[1] - p[2] * u[1] * u[2], -p[3] * u[2] + p[4] * u[1] * u[2]]
+end
+
+p = [1.5, 1.0, 3.0, 1.0]
+u0 = [1.0, 1.0]
+prob_oop = ODEProblem{false}(f, u0, (0.0, 3.0), p)
+true_sol = solve(prob_oop, Tsit5(), saveat=0.01)
+
+phi = pinn.phi
+ts = [true_sol.t...;;]
+x_pred = phi.x(ts, res.u.x)
+y_pred = phi.y(ts, res.u.y)
+
+plot(vec(ts), vec(x_pred), label=&quot;x_pred&quot;)
+plot!(vec(ts), vec(y_pred), label=&quot;y_pred&quot;)
+plot!(true_sol)</code></pre><img src="bdbfd95b.svg" alt="Example block output"/><p>While the initial results are encouraging, we can further refine our model. By remaking the sampler, we can gradually transition to the uniform distribution for improved results.</p><pre><code class="language-julia hljs"># Adjusting the sampler to uniform distribution and re-solving the problem
+for α in [0.6, 0.8, 1.0] # when α = 1.0, it is equivalent to uniform sampling
+    sampler = remake(sampler; α=α)
+    data = Sophon.sample(lotka_volterra, sampler)
+    prob = remake(prob; p=data, u0=res.u)
+    res = Optimization.solve(prob, BFGS(); maxiters=1000)
+end
+
+# Generating new predictions and calculating the absolute error
+x_pred = phi.x(ts, res.u.x)
+y_pred = phi.y(ts, res.u.y)
+maximum(sum(abs2, vcat(x_pred, y_pred) .- stack(true_sol.u); dims=1)) # print the absolute error</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../discontinuous/">Fitting a nonlinear discontinuous function »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.1.2 on <span class="colophon-date" title="Friday 24 November 2023 20:04">Friday 24 November 2023</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
