@@ -19,8 +19,7 @@ macro showprogress(expr)
     end
 
     iter_var = gensym(:iter)
-    progress_expr = :($iter_var = ProgressBars.ProgressBar(1:$maxiters))
-
+    progress_expr = :($iter_var = ProgressBars.ProgressBar(0:$(esc(maxiters))))
     if isnothing(callback)
         callback_var = gensym(:callback)
         callback_def = quote
@@ -41,7 +40,7 @@ macro showprogress(expr)
         end
     end
 
-    new_func_call = Expr(:call, :(Optimization.solve), esc(prob), esc(method), kwargs..., :($(Expr(:kw, :callback, callback_var))))
+    new_func_call = Expr(:call, :(Optimization.solve), esc(prob), esc(method), esc.(kwargs)..., :($(Expr(:kw, :callback, callback_var))))
     assignment_expr = Expr(:(=), esc(res), new_func_call)
 
     return quote
