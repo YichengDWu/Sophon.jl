@@ -1,10 +1,11 @@
-## Q: How can I train the model using GPUs?
+## Q: How can I train the model using my GPU?
 
-A: To train the model on GPUs, invoke the gpu function on instances of PINN:
+A: To train the model on a single GPU, do the following:
 
 ```julia
-using Lux
-pinn = gpu(PINN(...))
+using Lux, LuxCUDA
+device = gpu_device()
+pinn = PINN(...) |> device
 ```
 ## Q: How can I monitor the loss for each loss function?
 

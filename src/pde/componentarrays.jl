@@ -11,5 +11,5 @@ const AbstractGPUComponentVecorMat{T, Ax} = Union{AbstractGPUComponentVector{T, 
                                                   AbstractGPUComponentMatrix{T, Ax}}
 
 function _ComponentArray(nt::NamedTuple)
-    return isongpu(nt) ? adapt(CuArray, ComponentArray(cpu(nt))) : ComponentArray(nt)
+    return isongpu(nt) ? adapt(get_gpu_adaptor(), ComponentArray(cpu(nt))) : ComponentArray(nt)
 end

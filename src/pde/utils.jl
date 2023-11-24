@@ -14,7 +14,13 @@ This function is only used for the first order derivative.
 """
 forwarddiff(phi, t, εs, order, θ) = ForwardDiff.gradient(sum ∘ Base.Fix2(phi, θ), t)
 
-@inline maybe_adapt(x::AbstractGPUArray, ε_) = ChainRulesCore.@ignore_derivatives convert(CuArray, ε_)
+for (dev) in (:CPU, :CUDA, :AMDGPU, :Metal)
+    ldev = Symbol("Lux$(dev)Device")
+    ladaptor = Symbol("Lux$(dev)Adaptor")
+    @inline get_adaptor(::$(ldev)) = $(ladaptor)()
+end
+@inline get_gpu_adaptor() = get_adaptor(gpu_device())
+@inline maybe_adapt(x::AbstractGPUArray, ε_) = ChainRulesCore.@ignore_derivatives adapt(get_gpu_adaptor(), ε_)
 @inline maybe_adapt(x, ε_) = ChainRulesCore.@ignore_derivatives ε_
 
 @inline function finitediff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{1}) where {T<:AbstractFloat}

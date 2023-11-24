@@ -38,7 +38,7 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 Note that the boundary conditions are compatible with periocity, which allows us to apply [`BACON`](@ref).
 ```@example helmholtz
 chain = BACON(2, 1, 5, 2; hidden_dims = 32, num_layers=5)
-pinn = PINN(chain) # call `gpu` on it if you want to use gpu
+pinn = PINN(chain)
 sampler = QuasiRandomSampler(300, 100)  
 strategy = NonAdaptiveTraining()
 

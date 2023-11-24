@@ -80,7 +80,7 @@ function discretize(pde_system, pinn::PINN, sampler::PINNSampler,
 
     datasets = map(Base.Fix1(broadcast, fdtype), datasets)
     datasets = init_params isa AbstractGPUComponentVector ?
-               map(Base.Fix1(adapt, CuArray), datasets) : datasets
+               map(Base.Fix1(adapt, get_gpu_adaptor()), datasets) : datasets
     pde_and_bcs_loss_function = build_loss_function(pde_system, pinn, strategy,
                                                     derivative, derivative_bc,
                                                     fdtype)

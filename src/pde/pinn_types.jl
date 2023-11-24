@@ -2,7 +2,8 @@
     PINN(chain, rng::AbstractRNG=Random.default_rng())
     PINN(rng::AbstractRNG=Random.default_rng(); kwargs...)
 
-A container for a neural network, its states and its initial parameters. Call `gpu` and `cpu` to move the neural network to the GPU and CPU respectively.
+A container for a neural network, its states and its initial parameters. Call `Lux.gpu_device()`
+and `Lux.cpu_device()` to move the neural network to the GPU and CPU respectively.
 The default element type of the parameters is `Float64`.
 
 ## Fields
@@ -120,38 +121,27 @@ end
 
 const NTofChainState{names} = NamedTuple{names, <:Tuple{Vararg{ChainState}}}
 
-function Lux.cpu(cs::ChainState)
-    Lux.@set! cs.state = cpu(cs.state)
-    return cs
-end
+for (dev) in (:CPU, :CUDA, :AMDGPU, :Metal)
+    ldev = Symbol("Lux$(dev)Device")
+    ladaptor = Symbol("Lux$(dev)Adaptor")
+    @eval begin
+        function (device::$ldev)(cs::ChainState)
+            Lux.@set! cs.state = device(cs.state)
+            return c
+        end
 
-function Lux.gpu(cs::ChainState)
-    Lux.@set! cs.state = adapt(CuArray, cs.state)
-    return cs
-end
+        function (device::$ldev)(cs::NTofChainState{names}) where {names}
+            return map(cs) do c
+                return device(c)
+            end
+        end
 
-function Lux.cpu(cs::NamedTuple{names, <:Tuple{Vararg{ChainState}}}) where {names}
-    return map(cs) do c
-        return cpu(c)
+        function (device::$ldev)(pinn::PINN)
+            Lux.@set! pinn.phi = device(pinn.phi)
+            Lux.@set! pinn.init_params = adapt($(ladaptor)(), pinn.init_params)
+            return pinn
+        end
     end
-end
-
-function Lux.gpu(cs::NamedTuple{names, <:Tuple{Vararg{ChainState}}}) where {names}
-    return map(cs) do c
-        return gpu(c)
-    end
-end
-
-function Lux.gpu(pinn::PINN)
-    Lux.@set! pinn.phi = gpu(pinn.phi)
-    Lux.@set! pinn.init_params = adapt(CuArray, pinn.init_params)
-    return pinn
-end
-
-function Lux.cpu(pinn::PINN)
-    Lux.@set! pinn.phi = cpu(pinn.phi)
-    Lux.@set! pinn.init_params = cpu(pinn.init_params)
-    return pinn
 end
 
 """
