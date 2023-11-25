@@ -21,7 +21,7 @@ for (dev) in (:CPU, :CUDA, :AMDGPU, :Metal)
 end
 @inline get_gpu_adaptor() = get_adaptor(gpu_device())
 
-@memoize maybe_adapt(x::AbstractGPUArray, ε) = convert(typeof(x), ε)
+@memoize maybe_adapt(x::AbstractGPUArray, ε) = convert(parameterless_type(x), ε)
 @memoize maybe_adapt(x, ε) = ε
 ChainRulesCore.@non_differentiable maybe_adapt(x, ε)
 
