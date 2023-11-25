@@ -20,8 +20,10 @@ for (dev) in (:CPU, :CUDA, :AMDGPU, :Metal)
     @eval @inline get_adaptor(::$(ldev)) = $(ladaptor)()
 end
 @inline get_gpu_adaptor() = get_adaptor(gpu_device())
-@inline maybe_adapt(x::AbstractGPUArray, ε_) = ChainRulesCore.@ignore_derivatives adapt(get_gpu_adaptor(), ε_)
-@inline maybe_adapt(x, ε_) = ChainRulesCore.@ignore_derivatives ε_
+
+@memoize maybe_adapt(x::AbstractGPUArray, ε) = convert(typeof(x), ε)
+@memoize maybe_adapt(x, ε) = ε
+ChainRulesCore.@non_differentiable maybe_adapt(x, ε)
 
 @inline function finitediff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{1}) where {T<:AbstractFloat}
     ε = maybe_adapt(x, ε_)
