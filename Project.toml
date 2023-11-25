@@ -81,6 +81,7 @@ OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
 TaylorDiff = "b36ab563-344f-407b-a36a-4f200bebf99c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+LuxCUDA = "d0bbae9a-e099-4d5b-a835-1c6931763bda"
 
 [targets]
 test = ["Test", "Zygote", "ModelingToolkit", "DomainSets", "OptimizationOptimJL", "TaylorDiff"]
