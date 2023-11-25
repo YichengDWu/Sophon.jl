@@ -1,7 +1,3 @@
-function isongpu(nt::NamedTuple)
-    return any(x -> x isa AbstractGPUArray, Lux.fcollect(nt))
-end
-
 function get_l2_loss_function(loss_function, dataset)
     loss(θ) = mean(abs2, loss_function(dataset, θ))
     return loss
@@ -14,27 +10,28 @@ This function is only used for the first order derivative.
 """
 forwarddiff(phi, t, εs, order, θ) = ForwardDiff.gradient(sum ∘ Base.Fix2(phi, θ), t)
 
-@inline maybe_adapt(x::AbstractGPUArray, ε_) = ChainRulesCore.@ignore_derivatives convert(CuArray, ε_)
-@inline maybe_adapt(x, ε_) = ChainRulesCore.@ignore_derivatives ε_
+@memoize maybe_convert(x::AbstractGPUArray, ε) = convert(parameterless_type(x), ε)
+@memoize maybe_convert(x, ε) = ε
+ChainRulesCore.@non_differentiable maybe_convert(x, ε)
 
 @inline function finitediff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{1}) where {T<:AbstractFloat}
-    ε = maybe_adapt(x, ε_)
+    ε = maybe_convert(x, ε_)
     return (phi(x .+ ε, θ) .- phi(x .- ε, θ)) .* (h / 2)
 end
 
 @inline function finitediff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{2}) where {T<:AbstractFloat}
-    ε = maybe_adapt(x, ε_)
+    ε = maybe_convert(x, ε_)
     return (phi(x .+ ε, θ) .+ phi(x .- ε, θ) .- 2 .* phi(x, θ)) .* h^2
 end
 
 @inline function finitediff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{3}) where {T<:AbstractFloat}
-    ε = maybe_adapt(x, ε_)
+    ε = maybe_convert(x, ε_)
     return (phi(x .+ 2 .* ε, θ) .- 2 .* phi(x .+ ε, θ) .+ 2 .* phi(x .- ε, θ) -
             phi(x .- 2 .* ε, θ)) .* h^3 ./ 2
 end
 
 @inline function finitediff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{4}) where {T<:AbstractFloat}
-    ε = maybe_adapt(x, ε_)
+    ε = maybe_convert(x, ε_)
     return (phi(x .+ 2 .* ε, θ) .- 4 .* phi(x .+ ε, θ) .+ 6 .* phi(x, θ) .-
             4 .* phi(x .- ε, θ) .+ phi(x .- 2 .* ε, θ)) .* h^4
 end

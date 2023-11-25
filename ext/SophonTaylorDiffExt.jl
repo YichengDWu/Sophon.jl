@@ -115,7 +115,7 @@ for N in 1:5
 end
 
 @inline function taylordiff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{N}) where {T <: Number, N}
-    ε = Sophon.maybe_adapt(x, ε_)
+    ε = Sophon.maybe_convert(x, ε_)
     return TaylorDiff.derivative(Base.Fix2(phi, θ), x, ε, Val{N+1}())
 end
 
@@ -147,13 +147,6 @@ for l in 1:4
     end
 end
 
-# avoid NaN
-function Base.:*(A::Union{Sophon.CuMatrix{T}, LinearAlgebra.Transpose{T, Sophon.CuArray}},
-                 B::Sophon.CuMatrix{TaylorScalar{T, N}}) where {T, N}
-    C = similar(B, (size(A, 1), size(B, 2)))
-    fill!(C, zero(eltype(C)))
-    return LinearAlgebra.mul!(C, A, B)
-end
 
 function __init__()
     @static if VERSION >= v"1.9.0"

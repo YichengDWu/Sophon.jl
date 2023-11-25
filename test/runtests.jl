@@ -288,27 +288,6 @@ rng = Random.default_rng()
         @test_nowarn AdaptiveTraining((θ, p) -> p, 5)
         @test_nowarn AdaptiveTraining(((θ, p) -> p, (θ, p) -> θ), (3, 4, 5))
     end
-
-    #=
-    @testset "GPU" begin
-        @testset "single model" begin
-            pinn = PINN(DiscreteFourierFeature(2,1,2,2))
-            pinn = pinn |> gpu
-            @test getdata(pinn.init_params) isa CuArray
-            phi = pinn.phi
-            @test phi.state.weight isa CuArray
-        end
-
-        @testset "multiple models" begin
-            pinn = PINN(u = DiscreteFourierFeature(2,1,2,2),
-                        v = DiscreteFourierFeature(2,1,2,2))
-            pinn = pinn |> gpu
-            @test getdata(pinn.init_params) isa CuArray
-            phi = pinn.phi
-            @test phi.u.state.weight isa CuArray
-        end
-    end
-    =#
 end
 
 @testset "BetaSampler" begin include("betasampler.jl") end

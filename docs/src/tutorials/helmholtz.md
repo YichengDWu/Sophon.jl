@@ -38,7 +38,7 @@ bcs = [u(-1,y) ~ 0, u(1,y) ~ 0, u(x, -1) ~ 0, u(x, 1) ~ 0]
 Note that the boundary conditions are compatible with periocity, which allows us to apply [`BACON`](@ref).
 ```@example helmholtz
 chain = BACON(2, 1, 5, 2; hidden_dims = 32, num_layers=5)
-pinn = PINN(chain) # call `gpu` on it if you want to use gpu
+pinn = PINN(chain)
 sampler = QuasiRandomSampler(300, 100)  
 strategy = NonAdaptiveTraining()
 
@@ -50,14 +50,12 @@ prob = Sophon.discretize(helmholtz, pinn, sampler, strategy)
 Let's plot the result.
 ```@example helmholtz
 phi = pinn.phi
-
+ps = res.u
 xs, ys= [infimum(d.domain):0.01:supremum(d.domain) for d in domains]
 u_analytic(x,y) = sinpi(a1*x)*sinpi(a2*y)
 u_real = [u_analytic(x,y) for x in xs, y in ys]
 
-phi_cpu = cpu(phi) # in case you are using GPU
-ps_cpu = cpu(res.u)
-u_pred = [sum(phi_cpu(([x,y]), ps_cpu)) for x in xs, y in ys]
+u_pred = [sum(phi(([x,y]), ps)) for x in xs, y in ys]
 
 using CairoMakie
 axis = (xlabel="x", ylabel="y", title="Analytical Solution")
