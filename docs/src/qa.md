@@ -4,8 +4,7 @@ A: To train the model on a single GPU, do the following:
 
 ```julia
 using Lux, LuxCUDA
-device = gpu_device()
-pinn = PINN(...) |> device
+prob = Sophon.discretize(...) |> gpu_device()
 ```
 ## Q: How can I monitor the loss for each loss function?
 

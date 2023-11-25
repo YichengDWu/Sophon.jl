@@ -2,8 +2,7 @@
     PINN(chain, rng::AbstractRNG=Random.default_rng())
     PINN(rng::AbstractRNG=Random.default_rng(); kwargs...)
 
-A container for a neural network, its states and its initial parameters. Call `Lux.gpu_device()`
-and `Lux.cpu_device()` to move the neural network to the GPU and CPU respectively.
+A container for a neural network, its states and its initial parameters.
 The default element type of the parameters is `Float64`.
 
 ## Fields

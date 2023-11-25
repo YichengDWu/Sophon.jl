@@ -76,11 +76,9 @@ function discretize(pde_system, pinn::PINN, sampler::PINNSampler,
                     adtype=Optimization.AutoZygote())
     datasets = sample(pde_system, sampler)
     init_params = Lux.fmap(Base.Fix1(broadcast, fdtype), pinn.init_params)
-    init_params = _ComponentArray(init_params)
+    init_params = ComponentArray(init_params)
 
     datasets = map(Base.Fix1(broadcast, fdtype), datasets)
-    datasets = init_params isa AbstractGPUComponentVector ?
-               map(Base.Fix1(adapt, get_gpu_adaptor()), datasets) : datasets
     pde_and_bcs_loss_function = build_loss_function(pde_system, pinn, strategy,
                                                     derivative, derivative_bc,
                                                     fdtype)

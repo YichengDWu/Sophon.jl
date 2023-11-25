@@ -38,7 +38,6 @@ include("layers/nets.jl")
 include("layers/utils.jl")
 include("layers/operators.jl")
 
-include("pde/componentarrays.jl")
 include("pde/pinn_types.jl")
 include("pde/utils.jl")
 include("pde/sym_utils.jl")
