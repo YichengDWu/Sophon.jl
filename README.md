@@ -44,6 +44,7 @@ We're here to help you with any issues or challenges you might encounter. Feel f
 - [MindScience](https://gitee.com/mindspore/mindscience)
 - [Modulus](https://docs.nvidia.com/deeplearning/modulus/index.html#)
 - [DeepXDE](https://deepxde.readthedocs.io/en/latest/index.html#)
+- [SimulAI](https://github.com/IBM/simulai)
 
 ## What's the difference between this package and NeuralPDE.jl?
 
