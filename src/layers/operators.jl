@@ -65,7 +65,7 @@ DeepONet(
 [lu2019deeponet](@cite)
 """
 struct DeepONet{B, T, F, L, S} <:
-       AbstractExplicitContainerLayer{(:branch_net, :trunk_net, :flatten_layer,
+       AbstractLuxContainerLayer{(:branch_net, :trunk_net, :flatten_layer,
                                        :linear_layer, :bias)}
     branch_net::B
     trunk_net::T
@@ -74,10 +74,10 @@ struct DeepONet{B, T, F, L, S} <:
     bias::S
 end
 
-function DeepONet(branch_net::AbstractExplicitLayer, trunk_net::AbstractExplicitLayer;
-                  flatten_layer::AbstractExplicitLayer=FlattenLayer(),
-                  linear_layer::AbstractExplicitLayer=NoOpLayer(),
-                  bias::AbstractExplicitLayer=ScalarLayer(.+))
+function DeepONet(branch_net::AbstractLuxLayer, trunk_net::AbstractLuxLayer;
+                  flatten_layer::AbstractLuxLayer=FlattenLayer(),
+                  linear_layer::AbstractLuxLayer=NoOpLayer(),
+                  bias::AbstractLuxLayer=ScalarLayer(.+))
     return DeepONet{typeof(branch_net), typeof(trunk_net), typeof(flatten_layer),
                     typeof(linear_layer), typeof(bias)}(branch_net, trunk_net,
                                                         flatten_layer, linear_layer, bias)

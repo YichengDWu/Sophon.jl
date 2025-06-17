@@ -1,4 +1,5 @@
-using ModelingToolkit, DomainSets, TaylorDiff, Sophon, Test, Zygote
+using ModelingToolkit, DomainSets, TaylorDiff, Test, Zygote
+using Sophon
 using Optimization, OptimizationOptimJL
 
 @testset "Convergence" begin
@@ -44,8 +45,8 @@ end
     y = rand(2)
 
     f = isdefined(Base, :get_extension) ?
-        Base.get_extension(Sophon,:SophonTaylorDiffExt).broadcasted_make_taylor_2 :
-        Sophon.SophonTaylorDiffExt.broadcasted_make_taylor_2
+        Base.get_extension(Sophon,:SophonTaylorDiffExt).broadcasted_make_seed_2 :
+        Sophon.SophonTaylorDiffExt.broadcasted_make_seed_2
 
     g = isdefined(Base, :get_extension) ?
         Base.get_extension(Sophon,:SophonTaylorDiffExt).broadcasted_extract_derivative_2 :

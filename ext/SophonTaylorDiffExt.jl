@@ -2,13 +2,13 @@ module SophonTaylorDiffExt
 
 if isdefined(Base, :get_extension)
     using TaylorDiff
-    import TaylorDiff: derivative, make_taylor, raise, extract_derivative, value
+    import TaylorDiff: derivative, make_seed, raise, extract_derivative, value
 else
     using ..TaylorDiff
-    import ..TaylorDiff: derivative, make_taylor, raise, extract_derivative, value
+    import ..TaylorDiff: derivative, make_seed, raise, extract_derivative, value
 end
 
-using Sophon
+import Sophon
 import Sophon.ChainRulesCore as CRC
 import NNlib
 import LinearAlgebra
@@ -57,9 +57,9 @@ end
 
 for N in 1:5
     @eval begin
-        $(Symbol(:broadcasted_make_taylor_, N))(t0,t1) = CRC.@ignore_derivatives broadcast((t0, t1) -> make_taylor(t0, t1, $(Val(N))), t0, t1)
+        $(Symbol(:broadcasted_make_seed_, N))(t0,t1) = CRC.@ignore_derivatives broadcast((t0, t1) -> make_seed(t0, t1, $(Val(N))), t0, t1)
 
-        function CRC.rrule(f::typeof($(Symbol(:broadcasted_make_taylor_, N))), x::AbstractVector, y::AbstractVector)
+        function CRC.rrule(f::typeof($(Symbol(:broadcasted_make_seed_, N))), x::AbstractVector, y::AbstractVector)
             o = f(x, y)
             function f_pullback(x̄::AbstractVector{<:TaylorScalar{T}}) where {T}
                 x = reinterpret(reshape, T, x̄)
@@ -68,13 +68,13 @@ for N in 1:5
             return o, f_pullback
         end
 
-        function CRC.rrule(f::typeof($(Symbol(:broadcasted_make_taylor_, N))), x::AbstractMatrix, y::AbstractVector)
+        function CRC.rrule(f::typeof($(Symbol(:broadcasted_make_seed_, N))), x::AbstractMatrix, y::AbstractVector)
             o = f(x, y)
-            function broadcasted_make_taylor_pullback(x̄::AbstractMatrix{<:TaylorScalar{T}}) where {T}
+            function broadcasted_make_seed_pullback(x̄::AbstractMatrix{<:TaylorScalar{T}}) where {T}
                 x = reinterpret(reshape, T, x̄)
                 return CRC.NoTangent(), x[1, :, :], x[2, :, 1]
             end
-            return o, broadcasted_make_taylor_pullback
+            return o, broadcasted_make_seed_pullback
         end
 
         $(Symbol(:broadcasted_extract_derivative_, N))(t) = CRC.@ignore_derivatives broadcast(Base.Fix2(extract_derivative, $(Val(N))), t)
@@ -99,7 +99,7 @@ end
 for N in 1:5
     @eval @inline function derivative(f, x::AbstractVector{T}, l::AbstractVector{T},
                                       ::Val{$N}) where {T <: Number}
-        t = $(Symbol(:broadcasted_make_taylor_, N))(x, l)
+        t = $(Symbol(:broadcasted_make_seed_, N))(x, l)
         return extract_derivative(f(t), $N)
     end
 end
@@ -109,12 +109,12 @@ end
 for N in 1:5
     @eval @inline function derivative(f, x::AbstractMatrix{T}, l::AbstractVector{T},
                                       ::Val{$N}) where {T <: Number}
-        t = $(Symbol(:broadcasted_make_taylor_, N))(x, l)
+        t = $(Symbol(:broadcasted_make_seed_, N))(x, l)
         return $(Symbol(:broadcasted_extract_derivative_, N))(f(t))
     end
 end
 
-@inline function taylordiff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{N}) where {T <: Number, N}
+function taylordiff(phi, x, θ, ε_::AbstractVector{T}, h::T, ::Val{N}) where {T <: Number, N}
     ε = Sophon.maybe_convert(x, ε_)
     return TaylorDiff.derivative(Base.Fix2(phi, θ), x, ε, Val{N+1}())
 end
@@ -150,7 +150,7 @@ end
 
 function __init__()
     @static if VERSION >= v"1.9.0"
-        setproperty!(Sophon, :taylordiff, taylordiff)
+        Sophon.eval(:(taylordiff=$taylordiff))
     end
 end
 

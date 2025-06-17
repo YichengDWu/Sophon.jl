@@ -13,7 +13,7 @@ h1 → layer1 → connection → layer2 → connection
 ## Arguments
 
   - `connection`: A functio takes 3 inputs and combines them.
-  - `layers`: `AbstractExplicitLayer`s or a `Chain`.
+  - `layers`: `AbstractLuxLayer`s or a `Chain`.
 
 ## Inputs
 
@@ -46,12 +46,12 @@ end
   - States of each `layer` wrapped in a NamedTuple with
     `fields = layer_1, layer_2, ..., layer_N`
 """
-struct TriplewiseFusion{F, T <: NamedTuple} <: AbstractExplicitContainerLayer{(:layers,)}
+struct TriplewiseFusion{F, T <: NamedTuple} <: AbstractLuxContainerLayer{(:layers,)}
     connection::F
     layers::T
 end
 
-function TriplewiseFusion(connection, layers::AbstractExplicitLayer...)
+function TriplewiseFusion(connection, layers::AbstractLuxLayer...)
     names = ntuple(i -> Symbol("layer_$i"), length(layers))
     return TriplewiseFusion(connection, NamedTuple{names}(layers))
 end
@@ -64,7 +64,7 @@ end
 function (m::TriplewiseFusion)(x::Union{NTuple{3, AbstractArray},
                                         Tuple{AbstractArray, Vararg{Tuple}}}, ps,
                                st::NamedTuple)
-    return applytriplewisefusion(m.layers, m.connection, x, ps, st)
+    return applytriplewisefusion(m.layers, m.connection, x, ps.layers, st.layers)
 end
 
 @generated function applytriplewisefusion(layers::NamedTuple{names}, connection::C, x::T,
@@ -88,4 +88,4 @@ end
     return Expr(:block, calls...)
 end
 
-Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))
+# Base.keys(m::TriplewiseFusion) = Base.keys(getfield(m, :layers))

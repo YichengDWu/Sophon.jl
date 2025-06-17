@@ -17,9 +17,9 @@ x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connect
 
 ## Arguments
 
-  - `H_net`: `AbstractExplicitLayer`.
-  - `U_net`: `AbstractExplicitLayer`.
-  - `V_net`: `AbstractExplicitLayer`.
+  - `H_net`: `AbstractLuxLayer`.
+  - `U_net`: `AbstractLuxLayer`.
+  - `V_net`: `AbstractLuxLayer`.
   - `fusion_layers`: `Chain`.
 
 ## Keyword Arguments
@@ -32,32 +32,30 @@ x → H_net →  h1 → fusionlayer1 → connection → fusionlayer2 → connect
 [wang2021understanding](@cite)
 """
 struct PINNAttention{H, U, V, F <: TriplewiseFusion} <:
-       AbstractExplicitContainerLayer{(:H_net, :U_net, :V_net, :fusion)}
+       AbstractLuxContainerLayer{(:H_net, :U_net, :V_net, :fusion)}
     H_net::H
     U_net::U
     V_net::V
     fusion::F
 end
 
-function PINNAttention(H_net::AbstractExplicitLayer, U_net::AbstractExplicitLayer,
-                       V_net::AbstractExplicitLayer, fusion_layers::AbstractExplicitLayer)
+function PINNAttention(H_net::AbstractLuxLayer, U_net::AbstractLuxLayer,
+        V_net::AbstractLuxLayer, fusion_layers::AbstractLuxLayer)
     fusion = TriplewiseFusion(attention_connection, fusion_layers)
-    return PINNAttention{typeof(H_net), typeof(U_net), typeof(V_net), typeof(fusion)}(H_net,
-                                                                                      U_net,
-                                                                                      V_net,
-                                                                                      fusion)
+    return PINNAttention{typeof(H_net), typeof(U_net), typeof(V_net), typeof(fusion)}(
+        H_net, U_net, V_net, fusion)
 end
 
 function PINNAttention(in_dims::Int, out_dims::Int, activation::Function=sin;
-                       hidden_dims::Int, num_layers::Int)
+        hidden_dims::Int, num_layers::Int)
     H_net = Dense(in_dims, hidden_dims, activation)
     U_net = Dense(in_dims, hidden_dims, activation)
     V_net = Dense(in_dims, hidden_dims, activation)
-    fusion_layers = FullyConnected(hidden_dims, hidden_dims, activation;
-                                   hidden_dims=hidden_dims, num_layers=num_layers,
-                                   outermost=false)
-    return Chain(PINNAttention(H_net, U_net, V_net, fusion_layers),
-                 Dense(hidden_dims, out_dims))
+    fusion_layers = FullyConnected(
+        hidden_dims, hidden_dims, activation; hidden_dims=hidden_dims,
+        num_layers=num_layers, outermost=false)
+    return Chain(
+        PINNAttention(H_net, U_net, V_net, fusion_layers), Dense(hidden_dims, out_dims))
 end
 
 function (m::PINNAttention)(x::AbstractArray, ps, st::NamedTuple)
@@ -119,13 +117,13 @@ Chain(
           #        plus 90 states, summarysize 192 bytes
 ```
 """
-function FourierAttention(in_dims::Int, out_dims::Int, activation::Function, freq;
-                          hidden_dims::Int=512, num_layers::Int=6)
+function FourierAttention(in_dims::Int, out_dims::Int, activation::Function,
+        freq; hidden_dims::Int=512, num_layers::Int=6)
     fourierfeature = FourierFeature(in_dims, freq)
     encoder = SkipConnection(fourierfeature, vcat)
-    attention_layers = PINNAttention(fourierfeature.out_dims + in_dims, out_dims,
-                                     activation; hidden_dims=hidden_dims,
-                                     num_layers=num_layers)
+    attention_layers = PINNAttention(
+        fourierfeature.out_dims + in_dims, out_dims, activation;
+        hidden_dims=hidden_dims, num_layers=num_layers)
     return Chain(encoder, attention_layers)
 end
 
@@ -167,8 +165,8 @@ Chain(
           #        plus 4 states, summarysize 96 bytes.
 ```
 """
-function FourierNet(layer_sizes::NTuple{N, T}, activation::Function,
-                    modes::NTuple) where {N, T <: Int}
+function FourierNet(
+        layer_sizes::NTuple{N, T}, activation::Function, modes::NTuple) where {N, T <: Int}
     fourierfeature = FourierFeature(first(layer_sizes), modes)
     fc = FullyConnected((fourierfeature.out_dims, layer_sizes[2:end]...), activation)
     return Chain(fourierfeature, fc)
@@ -220,19 +218,19 @@ julia> chain = Siren(2, 1; num_layers = 4, hidden_dims = 50, init_weight = init_
 [sitzmann2020implicit](@cite)
 
 """
-function Siren(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, omega=30.0f0,
-               init_weight::Union{Nothing, Function}=nothing)
-    return _Siren((in_dims, ntuple(i -> hidden_dims, num_layers)..., out_dims), omega,
-                  init_weight)
+function Siren(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int,
+        omega=30.0f0, init_weight::Union{Nothing, Function}=nothing)
+    return _Siren(
+        (in_dims, ntuple(i -> hidden_dims, num_layers)..., out_dims), omega, init_weight)
 end
 
-function Siren(layer_sizes::Int...; omega=30.0f0,
-               init_weight::Union{Nothing, Function}=nothing)
+function Siren(
+        layer_sizes::Int...; omega=30.0f0, init_weight::Union{Nothing, Function}=nothing)
     return _Siren(layer_sizes, omega, init_weight)
 end
 
-@generated function _Siren(layer_sizes::NTuple{N, T}, omega::O,
-                           init_weight::W) where {N, T, O, W}
+@generated function _Siren(
+        layer_sizes::NTuple{N, T}, omega::O, init_weight::W) where {N, T, O, W}
     layers = W === Nothing ? [:(Sine(layer_sizes[1] => layer_sizes[2]; omega=omega))] :
              [:(Dense(layer_sizes[1], layer_sizes[2]; init_weight=init_weight))]
     N == 2 && return layers[1]
@@ -241,23 +239,19 @@ end
     end
     append!(layers, [get_layer(i) for i in 2:(N - 2)])
     append!(layers,
-            [
-                :(Dense(layer_sizes[$(N - 1)] => layer_sizes[$N];
-                        init_weight=kaiming_uniform(sin))),
-            ])
+        [:(Dense(
+            layer_sizes[$(N - 1)] => layer_sizes[$N]; init_weight=kaiming_uniform(sin)))])
     return :(Chain($(layers...)))
 end
 
 """
     FullyConnected(layer_sizes::NTuple{N, Int}, activation; outermost = true,
                    init_weight=kaiming_uniform(activation),
-                   init_bias=zeros32,
-                   allow_fast_activation=false)
+                   init_bias=zeros32)
     FullyConnected(in_dims::Int, out_dims::Int, activation::Function;
                    hidden_dims::Int, num_layers::Int, outermost=true,
                    init_weight=kaiming_uniform(activation),
-                   init_bias=zeros32,
-                   allow_fast_activation=false)
+                   init_bias=zeros32)
 
 Create fully connected layers.
 
@@ -273,8 +267,9 @@ Create fully connected layers.
   - `outermost`: Whether to use activation function for the last layer. If `false`, the activation function is applied
     to the output of the last layer.
   - `init_weight`: Initialization method for the weights.
-  - `allow_fast_activation`: If true, then certain activations can be approximated with a
-    faster version. The new activation function will be given by NNlib.fast_act(activation)
+
+## Removed Keyword Arguments
+  - `allow_fast_activation`: Pass an anonymous function as the activation to prevent internal modivations to the activation function
 
 ## Example
 
@@ -298,57 +293,50 @@ Chain(
 ```
 """
 function FullyConnected(layer_sizes::NTuple{N, T}, activation::Function;
-                        outermost::Bool=true, init_bias=zeros32,
-                        init_weight::Function=kaiming_uniform(activation),
-                        allow_fast_activation::Bool=false) where {N, T <: Int}
+        outermost::Bool=true, init_bias=zeros32,
+        init_weight::Function=kaiming_uniform(activation)) where {N, T <: Int}
     return FullyConnected(layer_sizes, activation, Val(outermost); init_weight=init_weight,
-                          init_bias=init_bias, allow_fast_activation=allow_fast_activation)
+        init_bias=init_bias)
 end
 
-function FullyConnected(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
-                        num_layers::Int, outermost::Bool=true,
-                        init_weight::Function=kaiming_uniform(activation),
-                        init_bias=zeros32, allow_fast_activation::Bool=false)
+function FullyConnected(in_dims::Int, out_dims::Int, activation::Function;
+        hidden_dims::Int, num_layers::Int, outermost::Bool=true,
+        init_weight::Function=kaiming_uniform(activation), init_bias=zeros32)
     return FullyConnected((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims),
-                          activation, Val(outermost); init_weight=init_weight,
-                          init_bias=init_bias, allow_fast_activation=allow_fast_activation)
+        activation, Val(outermost); init_weight=init_weight,
+        init_bias=init_bias)
 end
 
-@generated function FullyConnected(layer_sizes::NTuple{N, T}, activation::Function,
-                                   ::Val{F}; init_weight, init_bias,
-                                   allow_fast_activation) where {N, T <: Int, F}
+@generated function FullyConnected(
+        layer_sizes::NTuple{N, T}, activation::Function, ::Val{F};
+        init_weight, init_bias) where {N, T <: Int, F}
     N == 2 &&
         return :(Dense(layer_sizes[1], layer_sizes[2], activation; init_weight=init_weight,
-                       init_bias=init_bias, allow_fast_activation=allow_fast_activation))
+            init_bias=init_bias))
     function get_layer(i)
-        return :(Dense(layer_sizes[$i] => layer_sizes[$(i + 1)], activation;
-                       init_weight=init_weight, init_bias=init_bias,
-                       allow_fast_activation=allow_fast_activation))
+        return :(Dense(
+            layer_sizes[$i] => layer_sizes[$(i + 1)], activation; init_weight=init_weight,
+            init_bias=init_bias))
     end
-    layers = [
-        :(Dense(layer_sizes[1] => layer_sizes[2], activation; init_weight=init_weight,
-                init_bias=init_bias, allow_fast_activation=allow_fast_activation)),
-    ]
+    layers = [:(Dense(layer_sizes[1] => layer_sizes[2], activation; init_weight=init_weight,
+        init_bias=init_bias))]
     append!(layers, [get_layer(i) for i in 2:(N - 2)])
     append!(layers,
-            F ?
-            [
-                :(Dense(layer_sizes[$(N - 1)] => layer_sizes[$N]; init_weight=init_weight,
-                        init_bias=init_bias, allow_fast_activation=allow_fast_activation)),
-            ] : [get_layer(N - 1)])
+        F ?
+        [:(Dense(layer_sizes[$(N - 1)] => layer_sizes[$N]; init_weight=init_weight,
+            init_bias=init_bias))] :
+        [get_layer(N - 1)])
     return :(Chain($(layers...)))
 end
 
 """
     ResNet(layer_sizes::NTuple{N, Int}, activation; outermost=true,
                    init_weight=kaiming_uniform(activation),
-                   init_bias=zeros32,
-                   allow_fast_activation=false)
+                   init_bias=zeros32)
     ResNet(in_dims::Int, out_dims::Int, activation::Function;
                    hidden_dims::Int, num_layers::Int, outermost=true,
                    init_weight=kaiming_uniform(activation),
-                   init_bias=zeros32,
-                   allow_fast_activation=false)
+                   init_bias=zeros32)
 
 Create fully connected layers.
 
@@ -364,8 +352,9 @@ Create fully connected layers.
   - `outermost`: Whether to use activation function for the last layer. If `false`, the activation function is applied
     to the output of the last layer.
   - `init_weight`: Initialization method for the weights.
-  - `allow_fast_activation`: If true, then certain activations can be approximated with a
-    faster version. The new activation function will be given by NNlib.fast_act(activation)
+
+## Removed Keyword Arguments
+    - `allow_fast_activation`: Pass an anonymous function as the activation to prevent internal modivations to the activation function
 
 ## Example
 
@@ -397,49 +386,45 @@ Chain(
           #        plus 0 states, summarysize 64 bytes.
 ```
 """
-function ResNet(layer_sizes::NTuple{N, T}, activation::Function; outermost::Bool=true,
-                init_bias=zeros32, init_weight::Function=kaiming_uniform(activation),
-                allow_fast_activation::Bool=false) where {N, T <: Int}
+function ResNet(layer_sizes::NTuple{N, T}, activation::Function;
+        outermost::Bool=true, init_bias=zeros32,
+        init_weight::Function=kaiming_uniform(activation)) where {N, T <: Int}
     return ResNet(layer_sizes, activation, Val(outermost); init_weight=init_weight,
-                  init_bias=init_bias, allow_fast_activation=allow_fast_activation)
+        init_bias=init_bias)
 end
 
-function ResNet(in_dims::Int, out_dims::Int, activation::Function; hidden_dims::Int,
-                num_layers::Int, outermost::Bool=true,
-                init_weight::Function=kaiming_uniform(activation), init_bias=zeros32,
-                allow_fast_activation::Bool=false)
-    return ResNet((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims), activation,
-                  Val(outermost); init_weight=init_weight, init_bias=init_bias,
-                  allow_fast_activation=allow_fast_activation)
+function ResNet(in_dims::Int, out_dims::Int, activation::Function;
+        hidden_dims::Int, num_layers::Int, outermost::Bool=true,
+        init_weight::Function=kaiming_uniform(activation), init_bias=zeros32)
+    return ResNet((in_dims, ntuple(_ -> hidden_dims, num_layers)..., out_dims),
+        activation, Val(outermost); init_weight=init_weight,
+        init_bias=init_bias)
 end
 
 @generated function ResNet(layer_sizes::NTuple{N, T}, activation::Function, ::Val{F};
-                           init_weight, init_bias,
-                           allow_fast_activation) where {N, T <: Int, F}
+        init_weight, init_bias) where {N, T <: Int, F}
     N == 2 &&
         return :(Dense(layer_sizes[1], layer_sizes[2], activation; init_weight=init_weight,
-                       init_bias=init_bias, allow_fast_activation=allow_fast_activation))
+            init_bias=init_bias))
     function get_layer(i)
-        return :(SkipConnection(Dense(layer_sizes[$i] => layer_sizes[$(i + 1)], activation;
-                                      init_weight=init_weight, init_bias=init_bias,
-                                      allow_fast_activation=allow_fast_activation), +))
+        return :(SkipConnection(
+            Dense(layer_sizes[$i] => layer_sizes[$(i + 1)], activation;
+                init_weight=init_weight, init_bias=init_bias),
+            +))
     end
-    layers = [
-        :(Dense(layer_sizes[1] => layer_sizes[2], activation; init_weight=init_weight,
-                init_bias=init_bias, allow_fast_activation=allow_fast_activation)),
-    ]
+    layers = [:(Dense(layer_sizes[1] => layer_sizes[2], activation; init_weight=init_weight,
+        init_bias=init_bias))]
     append!(layers, [get_layer(i) for i in 2:(N - 2)])
     append!(layers,
-            F ?
-            [
-                :(Dense(layer_sizes[$(N - 1)] => layer_sizes[$N]; init_weight=init_weight,
-                        init_bias=init_bias, allow_fast_activation=allow_fast_activation)),
-            ] : [get_layer(N - 1)])
+        F ?
+        [:(Dense(layer_sizes[$(N - 1)] => layer_sizes[$N]; init_weight=init_weight,
+            init_bias=init_bias))] :
+        [get_layer(N - 1)])
     return :(Chain($(layers...)))
 end
 
 struct MultiplicativeFilterNet{F, L, O} <:
-       AbstractExplicitContainerLayer{(:filters, :linear_layers, :output_layer)}
+       AbstractLuxContainerLayer{(:filters, :linear_layers, :output_layer)}
     filters::F
     linear_layers::L
     output_layer::O
@@ -492,23 +477,25 @@ s_N(x)=\frac{a_0}{2}+\sum_{n=1}^N{a_n}\cdot \sin \left( \frac{2\pi}{P}nx+\varphi
 
 [lindell2021bacon](@cite)
 """
-function FourierFilterNet(in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int,
-                          bandwidth::Real)
+function FourierFilterNet(
+        in_dims::Int, out_dims::Int; hidden_dims::Int, num_layers::Int, bandwidth::Real)
     names = ntuple(i -> Symbol("filter_$i"), num_layers)
     scale = 2.0f0π * bandwidth / num_layers
-    layers = ntuple(i -> Dense(in_dims, hidden_dims, sin; init_bias=init_uniform(1.0f0π),
-                               init_weight=init_uniform(scale)), num_layers)
+    layers = ntuple(
+        i -> Dense(in_dims, hidden_dims, sin; init_bias=init_uniform(1.0f0π),
+            init_weight=init_uniform(scale)),
+        num_layers)
     nt = NamedTuple{names}(layers)
-    filters = BranchLayer{typeof(nt), Lux.NAME_TYPE}(nt, nothing)
+    filters = BranchLayer(nt, nothing)
 
     layers = ntuple(i -> Dense(hidden_dims, hidden_dims; init_weight=kaiming_uniform(sin)),
-                    num_layers - 1)
+        num_layers - 1)
     linear_layers = PairwiseFusion(.*, layers...)
 
     output_layer = Dense(hidden_dims, out_dims; init_weight=kaiming_uniform(sin))
-    return MultiplicativeFilterNet{typeof(filters), typeof(linear_layers),
-                                   typeof(output_layer)}(filters, linear_layers,
-                                                         output_layer)
+    return MultiplicativeFilterNet{
+        typeof(filters), typeof(linear_layers), typeof(output_layer)}(
+        filters, linear_layers, output_layer)
 end
 
 """
@@ -519,25 +506,25 @@ frequcies are dicrete and nontrainable.
 
 Tips: It is recommended to set `period` to be `1,2,π` or `2π` for better performance.
 """
-function BACON(in_dims::Int, out_dims::Int, N::Int, period::Real; hidden_dims::Int,
-               num_layers::Int)
+function BACON(in_dims::Int, out_dims::Int, N::Int,
+        period::Real; hidden_dims::Int, num_layers::Int)
     names = ntuple(i -> Symbol("filter_$i"), num_layers)
     Ns = ntuple(_ -> N ÷ num_layers, num_layers)
     if N % num_layers != 0
         Ns = (Ns[1:(end - 1)]..., Ns[end] + N % num_layers)
     end
 
-    layers = ntuple(i -> DiscreteFourierFeature(in_dims, hidden_dims, Ns[i], period),
-                    num_layers)
+    layers = ntuple(
+        i -> DiscreteFourierFeature(in_dims, hidden_dims, Ns[i], period), num_layers)
     nt = NamedTuple{names}(layers)
-    filters = BranchLayer{typeof(nt), Lux.NAME_TYPE}(nt, nothing)
+    filters = BranchLayer(nt, nothing)
 
     layers = ntuple(i -> Dense(hidden_dims, hidden_dims; init_weight=kaiming_uniform(sin)),
-                    num_layers - 1)
+        num_layers - 1)
     linear_layers = PairwiseFusion(.*, layers...)
 
     output_layer = Dense(hidden_dims, out_dims; init_weight=kaiming_uniform(sin))
-    return MultiplicativeFilterNet{typeof(filters), typeof(linear_layers),
-                                   typeof(output_layer)}(filters, linear_layers,
-                                                         output_layer)
+    return MultiplicativeFilterNet{
+        typeof(filters), typeof(linear_layers), typeof(output_layer)}(
+        filters, linear_layers, output_layer)
 end

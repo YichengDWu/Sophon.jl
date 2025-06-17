@@ -13,7 +13,7 @@ The default element type of the parameters is `Float64`.
 
 ## Arguments
 
-  - `chain`: `AbstractExplicitLayer` or a named tuple of `AbstractExplicitLayer`s.
+  - `chain`: `AbstractLuxLayer` or a named tuple of `AbstractLuxLayer`s.
   - `rng`: `AbstractRNG` to use for initialising the neural network. If yout want to set the seed, write
 
 ```julia
@@ -52,7 +52,7 @@ function PINN(chain::NamedTuple, rng::AbstractRNG=Random.default_rng())
     return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
 end
 
-function PINN(chain::AbstractExplicitLayer, rng::AbstractRNG=Random.default_rng())
+function PINN(chain::AbstractLuxLayer, rng::AbstractRNG=Random.default_rng())
     phi = ChainState(chain, rng)
     init_params = initialparameters(rng, phi)
     return PINN{typeof(phi), typeof(init_params)}(phi, init_params)
@@ -79,7 +79,7 @@ It this similar to `Lux.Chain` but wraps it in a stateful container.
 
 ## Arguments
 
-  - `model`: `AbstractExplicitLayer`, or a named tuple of them, which will be treated as a `Chain`.
+  - `model`: `AbstractLuxLayer`, or a named tuple of them, which will be treated as a `Chain`.
   - `rng`: `AbstractRNG` to use for initialising the neural network.
 """
 mutable struct ChainState{L, S}
@@ -112,7 +112,7 @@ function (c::ChainState{<:NamedTuple})(x, ps)
     return y
 end
 
-function (c::ChainState{<:AbstractExplicitLayer})(x, ps)
+function (c::ChainState{<:AbstractLuxLayer})(x, ps)
     y, st = c.model(x, ps, c.state)
     ChainRulesCore.@ignore_derivatives c.state = st
     return y
@@ -121,11 +121,11 @@ end
 const NTofChainState{names} = NamedTuple{names, <:Tuple{Vararg{ChainState}}}
 
 for (dev) in (:CPU, :CUDA, :AMDGPU, :Metal)
-    ldev = Symbol("Lux$(dev)Device")
-    ladaptor = Symbol("Lux$(dev)Adaptor")
+    ldev = Symbol("$(dev)Device")
+    ladaptor = Symbol("$(dev)Adaptor")
     @eval begin
         function (device::$ldev)(cs::ChainState)
-            Lux.@set! cs.state = device(cs.state)
+            Setfield.@set! cs.state = device(cs.state)
             return cs
         end
 
@@ -136,8 +136,8 @@ for (dev) in (:CPU, :CUDA, :AMDGPU, :Metal)
         end
 
         function (device::$ldev)(pinn::PINN)
-            Lux.@set! pinn.phi = device(pinn.phi)
-            Lux.@set! pinn.init_params = adapt($(ladaptor)(), pinn.init_params)
+            Setfield.@set! pinn.phi = device(pinn.phi)
+            Setfield.@set! pinn.init_params = adapt($(ladaptor)(), pinn.init_params)
             return pinn
         end
     end

@@ -46,28 +46,28 @@ function stan end
 
 kaiming_normal(::typeof(stan)) = Lux.glorot_uniform
 
-function initialparameters(rng::AbstractRNG, d::Dense{true, typeof(stan)})
+function Lux.initialparameters(rng::AbstractRNG, d::Dense{typeof(stan), __T_in_dims, __T_out_dims, __T_init_weight, __T_init_bias, Lux.True} where {__T_in_dims<:Union{Integer, Lux.LuxLib.Static.StaticInteger}, __T_out_dims<:Union{Integer, Lux.LuxLib.Static.StaticInteger}, __T_init_weight, __T_init_bias})
     return (weight=d.init_weight(rng, d.out_dims, d.in_dims),
             bias=d.init_bias(rng, d.out_dims, 1),
             β=Lux.ones32(rng, d.out_dims, 1))
 end
 
-function initialparameters(rng::AbstractRNG, d::Dense{false, typeof(stan)})
+function Lux.initialparameters(rng::AbstractRNG, d::Dense{typeof(stan), __T_in_dims, __T_out_dims, __T_init_weight, __T_init_bias, Lux.False} where {__T_in_dims<:Union{Integer, Lux.LuxLib.Static.StaticInteger}, __T_out_dims<:Union{Integer, Lux.LuxLib.Static.StaticInteger}, __T_init_weight, __T_init_bias})
     return (weight=d.init_weight(rng, d.out_dims, d.in_dims),
             β=Lux.ones32(rng, d.out_dims, 1))
 end
 
-@inline function (d::Dense{false, typeof(stan)})(x::AbstractVecOrMat, ps, st::NamedTuple)
+@inline function (d::Dense{typeof(stan), __T_in_dims, __T_out_dims, __T_init_weight, __T_init_bias,Lux.False} where {__T_in_dims<:Union{Integer, Lux.LuxLib.Static.StaticInteger}, __T_out_dims<:Union{Integer, Lux.LuxLib.Static.StaticInteger}, __T_init_weight, __T_init_bias})(x::AbstractVecOrMat, ps, st::NamedTuple)
     z = ps.weight * x
     return tanh.(z) .* (1 .+ ps.β .* z), st
 end
 
-@inline function (d::Dense{true, typeof(stan)})(x::AbstractVector, ps, st::NamedTuple)
+@inline function (d::Dense{typeof(stan), __T_in_dims, __T_out_dims, __T_init_weight, __T_init_bias,Lux.True} where {__T_in_dims<:Union{Integer, Lux.LuxLib.Static.StaticInteger}, __T_out_dims<:Union{Integer, Lux.LuxLib.Static.StaticInteger}, __T_init_weight, __T_init_bias})(x::AbstractVector, ps, st::NamedTuple)
     z = ps.weight * x .+ vec(ps.bias)
     return tanh.(z) .* (1 .+ ps.β .* z), st
 end
 
-@inline function (d::Dense{true, typeof(stan)})(x::AbstractMatrix, ps, st::NamedTuple)
+@inline function (d::Dense{typeof(stan), __T_in_dims, __T_out_dims, __T_init_weight, __T_init_bias,Lux.True} where {__T_in_dims<:Union{Integer, Lux.LuxLib.Static.StaticInteger}, __T_out_dims<:Union{Integer, Lux.LuxLib.Static.StaticInteger}, __T_init_weight, __T_init_bias})(x::AbstractMatrix, ps, st::NamedTuple)
     z = ps.weight * x .+ ps.bias
     return tanh.(z) .* (1 .+ ps.β .* z), st
 end

@@ -22,7 +22,7 @@ function build_loss_function(pde_system::ModelingToolkit.PDESystem, pinn::PINN,
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, eq, i)
                                         for (i, eq) in enumerate(eqs))
 
-    pinnrep = Lux.@set pinnrep.derivative = derivative_bc
+    pinnrep = Setfield.@set pinnrep.derivative = derivative_bc
     datafree_bc_loss_functions = Tuple(build_loss_function(pinnrep, bc,
                                                            i +
                                                            length(datafree_pde_loss_functions))
@@ -50,7 +50,7 @@ function build_loss_function(pde_system::PDESystem, pinn::PINN,
     datafree_pde_loss_functions = Tuple(build_loss_function(pinnrep, first(eq), i)
                                         for (i, eq) in enumerate(eqs))
 
-    pinnrep = Lux.@set pinnrep.derivative = derivative_bc
+    pinnrep = Setfield.@set pinnrep.derivative = derivative_bc
     datafree_bc_loss_functions = Tuple(build_loss_function(pinnrep, first(bc),
                                                            i +
                                                            length(datafree_pde_loss_functions))
@@ -118,7 +118,7 @@ function symbolic_discretize(pde_system, pinn::PINN, sampler::PINNSampler,
         return :($args -> $body)
     end
 
-    pinnrep = Lux.@set pinnrep.derivative = derivative_bc
+    pinnrep = Setfield.@set pinnrep.derivative = derivative_bc
     bc_loss_function = map(bcs) do bc
         args, body = build_symbolic_loss_function(pinnrep, bc)
         return :($args -> $body)

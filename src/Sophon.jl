@@ -3,8 +3,9 @@ module Sophon
 using LinearAlgebra
 using Lux, Random, NNlib
 import Lux: initialparameters, initialstates, parameterlength, statelength,
-            AbstractExplicitLayer, AbstractExplicitContainerLayer, zeros32
-using Lux.WeightInitializers: _nfan
+            AbstractLuxLayer, AbstractLuxContainerLayer,zeros32
+using Lux.WeightInitializers.Utils: nfan
+using Setfield
 
 import ModelingToolkit
 import ModelingToolkit: Differential

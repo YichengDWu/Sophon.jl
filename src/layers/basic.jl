@@ -52,7 +52,7 @@ FourierFeature(2 => 16)
 
 [wang2021eigenvector](@cite)
 """
-struct FourierFeature{F} <: AbstractExplicitLayer
+struct FourierFeature{F} <: AbstractLuxLayer
     in_dims::Int
     out_dims::Int
     frequencies::F
@@ -130,7 +130,7 @@ The output is guaranteed to be periodic.
   - `N`: ``N`` in the formula.
   - `period`: ``P`` in the formula.
 """
-struct DiscreteFourierFeature{P, F} <: AbstractExplicitLayer
+struct DiscreteFourierFeature{P, F} <: AbstractLuxLayer
     in_dims::Int
     out_dims::Int
     period::P
@@ -225,7 +225,7 @@ end
 
 Normalized Radial Basis Fuction Network.
 """
-struct RBF{F1, F2} <: AbstractExplicitLayer
+struct RBF{F1, F2} <: AbstractLuxLayer
     in_dims::Int
     out_dims::Int
     num_centers::Int
@@ -274,7 +274,7 @@ end
 
 Return connection(scalar, x)
 """
-struct ScalarLayer{F} <: AbstractExplicitLayer
+struct ScalarLayer{F} <: AbstractLuxLayer
     connection::F
 end
 
@@ -293,7 +293,7 @@ end
 A conatiner for scalar parameter. This is useful for the case that you want a dummy layer
 that returns the scalar parameter for any input.
 """
-struct ConstantFunction <: AbstractExplicitLayer end
+struct ConstantFunction <: AbstractLuxLayer end
 
 initialparameters(rng::AbstractRNG, s::ConstantFunction) = (; constant=[0.0f0;;])
 parameterlength(s::ConstantFunction) = 1
@@ -308,7 +308,7 @@ end
 
 Split the input along the first demision according to indices.
 """
-struct SplitFunction{F} <: AbstractExplicitLayer
+struct SplitFunction{F} <: AbstractLuxLayer
     indices::F
 end
 
@@ -367,7 +367,7 @@ each row and the weight matrix.
 
 [wang2022random](@cite)
 """
-struct FactorizedDense{F1, F2, F3} <: AbstractExplicitLayer
+struct FactorizedDense{F1, F2, F3} <: AbstractLuxLayer
     activation::F1
     in_dims::Int
     out_dims::Int
